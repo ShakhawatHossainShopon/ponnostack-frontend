@@ -1,0 +1,13 @@
+# Client Storefront Git Ignore
+.env
+*.local.php
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and cache
+*.log
+tmp/
+cache/
