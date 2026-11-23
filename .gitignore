@@ -1,13 +1,30 @@
-# Client Storefront Git Ignore
-.env
-*.local.php
+# Node dependencies
+node_modules
+node_modules/
+**/node_modules/**
+.pnp
+.pnp.js
 
-# Operating System Files
+# Testing
+coverage/
+
+# Next.js build output
+.next
+.next/
+out
+out/
+build/
+dist/
+
+# Environment files
+.env*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
 .DS_Store
+*.pem
 Thumbs.db
-desktop.ini
-
-# Logs and cache
-*.log
-tmp/
-cache/
