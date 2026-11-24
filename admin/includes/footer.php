@@ -1741,7 +1741,7 @@
         async function loadCategories() {
             renderCategorySkeletons(4);
             try {
-                const res = await StoreApi.get('categories');
+                const res = await StoreApi.get('categories', { store: STORE_UUID });
                 if (res.success && Array.isArray(res.data)) {
                     categoriesData = res.data;
                     const def = categoriesData.find(c => c.is_default == 1 || c.slug === 'unnamed');
@@ -1932,9 +1932,10 @@
                         reader.readAsDataURL(selectedCatImageFile);
                     });
 
-                    const uploadRes = await StoreApi.post('categories/upload-image', {
+                    const uploadRes = await StoreApi.post(`categories/upload-image?store=${STORE_UUID}`, {
                         image_base64: base64Data,
-                        category_name: catName
+                        category_name: catName,
+                        store_uuid: STORE_UUID
                     });
 
                     if (uploadRes.success && uploadRes.data && uploadRes.data.url) {
@@ -1946,14 +1947,15 @@
 
                 const payload = {
                     name: catName,
-                    image: finalImageUrl
+                    image: finalImageUrl,
+                    store_uuid: STORE_UUID
                 };
 
                 let res;
                 if (isEdit) {
-                    res = await StoreApi.put(`categories/${editUuid}`, payload);
+                    res = await StoreApi.put(`categories/${editUuid}?store=${STORE_UUID}`, payload);
                 } else {
-                    res = await StoreApi.post('categories', payload);
+                    res = await StoreApi.post(`categories?store=${STORE_UUID}`, payload);
                 }
 
                 if (res.success) {
@@ -1991,7 +1993,7 @@
 
             if (confirm.isConfirmed) {
                 try {
-                    const res = await StoreApi.delete(`categories/${uuid}`);
+                    const res = await StoreApi.delete(`categories/${uuid}?store=${STORE_UUID}`);
                     if (res.success) {
                         await loadCategories();
                         await loadProducts();
