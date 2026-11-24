@@ -1,185 +1,4 @@
 
-    <!-- 3. MODAL: ADD / EDIT PRODUCT -->
-    <div id="modalProduct" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8">
-            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
-                        <i data-lucide="package-plus" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900" id="modalProductTitle" data-i18n="modalAddProdTitle">নতুন প্রোডাক্ট যোগ করুন</h3>
-                        <p class="text-[11px] text-slate-500" data-i18n="modalAddProdSub">ইমেজ সর্বোচ্চ ২০০KB-তে অপটিমাইজ হয়ে মাদার এপিআই-তে সংরক্ষিত হবে।</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 transition p-1">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <form id="productForm" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-                <input type="hidden" id="prodEditUuid">
-
-                <!-- Product Name & Slug -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="modalProdName">প্রোডাক্টের নাম (Product Name) *</label>
-                        <input type="text" id="fProdName" required placeholder="যেমন: ক্লাসিক কটন পোলো শার্ট"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs"
-                            oninput="autoSlugFromName(this.value)">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="modalProdSlug">ইউনিক স্ল্যাগ (URL Slug) *</label>
-                        <input type="text" id="fProdSlug" required placeholder="classic-cotton-polo"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-mono focus:outline-none focus:border-brand-600 shadow-xs">
-                    </div>
-                </div>
-
-                <!-- 2 Price Fields & Real-time Profit Calculation -->
-                <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 space-y-3">
-                    <div class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                        <i data-lucide="calculator" class="w-3.5 h-3.5 text-brand-600"></i>
-                        <span data-i18n="titlePricingSection">মূল্য ও লাভ নির্ধারণ (Pricing & Profit Calculation)</span>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="lblMainCostPrice">
-                                মেইন বা কেনা দাম (Cost / Wholesale) *
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-xs">৳</span>
-                                <input type="number" id="fMainPrice" required step="0.01" min="0" placeholder="650.00"
-                                    class="w-full pl-7 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-brand-600 shadow-xs"
-                                    oninput="calculateProfitPreview()">
-                            </div>
-                            <span class="text-[10px] text-slate-400" data-i18n="hintMainPrice">স্টোরফ্রন্ট যে দামে সংগ্রহ করেছে</span>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="lblRetailerSellingPrice">
-                                বিক্রয় মূল্য (Retailer Selling Price) *
-                            </label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-xs">৳</span>
-                                <input type="number" id="fRetailerPrice" required step="0.01" min="0" placeholder="1250.00"
-                                    class="w-full pl-7 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-brand-600 shadow-xs"
-                                    oninput="calculateProfitPreview()">
-                            </div>
-                            <span class="text-[10px] text-slate-400" data-i18n="hintRetailerPrice">গ্রাহক ওয়েবসাইটে যে দামে ক্রয় করবে</span>
-                        </div>
-                    </div>
-
-                    <!-- Live Profit Calculation Display Banner -->
-                    <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
-                        <div class="flex items-center space-x-2 text-emerald-800 font-bold">
-                            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
-                            <span data-i18n="lblProfitPerUnit">প্রতি ইউনিটে লাভ (Profit):</span>
-                            <span id="previewProfitVal" class="text-sm font-black text-emerald-700">৳০.০০</span>
-                        </div>
-                        <div class="text-[11px] font-semibold text-emerald-600" id="previewProfitMargin">০% মার্জিন</div>
-                    </div>
-                </div>
-
-                <!-- Stock Quantity (Inventory) -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblStockQty">ইনভেন্টরি স্টক (Stock Quantity) *</label>
-                    <input type="number" id="fStock" required min="0" value="10"
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-brand-600 shadow-xs">
-                    <p class="text-[10px] text-slate-400 mt-1" data-i18n="hintStock">প্রতিটি বিক্রয়ে এই সংখ্যা থেকে অটোমেটিক স্টক মাইনাস হবে।</p>
-                </div>
-
-                <!-- Sizes & Colors Tags -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblSizes">সাইজসমূহ (Sizes)</label>
-                        <input type="text" id="fSizes" placeholder="M, L, XL, XXL (কমা দিয়ে লিখুন)"
-                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs">
-                        <div class="flex flex-wrap gap-1 mt-1.5" id="quickSizeButtons">
-                            <button type="button" onclick="appendTag('fSizes', 'S')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+S</button>
-                            <button type="button" onclick="appendTag('fSizes', 'M')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+M</button>
-                            <button type="button" onclick="appendTag('fSizes', 'L')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+L</button>
-                            <button type="button" onclick="appendTag('fSizes', 'XL')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+XL</button>
-                            <button type="button" onclick="appendTag('fSizes', 'XXL')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+XXL</button>
-                            <button type="button" onclick="appendTag('fSizes', 'Free Size')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Free Size</button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblColors">রঙসমূহ (Colors)</label>
-                        <input type="text" id="fColors" placeholder="Black, White, Navy (কমা দিয়ে লিখুন)"
-                            class="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs">
-                        <div class="flex flex-wrap gap-1 mt-1.5" id="quickColorButtons">
-                            <button type="button" onclick="appendTag('fColors', 'Black')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Black</button>
-                            <button type="button" onclick="appendTag('fColors', 'White')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+White</button>
-                            <button type="button" onclick="appendTag('fColors', 'Navy')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Navy</button>
-                            <button type="button" onclick="appendTag('fColors', 'Red')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Red</button>
-                            <button type="button" onclick="appendTag('fColors', 'Gray')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Gray</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Product Description -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblDescription">পণ্যের বিবরণ (Description)</label>
-                    <textarea id="fDescription" rows="2" placeholder="পণ্যের ম্যাটেরিয়াল, ফিচার ও বিস্তারিত বিবরণ..."
-                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs"></textarea>
-                </div>
-
-                <!-- Multi-Image Upload (Auto-compressed to ~200KB, Max 5 Images) -->
-                <div class="border-t border-slate-200 pt-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-bold text-slate-900 flex items-center space-x-1">
-                            <i data-lucide="image" class="w-3.5 h-3.5 text-brand-600"></i>
-                            <span data-i18n="lblProductImages">প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ৫টি ছবি)</span>
-                            <span class="text-rose-500 font-black">*</span>
-                        </label>
-                        <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" data-i18n="lblAutoCompressBadge">
-                            ⚡ স্বয়ংক্রিয় ২০০KB অপটিমাইজেশন
-                        </span>
-                    </div>
-
-                    <!-- File input & Dropzone -->
-                    <label for="fImagesInput" id="imageDropzone" class="border-2 border-dashed border-slate-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-xl p-5 text-center cursor-pointer transition bg-slate-50/50 block group select-none">
-                        <input type="file" id="fImagesInput" multiple accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only" onchange="handleImageSelection(event)">
-                        <div class="flex flex-col items-center justify-center pointer-events-none">
-                            <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
-                                <i data-lucide="upload-cloud" class="w-5 h-5"></i>
-                            </div>
-                            <div class="text-xs font-bold text-slate-800" data-i18n="dropzonePrompt">ছবি আপলোড করতে ক্লিক করুন (বা ড্র্যাগ করুন)</div>
-                            <div class="text-[10px] text-slate-500 mt-0.5" data-i18n="dropzoneHelp">PNG, JPG, WebP ইত্যাদি (যেকোনো সাইজের ছবি স্বয়ংক্রিয়ভাবে ২০০KB-তে কম্প্রেস হবে)</div>
-                            <div class="mt-2.5 inline-flex items-center space-x-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-brand-600 shadow-2xs group-hover:border-brand-300">
-                                <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
-                                <span>কম্পিউটার থেকে ছবি বাছুন (Browse Files)</span>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- Validation Error Message -->
-                    <div id="imageValidationError" class="hidden mt-2 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center space-x-2">
-                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500 shrink-0"></i>
-                        <span>কমপক্ষে একটি প্রোডাক্টের ছবি আপলোড করা আবশ্যক। ছবি ছাড়া পণ্য সংরক্ষণ করা যাবে না।</span>
-                    </div>
-
-                    <!-- Live Image Previews Container -->
-                    <div id="imagePreviewGrid" class="grid grid-cols-5 gap-2 mt-3">
-                        <!-- Populated dynamically via JS -->
-                    </div>
-                </div>
-
-                <!-- Hidden Submit Button for Enter key form submission -->
-                <button type="submit" id="hiddenProductSubmit" class="hidden"></button>
-            </form>
-
-            <!-- Modal Footer (Pinned at Bottom) -->
-            <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200 flex items-center justify-end space-x-2 shrink-0">
-                <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer" data-i18n="btnCancel">বাতিল</button>
-                <button type="button" onclick="$('#productForm').submit()" id="btnSaveProduct" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
-                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                    <span id="btnSaveProductText" data-i18n="btnSaveProduct">প্রোডাক্ট সংরক্ষণ করুন</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- 4. MODAL: ADD / EDIT CATEGORY -->
     <div id="modalCategory" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -291,8 +110,8 @@
                     </div>
                 </div>
 
-                <!-- Stock Units & Quick Inventory Stepper -->
-                <div class="bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-200/80 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Stock Units Display Banner -->
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-200/80 rounded-xl p-3.5 flex items-center justify-between">
                     <div>
                         <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1.5">
                             <i data-lucide="boxes" class="w-3.5 h-3.5 text-emerald-600"></i>
@@ -302,13 +121,6 @@
                             <span class="text-2xl font-black text-emerald-950" id="detailStockCount">0</span>
                             <span class="text-xs text-emerald-700 font-semibold" data-i18n="statStockUnits">উপলব্ধ আইটেম/ইউনিট</span>
                         </div>
-                    </div>
-
-                    <!-- Quick Stepper (+5 / +1 / -1) -->
-                    <div class="flex items-center space-x-1.5 self-start sm:self-auto">
-                        <button type="button" id="btnDetailStockDec" class="px-2.5 py-1.5 bg-white border border-emerald-200 hover:bg-emerald-100/60 rounded-lg font-black text-slate-700 shadow-2xs transition cursor-pointer" title="১টি কমান">-১</button>
-                        <button type="button" id="btnDetailStockInc" class="px-2.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-black shadow-2xs transition cursor-pointer" title="১টি বাড়ান">+১</button>
-                        <button type="button" id="btnDetailStockInc5" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-black shadow-2xs transition cursor-pointer" title="৫টি বাড়ান">+৫</button>
                     </div>
                 </div>
 
@@ -332,7 +144,7 @@
                 <!-- Sizes & Colors Tags -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="p-3 bg-slate-50/70 border border-slate-200/70 rounded-xl">
-                        <span class="text-[11px] font-bold text-slate-700 block mb-1.5" data-i18n="lblSizes">সাইজসমূহ (Sizes)</span>
+                        <span class="text-[11px] font-bold text-slate-700 block mb-1.5" id="detailSizesLabel" data-i18n="lblSizes">সাইজসমূহ (Sizes)</span>
                         <div id="detailSizesContainer" class="flex flex-wrap gap-1">
                             <!-- Populated -->
                         </div>
@@ -377,6 +189,64 @@
                         <span>সম্পাদনা করুন</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dedicated Product Delete Confirmation Modal (Yes / No) -->
+    <div id="modalConfirmDelete" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-sm shadow-2xl p-5 sm:p-6 text-center transform transition-all space-y-4">
+            <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-900">পণ্যটি মুছে ফেলতে চান?</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    আপনি কি নিশ্চিতভাবে <b id="confirmDeleteProdName" class="text-rose-600 font-bold"></b> প্রোডাক্টটি মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা সম্ভব হবে না।
+                </p>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button type="button" onclick="closeConfirmDeleteModal()" class="w-full py-2.5 px-3 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                    না, বাতিল
+                </button>
+                <button type="button" id="btnExecuteDelete" onclick="executeDeleteProduct()" class="w-full py-2.5 px-3 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>হ্যাঁ, ডিলিট করুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dedicated Package Product Upload Limit Modal -->
+    <div id="modalPackageProductLimit" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-rose-200 rounded-3xl w-full max-w-md shadow-2xl p-6 sm:p-7 text-center transform transition-all space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+                <i data-lucide="shield-alert" class="w-7 h-7"></i>
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-extrabold text-slate-900">প্রোডাক্ট আপলোডের লিমিট শেষ</h3>
+                <p id="modalLimitReachedMsg" class="text-xs text-slate-600 leading-relaxed">
+                    আপনার প্রোডাক্ট আপলোডের লিমিট শেষ হয়ে গেছে। আপনার প্যাকেজের আওতায় সর্বোচ্চ প্রোডাক্ট যোগ করার সীমা পূর্ণ হয়ে গেছে। আপনি আর নতুন প্রোডাক্ট যোগ করতে পারবেন না।
+                </p>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 grid grid-cols-3 divide-x divide-slate-200 text-xs">
+                <div class="px-1">
+                    <span class="text-[10px] text-slate-400 block font-bold">বর্তমান প্রোডাক্ট</span>
+                    <span id="modalLimitReachedCurrent" class="text-sm font-black text-slate-800">০ টি</span>
+                </div>
+                <div class="px-1">
+                    <span class="text-[10px] text-slate-400 block font-bold">প্যাকেজ সীমা</span>
+                    <span id="modalLimitReachedMax" class="text-sm font-black text-slate-800">০ টি</span>
+                </div>
+                <div class="px-1">
+                    <span class="text-[10px] text-slate-400 block font-bold">আর বাকি আছে</span>
+                    <span id="modalLimitReachedRemaining" class="text-sm font-black text-rose-600">০ টি</span>
+                </div>
+            </div>
+            <div class="pt-1">
+                <button type="button" onclick="closePackageLimitModal()" class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer">
+                    ঠিক আছে, বুঝতে পেরেছি
+                </button>
             </div>
         </div>
     </div>
@@ -1224,17 +1094,17 @@
         // 3. Tab Switching with Skeleton Loading, Smooth Fade and Top Loader
         function switchTab(tab) {
             showTopLoader();
-            const tabs = ['dashboard', 'orders', 'products', 'designWebsite', 'payments', 'discounts', 'completedOrders', 'cancelledOrders', 'categories', 'stockOut', 'userInfo', 'deliveryCharges', 'uploadBanner'];
+            const tabs = ['dashboard', 'orders', 'products', 'productCreate', 'designWebsite', 'payments', 'discounts', 'completedOrders', 'cancelledOrders', 'categories', 'stockOut', 'stockManagement', 'userInfo', 'deliveryCharges', 'uploadBanner'];
 
             // Auto-expand collapsible navigation group if needed
-            if (['discounts', 'completedOrders', 'cancelledOrders', 'categories', 'stockOut', 'userInfo', 'deliveryCharges', 'uploadBanner'].includes(tab)) {
+            if (['discounts', 'completedOrders', 'cancelledOrders', 'categories', 'stockOut', 'stockManagement', 'userInfo', 'deliveryCharges', 'uploadBanner'].includes(tab)) {
                 toggleCollapsibleNav(true);
             }
 
             // Immediately update sidebar active button highlight
             tabs.forEach(t => {
                 const navBtn = $('#navTab' + t.charAt(0).toUpperCase() + t.slice(1));
-                if (t === tab) {
+                if (t === tab || (tab === 'productCreate' && t === 'products')) {
                     navBtn.addClass('text-brand-600 bg-brand-50 border border-brand-200/50').removeClass('text-slate-600 hover:text-slate-900 hover:bg-slate-50');
                 } else {
                     navBtn.removeClass('text-brand-600 bg-brand-50 border border-brand-200/50').addClass('text-slate-600 hover:text-slate-900 hover:bg-slate-50');
@@ -1270,6 +1140,8 @@
                     renderUploadBannerTab();
                 } else if (tab === 'payments') {
                     loadSaasSubscriptionAndPayments();
+                } else if (tab === 'stockManagement') {
+                    renderStockManagementProducts(productsData);
                 }
 
                 hideTopLoader();
@@ -2020,12 +1892,71 @@
                     updateProductStats(productsData);
                     renderProducts(productsData);
                     renderStockOutProducts(productsData);
+                    renderStockManagementProducts(productsData);
                 } else if (res.status === 401) {
                     window.location.href = 'login';
                 }
             } catch (err) {
                 console.error('Error fetching products:', err);
             }
+        }
+
+        // Helper: Parse JSON or array safe
+        function parseJsonSafeList(val) {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'string') {
+                try {
+                    const parsed = JSON.parse(val);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+            return [];
+        }
+
+        // Universal Stock-Out Evaluation (Full Product vs Size/Variant vs Color)
+        function getProductStockOutStatus(p) {
+            const stock = parseInt(p.stock) || 0;
+            const isFull = stock <= 0;
+
+            const rawSizes = parseJsonSafeList(p.sizes);
+            const parsedSizes = rawSizes.map(s => {
+                if (typeof s === 'object' && s !== null) {
+                    return { name: s.name || '', stock: parseInt(s.stock) || 0 };
+                }
+                return { name: String(s || ''), stock: 0 };
+            });
+
+            const rawColors = parseJsonSafeList(p.colors);
+            const parsedColors = rawColors.map(c => {
+                if (typeof c === 'object' && c !== null) {
+                    return { name: c.name || '', stock: parseInt(c.stock) || 0, hex: c.hex || null };
+                }
+                return { name: String(c || ''), stock: 0, hex: null };
+            });
+
+            const zeroSizes = parsedSizes.filter(s => s.stock <= 0);
+            const hasZeroSize = parsedSizes.length > 0 && zeroSizes.length > 0;
+
+            const zeroColors = parsedColors.filter(c => c.stock <= 0);
+            const hasZeroColor = parsedColors.length > 0 && zeroColors.length > 0;
+
+            // Partial stock out: Product has sizes/variants/colors where at least one has 0 stock
+            const isPartial = (parsedSizes.length > 0 && hasZeroSize) || (parsedColors.length > 0 && hasZeroColor);
+            const isAny = isFull || isPartial;
+
+            return {
+                isFull,
+                isPartial,
+                isAny,
+                parsedSizes,
+                parsedColors,
+                zeroSizes,
+                zeroColors,
+                stock
+            };
         }
 
         function updateProductStats(list) {
@@ -2035,23 +1966,85 @@
 
             let totalStock = 0;
             let totalProfitPotential = 0;
-            let stockOutCount = 0;
+            let fullCount = 0;
+            let partialCount = 0;
+            let totalAttentionCount = 0;
+            let inStockCount = 0;
+            let outStockCount = 0;
+            let hasVariantsCount = 0;
 
             list.forEach(p => {
+                const status = getProductStockOutStatus(p);
                 const stock = parseInt(p.stock) || 0;
                 const profit = parseFloat(p.profit) || 0;
                 totalStock += stock;
                 totalProfitPotential += (profit * stock);
-                if (stock <= 0) {
-                    stockOutCount++;
-                }
+
+                if (status.isFull) fullCount++;
+                if (status.isPartial) partialCount++;
+                if (status.isAny) totalAttentionCount++;
+
+                if (stock > 0) inStockCount++;
+                if (stock <= 0) outStockCount++;
+                if (status.parsedSizes.length > 0 || status.parsedColors.length > 0) hasVariantsCount++;
             });
 
             $('#dashTotalStock').text(totalStock);
             $('#dashTotalProfit').text('৳' + totalProfitPotential.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $('#badgeStockOutCount').text(stockOutCount);
-            $('#stockOutHeaderCount').text(stockOutCount + (currentLang === 'bn' ? ' টি' : ' items'));
-            $('#dashStockOutIndicator').text(stockOutCount + (currentLang === 'bn' ? ' টি স্টক আউট' : ' stock out'));
+            
+            // Filter Pills Count Badges in Stock Out Tab
+            $('#soFilterCountAll').text(totalAttentionCount);
+            $('#soFilterCountFull').text(fullCount);
+            $('#soFilterCountPartial').text(partialCount);
+
+            // Filter Pills Count Badges in Stock Management Tab
+            $('#badgeStockManagementCount').text(count);
+            $('#stockManagementHeaderCount').text(toBnDigit(count) + (currentLang === 'bn' ? ' টি পণ্য' : ' items'));
+            $('#smFilterCountAll').text(count);
+            $('#smFilterCountInStock').text(inStockCount);
+            $('#smFilterCountOutStock').text(outStockCount);
+            $('#smFilterCountHasVariants').text(hasVariantsCount);
+
+            // Global badges
+            $('#badgeStockOutCount').text(totalAttentionCount);
+            $('#stockOutHeaderCount').text(toBnDigit(totalAttentionCount) + (currentLang === 'bn' ? ' টি' : ' items'));
+            $('#dashStockOutIndicator').text(toBnDigit(totalAttentionCount) + (currentLang === 'bn' ? ' টি স্টক অ্যালার্ট' : ' stock alert'));
+
+            // Package Product Limit Status & Remaining Countdown
+            const pkgLimit = parseInt(storeData && storeData.product_limit !== undefined ? storeData.product_limit : 50, 10);
+            const isUnlimited = (pkgLimit <= 0);
+            const remaining = isUnlimited ? null : Math.max(0, pkgLimit - count);
+            const isLimitReached = (!isUnlimited && count >= pkgLimit);
+
+            // 1. Product Toolbar Limit & Remaining Badge
+            const badgeEl = $('#productLimitBadge');
+            if (badgeEl.length) {
+                if (isUnlimited) {
+                    badgeEl.html(`<span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold inline-flex items-center space-x-1.5 shadow-2xs"><i data-lucide="infinity" class="w-3.5 h-3.5 text-emerald-600"></i><span>আনলিমিটেড প্রোডাক্ট আপলোড</span></span>`);
+                } else if (isLimitReached) {
+                    badgeEl.html(`<span class="px-3 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-black inline-flex items-center space-x-1.5 shadow-2xs"><i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-600"></i><span>আর বাকি নেই: ০ টি (${toBnDigit(pkgLimit)} টির কোটা পূর্ণ)</span></span>`);
+                } else {
+                    badgeEl.html(`<span class="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold inline-flex items-center space-x-1.5 shadow-2xs"><i data-lucide="package-check" class="w-3.5 h-3.5 text-amber-600"></i><span>আর বাকি আছে: <strong class="text-amber-950 text-sm font-black">${toBnDigit(remaining)}</strong> টি (মোট ${toBnDigit(pkgLimit)} টির মধ্যে ${toBnDigit(count)} টি ব্যবহৃত)</span></span>`);
+                }
+            }
+
+            // 2. Dashboard Product Limit Remaining Stat
+            const dashRemainingEl = $('#dashProductLimitRemaining');
+            const dashSubtextEl = $('#dashProductLimitSubtext');
+            if (dashRemainingEl.length) {
+                dashRemainingEl.removeClass('hidden');
+                if (isUnlimited) {
+                    dashRemainingEl.removeClass('text-rose-700 bg-rose-50 border-rose-200').addClass('text-emerald-700 bg-emerald-50 border-emerald-200').text('আনলিমিটেড বাকি');
+                    dashSubtextEl.text('প্যাকেজ কোটা: আনলিমিটেড');
+                } else if (isLimitReached) {
+                    dashRemainingEl.removeClass('text-emerald-700 bg-emerald-50 border-emerald-200 text-amber-700 bg-amber-50 border-amber-200').addClass('text-rose-700 bg-rose-50 border-rose-200').text('০ টি বাকি');
+                    dashSubtextEl.text(`প্যাকেজ লিমিট পূর্ণ (${toBnDigit(count)}/${toBnDigit(pkgLimit)} টি)`);
+                } else {
+                    dashRemainingEl.removeClass('text-rose-700 bg-rose-50 border-rose-200 text-emerald-700 bg-emerald-50 border-emerald-200').addClass('text-amber-700 bg-amber-50 border-amber-200').text(`আর বাকি: ${toBnDigit(remaining)} টি`);
+                    dashSubtextEl.text(`প্যাকেজ লিমিট: ${toBnDigit(pkgLimit)} টি (ব্যবহৃত ${toBnDigit(count)} টি)`);
+                }
+            }
+            if (window.lucide) lucide.createIcons();
         }
 
         function renderProducts(list) {
@@ -2071,7 +2064,7 @@
                             <i data-lucide="package-search" class="w-7 h-7"></i>
                         </div>
                         <p class="text-xs text-slate-500 max-w-sm">${i18n[currentLang] ? i18n[currentLang].noProductsFound : 'কোনো প্রোডাক্ট পাওয়া যায়নি।'}</p>
-                        <button type="button" onclick="openCreateProductModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-xs cursor-pointer">
+                        <button type="button" onclick="openProductCreatePage()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-xs cursor-pointer">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                             <span>${i18n[currentLang] ? i18n[currentLang].btnAddProduct : 'নতুন প্রোডাক্ট যোগ করুন'}</span>
                         </button>
@@ -2138,14 +2131,12 @@
                             </div>
                         </div>
 
-                        <!-- Card Footer: Quick Stepper & Detail Trigger -->
+                        <!-- Card Footer: Actions (Delete Icon Only, Edit, View) -->
                         <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1" onclick="event.stopPropagation()">
-                            <!-- Quick Stock Stepper (- / +) -->
-                            <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-0.5 shadow-2xs">
-                                <button type="button" onclick="adjustQuickStock('${p.uuid}', -1)" class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white hover:bg-slate-200 text-slate-700 text-xs font-black flex items-center justify-center transition cursor-pointer" title="১টি কমান">-</button>
-                                <span class="text-[11px] sm:text-xs font-bold text-slate-800 px-1 min-w-[18px] text-center">${stockCount}</span>
-                                <button type="button" onclick="adjustQuickStock('${p.uuid}', 1)" class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white hover:bg-slate-200 text-slate-700 text-xs font-black flex items-center justify-center transition cursor-pointer" title="১টি বাড়ান">+</button>
-                            </div>
+                            <!-- Delete Icon Only (No Text) -->
+                            <button type="button" onclick="confirmDeleteProduct('${p.uuid}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="মুছে ফেলুন">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
 
                             <div class="flex items-center space-x-0.5">
                                 <button type="button" onclick="openEditProductModal('${p.uuid}')" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer" title="সম্পাদনা">
@@ -2164,8 +2155,37 @@
         }
 
         // ==========================================
-        // 5.2 STOCK OUT PRODUCTS GRID
+        // 5.2 STOCK OUT & RESTOCK MANAGEMENT SYSTEM
         // ==========================================
+        let currentStockOutFilter = 'all'; // 'all' | 'full' | 'partial'
+        let stockOutDrafts = {}; // { [uuid]: { sizes: [...], colors: [...], stock: number, isModified: boolean } }
+
+        function setStockOutFilter(mode) {
+            currentStockOutFilter = mode;
+            ['all', 'full', 'partial'].forEach(m => {
+                const $btn = $(`#soFilterBtn_${m}`);
+                const capM = m.charAt(0).toUpperCase() + m.slice(1);
+                const $cnt = $(`#soFilterCount${capM}`);
+                if (m === mode) {
+                    $btn.removeClass('bg-white hover:bg-slate-100 text-slate-700 border border-slate-200')
+                        .addClass('bg-brand-600 text-white shadow-2xs border-transparent');
+                    $cnt.removeClass('bg-rose-50 text-rose-700 bg-amber-50 text-amber-800 bg-slate-100 text-slate-700 border border-rose-200 border-amber-200 border-slate-200')
+                        .addClass('bg-white/25 text-white font-black');
+                } else {
+                    $btn.removeClass('bg-brand-600 text-white shadow-2xs border-transparent')
+                        .addClass('bg-white hover:bg-slate-100 text-slate-700 border border-slate-200');
+                    $cnt.removeClass('bg-white/25 text-white');
+                    if (m === 'all') {
+                        $cnt.addClass('bg-slate-100 text-slate-700 border border-slate-200 font-bold');
+                    } else if (m === 'full') {
+                        $cnt.addClass('bg-rose-50 text-rose-700 border border-rose-200 font-bold');
+                    } else if (m === 'partial') {
+                        $cnt.addClass('bg-amber-50 text-amber-800 border border-amber-200 font-bold');
+                    }
+                }
+            });
+            renderStockOutProducts(productsData);
+        }
 
         function renderStockOutProducts(list) {
             const $grid = $('#stockOutGridContainer');
@@ -2174,19 +2194,49 @@
             const search = $('#stockOutSearchInput').val() ? $('#stockOutSearchInput').val().trim().toLowerCase() : '';
 
             const stockOutList = list.filter(p => {
-                const isOut = (parseInt(p.stock) || 0) <= 0 || !!recentlyRestocked[p.uuid];
-                const matchSearch = !search || p.name.toLowerCase().includes(search) || (p.slug && p.slug.toLowerCase().includes(search));
-                return isOut && matchSearch;
+                const status = getProductStockOutStatus(p);
+                const isRecent = !!recentlyRestocked[p.uuid];
+
+                let matchesFilter = false;
+                if (currentStockOutFilter === 'all') {
+                    matchesFilter = status.isAny || isRecent;
+                } else if (currentStockOutFilter === 'full') {
+                    matchesFilter = status.isFull || (isRecent && status.stock <= 0);
+                } else if (currentStockOutFilter === 'partial') {
+                    matchesFilter = status.isPartial;
+                }
+
+                if (!matchesFilter) return false;
+
+                if (!search) return true;
+
+                // Match product name, category, or size name
+                const nameMatch = (p.name || '').toLowerCase().includes(search);
+                const catMatch = (p.category_name || '').toLowerCase().includes(search);
+                const sizeMatch = status.parsedSizes.some(s => s.name.toLowerCase().includes(search));
+                const colorMatch = status.parsedColors.some(c => c.name.toLowerCase().includes(search));
+
+                return nameMatch || catMatch || sizeMatch || colorMatch;
             });
 
             if (stockOutList.length === 0) {
+                let emptyMsg = 'কোনো স্টক আউট প্রোডাক্ট নেই!';
+                let emptySub = 'আপনার স্টোরের সকল পণ্য বর্তমানে পর্যাপ্ত স্টকে উপলব্ধ রয়েছে।';
+                if (currentStockOutFilter === 'full') {
+                    emptyMsg = 'সম্পূর্ণ স্টক শেষ এমন কোনো পণ্য নেই!';
+                    emptySub = 'সকল পণ্যের ন্যূনতম কিছু স্টক স্টোরে অবশিষ্ট রয়েছে।';
+                } else if (currentStockOutFilter === 'partial') {
+                    emptyMsg = 'সাইজ বা ভ্যারিয়েন্ট স্টক শেষ এমন পণ্য নেই!';
+                    emptySub = 'সকল ভ্যারিয়েন্ট ও সাইজের পর্যাপ্ত ইউনিট স্টকে রয়েছে।';
+                }
+
                 const emptyHtml = `
-                    <div class="col-span-full py-16 text-center flex flex-col items-center justify-center space-y-3">
+                    <div class="col-span-full py-16 text-center flex flex-col items-center justify-center space-y-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                         <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-xs">
                             <i data-lucide="check-check" class="w-7 h-7"></i>
                         </div>
-                        <h4 class="text-sm font-bold text-slate-800" data-i18n="noStockOutFound">কোনো স্টক আউট প্রোডাক্ট নেই!</h4>
-                        <p class="text-xs text-slate-500 max-w-sm">আপনার স্টোরের সকল পণ্য বর্তমানে স্টকে উপলব্ধ রয়েছে।</p>
+                        <h4 class="text-sm font-bold text-slate-800">${emptyMsg}</h4>
+                        <p class="text-xs text-slate-500 max-w-sm">${emptySub}</p>
                     </div>
                 `;
                 $grid.append(emptyHtml);
@@ -2195,89 +2245,195 @@
             }
 
             stockOutList.forEach(p => {
-                const stockCount = parseInt(p.stock) || 0;
-                const mainPrice = parseFloat(p.main_price) || 0;
+                const status = getProductStockOutStatus(p);
+                const isRecent = !!recentlyRestocked[p.uuid];
                 const retailerPrice = parseFloat(p.retailer_price) || 0;
-                const profit = parseFloat(p.profit) || (retailerPrice - mainPrice);
-                const profitMargin = retailerPrice > 0 ? ((profit / retailerPrice) * 100).toFixed(0) : 0;
                 const imgThumbUrl = (p.images && p.images[0]) ? p.images[0] : null;
 
-                const isRecent = !!recentlyRestocked[p.uuid];
-                const cardBorder = isRecent
-                    ? 'border-2 border-emerald-400 bg-emerald-50/20 shadow-xs'
-                    : 'border-2 border-rose-200/80 hover:border-rose-400 bg-white';
+                // Initialize draft state if not modified yet
+                if (!stockOutDrafts[p.uuid] || !stockOutDrafts[p.uuid].isModified) {
+                    stockOutDrafts[p.uuid] = {
+                        sizes: JSON.parse(JSON.stringify(status.parsedSizes)),
+                        colors: JSON.parse(JSON.stringify(status.parsedColors)),
+                        stock: status.stock,
+                        isModified: false
+                    };
+                }
+                const draft = stockOutDrafts[p.uuid];
 
-                const stockBadgeGrid = isRecent
-                    ? `<span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-xs bg-emerald-600 text-white flex items-center space-x-1"><i data-lucide="check-circle" class="w-3 h-3"></i><span>+${recentlyRestocked[p.uuid].added} টি যোগ সম্পন্ন (বর্তমান: ${stockCount})</span></span>`
-                    : `<span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-xs bg-rose-600 text-white flex items-center space-x-1"><i data-lucide="alert-octagon" class="w-3 h-3"></i><span>${currentLang === 'bn' ? 'স্টক শেষ (০)' : 'Stock Out (0)'}</span></span>`;
+                const hasSizes = draft.sizes && draft.sizes.length > 0;
+                const hasColors = draft.colors && draft.colors.length > 0;
 
-                const imgHtmlGrid = imgThumbUrl
-                    ? `<img src="${imgThumbUrl}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">`
-                    : `<div class="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50"><i data-lucide="package" class="w-8 h-8"></i></div>`;
+                // Detect if non-clothing variants
+                const apparelSizes = ['s', 'm', 'l', 'xl', 'xxl', '2xl', '3xl', 'free size', 'free-size', '28', '30', '32', '34', '36', '38', '40', '42', '44'];
+                const isVariant = hasSizes && draft.sizes.some(s => s.name && !apparelSizes.includes(s.name.trim().toLowerCase()));
+                const variantHeading = isVariant ? 'ভ্যারিয়েন্ট তালিকা ও স্টক সংখ্যা:' : 'সাইজ তালিকা ও স্টক সংখ্যা:';
 
-                $grid.append(`
-                    <div class="${cardBorder} rounded-2xl p-2.5 sm:p-3.5 shadow-2xs hover:shadow-md transition duration-200 flex flex-col justify-between group cursor-pointer relative" onclick="openProductDetailsModal('${p.uuid}')">
-                        <div>
-                            <!-- Image with Stock Out Badge (No Active Status Overload) -->
-                            <div class="aspect-square w-full bg-slate-100 rounded-xl overflow-hidden relative mb-2.5 border border-slate-100">
-                                ${imgHtmlGrid}
-                                
-                                <div class="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
-                                    ${stockBadgeGrid}
-                                </div>
+                // Status Badge
+                let statusBadge = '';
+                if (isRecent) {
+                    statusBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>+${toBnDigit(recentlyRestocked[p.uuid].added)}টি যোগ সম্পন্ন (স্টক: ${toBnDigit(draft.stock)})</span></span>`;
+                } else if (status.isFull) {
+                    statusBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs"><i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i><span>সম্পূর্ণ স্টক শেষ (০ টি)</span></span>`;
+                } else if (status.isPartial) {
+                    const zeroNames = status.zeroSizes.map(s => s.name).join(', ') || status.zeroColors.map(c => c.name).join(', ');
+                    statusBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i><span>সাইজ স্টক শেষ (${escapeHtml(zeroNames)})</span></span>`;
+                }
+
+                // Render Size Steppers Rows (Step 2 style)
+                let sizesHtml = '';
+                if (hasSizes) {
+                    sizesHtml = `
+                        <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <i data-lucide="${isVariant ? 'layers' : 'shirt'}" class="w-3.5 h-3.5 text-brand-600"></i>
+                                    <span>${variantHeading}</span>
+                                </span>
+                                <span class="text-[11px] text-slate-500 font-semibold">মোট স্টক: <b id="soTotalBadge_${p.uuid}" class="text-brand-600 font-black">${toBnDigit(draft.stock)} টি</b></span>
                             </div>
+                            <div class="space-y-1.5 max-h-48 overflow-y-auto pr-0.5" id="soSizeRows_${p.uuid}">
+                                ${draft.sizes.map((s, idx) => {
+                                    const isZero = (parseInt(s.stock) || 0) <= 0;
+                                    const rowBorder = isZero ? 'border-rose-200 bg-rose-50/50 hover:border-rose-300' : 'border-slate-200 bg-slate-50/70 hover:border-brand-200';
+                                    const tagBadge = isZero
+                                        ? `<span id="soTag_${p.uuid}_size_${idx}" class="text-[10px] font-bold text-rose-600 bg-rose-100/90 px-1.5 py-0.5 rounded border border-rose-200">স্টক ০ (শেষ)</span>`
+                                        : `<span id="soTag_${p.uuid}_size_${idx}" class="text-[10px] font-semibold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">${toBnDigit(s.stock)} টি</span>`;
 
-                            <!-- Category Badge -->
-                            <div class="mb-1">
-                                <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 truncate max-w-full">
-                                    <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
-                                    <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
+                                    return `
+                                        <div id="soRow_${p.uuid}_size_${idx}" class="flex items-center justify-between px-2.5 py-1.5 ${rowBorder} border rounded-xl text-xs transition">
+                                            <div class="flex items-center space-x-2 min-w-0 pr-1">
+                                                <span class="w-5 h-5 rounded bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-[10px] shrink-0">${toBnDigit(idx + 1)}</span>
+                                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-slate-800 text-xs truncate max-w-[120px]">${escapeHtml(s.name)}</span>
+                                                ${tagBadge}
+                                            </div>
+                                            <div class="flex items-center space-x-1 shrink-0">
+                                                <button type="button" onclick="changeStockOutItem('${p.uuid}', 'size', ${idx}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95" title="১ কমান">-</button>
+                                                <input type="number" min="0" value="${s.stock}" id="soInput_${p.uuid}_size_${idx}" oninput="onStockOutInput('${p.uuid}', 'size', ${idx}, this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveStockOutChanges('${p.uuid}'); }" class="w-12 text-center py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white shadow-2xs">
+                                                <button type="button" onclick="changeStockOutItem('${p.uuid}', 'size', ${idx}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 border border-emerald-600 text-white flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95" title="১ বাড়ান">+</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Render Color Steppers Rows (if product has colors)
+                let colorsHtml = '';
+                if (hasColors) {
+                    colorsHtml = `
+                        <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <i data-lucide="palette" class="w-3.5 h-3.5 text-blue-600"></i>
+                                    <span>রঙ তালিকা ও স্টক সংখ্যা:</span>
                                 </span>
                             </div>
+                            <div class="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
+                                ${draft.colors.map((c, idx) => {
+                                    const isZero = (parseInt(c.stock) || 0) <= 0;
+                                    const rowBorder = isZero ? 'border-rose-200 bg-rose-50/50' : 'border-slate-200 bg-slate-50/70';
+                                    const tagBadge = isZero
+                                        ? `<span id="soTag_${p.uuid}_color_${idx}" class="text-[10px] font-bold text-rose-600 bg-rose-100/90 px-1.5 py-0.5 rounded border border-rose-200">স্টক ০ (শেষ)</span>`
+                                        : `<span id="soTag_${p.uuid}_color_${idx}" class="text-[10px] font-semibold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">${toBnDigit(c.stock)} টি</span>`;
 
-                            <!-- Product Name -->
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-brand-600 transition truncate mb-1" title="${escapeHtml(p.name)}">
-                                ${escapeHtml(p.name)}
-                            </h4>
+                                    return `
+                                        <div id="soRow_${p.uuid}_color_${idx}" class="flex items-center justify-between px-2.5 py-1.5 ${rowBorder} border rounded-xl text-xs transition">
+                                            <div class="flex items-center space-x-2 min-w-0 pr-1">
+                                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-slate-800 text-xs truncate max-w-[120px]">${escapeHtml(c.name)}</span>
+                                                ${tagBadge}
+                                            </div>
+                                            <div class="flex items-center space-x-1 shrink-0">
+                                                <button type="button" onclick="changeStockOutItem('${p.uuid}', 'color', ${idx}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95">-</button>
+                                                <input type="number" min="0" value="${c.stock}" id="soInput_${p.uuid}_color_${idx}" oninput="onStockOutInput('${p.uuid}', 'color', ${idx}, this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveStockOutChanges('${p.uuid}'); }" class="w-12 text-center py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white shadow-2xs">
+                                                <button type="button" onclick="changeStockOutItem('${p.uuid}', 'color', ${idx}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 border border-emerald-600 text-white flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95">+</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
 
-                            <!-- Pricing Breakdown -->
-                            <div class="flex items-baseline justify-between mb-2">
+                // If Product has NO Sizes and NO Colors (Simple Product)
+                let simpleHtml = '';
+                if (!hasSizes && !hasColors) {
+                    simpleHtml = `
+                        <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
                                 <div>
-                                    <span class="text-[9px] text-slate-400 font-semibold uppercase block">বিক্রয়</span>
-                                    <span class="text-xs sm:text-sm font-black text-slate-900">৳${retailerPrice.toFixed(2)}</span>
+                                    <span class="text-xs font-bold text-slate-800 block">ইনভেন্টরি স্টক:</span>
+                                    <span class="text-[10px] text-slate-400">এই পণ্যের কোনো সাইজ বা ভ্যারিয়েন্ট নেই</span>
                                 </div>
-                                <div class="text-right">
-                                    <span class="text-[10px] text-emerald-700 font-bold block">+৳${profit.toFixed(0)}</span>
-                                    <span class="text-[9px] text-slate-400 font-medium">মার্জিন ${profitMargin}%</span>
+                                <div class="flex items-center space-x-1.5">
+                                    <button type="button" onclick="changeStockOutSimple('${p.uuid}', -1)" class="w-7 h-7 rounded-lg bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm cursor-pointer shadow-2xs active:scale-95">-</button>
+                                    <input type="number" min="0" value="${draft.stock}" id="soInput_${p.uuid}_simple" oninput="onStockOutSimpleInput('${p.uuid}', this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveStockOutChanges('${p.uuid}'); }" class="w-14 text-center py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white shadow-2xs">
+                                    <button type="button" onclick="changeStockOutSimple('${p.uuid}', 1)" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 border border-emerald-600 text-white flex items-center justify-center font-black text-sm cursor-pointer shadow-2xs active:scale-95">+</button>
                                 </div>
                             </div>
                         </div>
+                    `;
+                }
 
-                        <!-- Card Footer: Wide Quantity Input & Submit Button -->
-                        <div class="pt-2.5 border-t border-slate-100 space-y-2" onclick="event.stopPropagation()">
-                            <!-- Row 1: Comfortable Wide Restock Input -->
-                            <div class="flex items-center space-x-2">
-                                <label for="restockInput_${p.uuid}" class="text-[11px] font-bold text-slate-600 shrink-0">নতুন স্টক:</label>
-                                <div class="relative flex-1">
-                                    <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-emerald-600 text-xs font-bold">+</span>
-                                    <input type="number" id="restockInput_${p.uuid}" min="1" step="1" placeholder="যেমন: 10" value="10"
-                                        class="w-full h-8 pl-6 pr-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
-                                        onkeydown="if(event.key==='Enter'){ event.stopPropagation(); submitRestockStockOut('${p.uuid}'); }">
+                const imgHtml = imgThumbUrl
+                    ? `<img src="${imgThumbUrl}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover">`
+                    : `<div class="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100"><i data-lucide="package" class="w-6 h-6"></i></div>`;
+
+                $grid.append(`
+                    <div class="bg-white border ${status.isFull ? 'border-rose-200' : 'border-amber-200'} rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-sm transition flex flex-col justify-between space-y-3.5 relative" id="soCard_${p.uuid}">
+                        <!-- Top Metadata Row -->
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center space-x-3 min-w-0">
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                                    ${imgHtml}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center space-x-1.5 mb-0.5">
+                                        <span class="inline-flex items-center space-x-1 px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded text-[10px] font-semibold truncate max-w-[140px]">
+                                            <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
+                                            <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
+                                        </span>
+                                    </div>
+                                    <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate mb-1" title="${escapeHtml(p.name)}">
+                                        ${escapeHtml(p.name)}
+                                    </h4>
+                                    <div class="text-[11px] text-slate-500 font-medium">
+                                        বিক্রয় মূল্য: <b class="text-slate-900">৳${retailerPrice.toFixed(2)}</b>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="shrink-0">
+                                ${statusBadge}
+                            </div>
+                        </div>
 
-                            <!-- Row 2: Full-width Submit Action & Detail Trigger -->
+                        <!-- Mid Restock Controls -->
+                        ${sizesHtml}
+                        ${colorsHtml}
+                        ${simpleHtml}
+
+                        <!-- Card Action Footer -->
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                             <div class="flex items-center space-x-1.5">
-                                <button type="button" onclick="submitRestockStockOut('${p.uuid}')" id="btnRestock_${p.uuid}"
-                                    class="flex-1 h-8 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
-                                    title="স্টক যোগ করুন">
-                                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-                                    <span>স্টক যোগ করুন</span>
+                                <button type="button" onclick="openProductDetailsModal('${p.uuid}')" class="px-2.5 py-1.5 text-xs text-slate-600 hover:text-brand-600 hover:bg-brand-50 border border-slate-200 rounded-xl transition flex items-center space-x-1 cursor-pointer font-bold" title="পণ্যের বিস্তারিত দেখুন">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                    <span class="hidden sm:inline">বিস্তারিত</span>
                                 </button>
-                                <button type="button" onclick="openProductDetailsModal('${p.uuid}')" class="h-8 w-8 text-slate-400 hover:text-brand-600 hover:bg-brand-50 border border-slate-200 rounded-lg transition flex items-center justify-center cursor-pointer shrink-0" title="বিস্তারিত">
-                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                <button type="button" onclick="quickStockOutBatchAdd('${p.uuid}', 5)" class="px-2.5 py-1.5 text-xs text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition cursor-pointer font-bold flex items-center space-x-1" title="সব স্টক ০ থাকা আইটেমে ৫ টি যোগ করুন">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                    <span>+৫ রিস্টক</span>
                                 </button>
                             </div>
+
+                            <button type="button" onclick="saveStockOutChanges('${p.uuid}')" id="soSaveBtn_${p.uuid}"
+                                class="px-3.5 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                <span>স্টক সেভ করুন</span>
+                            </button>
                         </div>
                     </div>
                 `);
@@ -2286,45 +2442,213 @@
             lucide.createIcons();
         }
 
-        // Dedicated Quantity Restock Handler for Stock Out Products
-        async function submitRestockStockOut(uuid) {
-            const $btn = $(`#btnRestock_${uuid}`);
-            const $input = $(`#restockInput_${uuid}`);
-            const qtyVal = $input.val() ? $input.val().trim() : '';
-            const qty = parseInt(qtyVal);
+        // Stepper: Change Size or Color Stock by Delta (-1 or +1)
+        function changeStockOutItem(uuid, type, idx, delta) {
+            const draft = stockOutDrafts[uuid];
+            if (!draft) return;
 
-            if (qtyVal === '' || isNaN(qty) || qty <= 0) {
-                $input.focus().addClass('border-rose-500 ring-2 ring-rose-100');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'পরিমাণ দিন',
-                    text: 'অনুগ্রহ করে কতটি স্টক যোগ করতে চান তার সঠিক সংখ্যা দিন (কমপক্ষে ১)।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
+            const list = type === 'size' ? draft.sizes : draft.colors;
+            if (!list || !list[idx]) return;
+
+            const current = parseInt(list[idx].stock) || 0;
+            const updated = Math.max(0, current + delta);
+            list[idx].stock = updated;
+            draft.isModified = true;
+
+            // Update input
+            $(`#soInput_${uuid}_${type}_${idx}`).val(updated);
+
+            // Update Tag & Row styling
+            const $tag = $(`#soTag_${uuid}_${type}_${idx}`);
+            const $row = $(`#soRow_${uuid}_${type}_${idx}`);
+
+            if (updated === 0) {
+                $tag.removeClass('bg-white text-slate-600 border-slate-200 bg-emerald-50 text-emerald-700 border-emerald-200')
+                    .addClass('bg-rose-100/90 text-rose-600 border-rose-200 font-bold')
+                    .text('স্টক ০ (শেষ)');
+                $row.removeClass('border-slate-200 bg-slate-50/70 border-emerald-200 bg-emerald-50/20')
+                    .addClass('border-rose-200 bg-rose-50/50');
+            } else {
+                $tag.removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                    .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                    .text(toBnDigit(updated) + ' টি');
+                $row.removeClass('border-rose-200 bg-rose-50/50')
+                    .addClass('border-slate-200 bg-slate-50/70');
             }
 
-            $input.removeClass('border-rose-500 ring-2 ring-rose-100');
-            $btn.prop('disabled', true).addClass('opacity-60 cursor-not-allowed');
+            // Recalculate total if sizes
+            if (type === 'size' && draft.sizes.length > 0) {
+                draft.stock = draft.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0);
+                $(`#soTotalBadge_${uuid}`).text(toBnDigit(draft.stock) + ' টি');
+            } else if (type === 'color' && (!draft.sizes || draft.sizes.length === 0)) {
+                draft.stock = draft.colors.reduce((sum, c) => sum + (parseInt(c.stock) || 0), 0);
+            }
+
+            // Highlight save button
+            $(`#soSaveBtn_${uuid}`).addClass('ring-2 ring-emerald-400');
+        }
+
+        // Direct Input: Size or Color Stock
+        function onStockOutInput(uuid, type, idx, val) {
+            const draft = stockOutDrafts[uuid];
+            if (!draft) return;
+
+            const list = type === 'size' ? draft.sizes : draft.colors;
+            if (!list || !list[idx]) return;
+
+            const updated = Math.max(0, parseInt(val) || 0);
+            list[idx].stock = updated;
+            draft.isModified = true;
+
+            const $tag = $(`#soTag_${uuid}_${type}_${idx}`);
+            const $row = $(`#soRow_${uuid}_${type}_${idx}`);
+
+            if (updated === 0) {
+                $tag.removeClass('bg-white text-slate-600 border-slate-200 bg-emerald-50 text-emerald-700 border-emerald-200')
+                    .addClass('bg-rose-100/90 text-rose-600 border-rose-200 font-bold')
+                    .text('স্টক ০ (শেষ)');
+                $row.removeClass('border-slate-200 bg-slate-50/70 border-emerald-200 bg-emerald-50/20')
+                    .addClass('border-rose-200 bg-rose-50/50');
+            } else {
+                $tag.removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                    .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                    .text(toBnDigit(updated) + ' টি');
+                $row.removeClass('border-rose-200 bg-rose-50/50')
+                    .addClass('border-slate-200 bg-slate-50/70');
+            }
+
+            if (type === 'size' && draft.sizes.length > 0) {
+                draft.stock = draft.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0);
+                $(`#soTotalBadge_${uuid}`).text(toBnDigit(draft.stock) + ' টি');
+            } else if (type === 'color' && (!draft.sizes || draft.sizes.length === 0)) {
+                draft.stock = draft.colors.reduce((sum, c) => sum + (parseInt(c.stock) || 0), 0);
+            }
+
+            $(`#soSaveBtn_${uuid}`).addClass('ring-2 ring-emerald-400');
+        }
+
+        // Stepper & Input for Simple Products (No sizes, no colors)
+        function changeStockOutSimple(uuid, delta) {
+            const draft = stockOutDrafts[uuid];
+            if (!draft) return;
+            const updated = Math.max(0, (parseInt(draft.stock) || 0) + delta);
+            draft.stock = updated;
+            draft.isModified = true;
+            $(`#soInput_${uuid}_simple`).val(updated);
+            $(`#soSaveBtn_${uuid}`).addClass('ring-2 ring-emerald-400');
+        }
+
+        function onStockOutSimpleInput(uuid, val) {
+            const draft = stockOutDrafts[uuid];
+            if (!draft) return;
+            draft.stock = Math.max(0, parseInt(val) || 0);
+            draft.isModified = true;
+            $(`#soSaveBtn_${uuid}`).addClass('ring-2 ring-emerald-400');
+        }
+
+        // Quick Batch Add (+5 to any 0-stock size/color)
+        function quickStockOutBatchAdd(uuid, amount = 5) {
+            const draft = stockOutDrafts[uuid];
+            if (!draft) return;
+
+            let changed = false;
+            if (draft.sizes && draft.sizes.length > 0) {
+                draft.sizes.forEach((s, idx) => {
+                    if ((parseInt(s.stock) || 0) <= 0) {
+                        s.stock = amount;
+                        changed = true;
+                        $(`#soInput_${uuid}_size_${idx}`).val(amount);
+                        $(`#soTag_${uuid}_size_${idx}`).removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                            .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                            .text(toBnDigit(amount) + ' টি');
+                        $(`#soRow_${uuid}_size_${idx}`).removeClass('border-rose-200 bg-rose-50/50')
+                            .addClass('border-slate-200 bg-slate-50/70');
+                    }
+                });
+                if (changed) {
+                    draft.stock = draft.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0);
+                    $(`#soTotalBadge_${uuid}`).text(toBnDigit(draft.stock) + ' টি');
+                }
+            } else if (draft.colors && draft.colors.length > 0) {
+                draft.colors.forEach((c, idx) => {
+                    if ((parseInt(c.stock) || 0) <= 0) {
+                        c.stock = amount;
+                        changed = true;
+                        $(`#soInput_${uuid}_color_${idx}`).val(amount);
+                        $(`#soTag_${uuid}_color_${idx}`).removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                            .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                            .text(toBnDigit(amount) + ' টি');
+                        $(`#soRow_${uuid}_color_${idx}`).removeClass('border-rose-200 bg-rose-50/50')
+                            .addClass('border-slate-200 bg-slate-50/70');
+                    }
+                });
+                if (changed) {
+                    draft.stock = draft.colors.reduce((sum, c) => sum + (parseInt(c.stock) || 0), 0);
+                }
+            } else {
+                draft.stock = (parseInt(draft.stock) || 0) + amount;
+                changed = true;
+                $(`#soInput_${uuid}_simple`).val(draft.stock);
+            }
+
+            if (changed) {
+                draft.isModified = true;
+                $(`#soSaveBtn_${uuid}`).addClass('ring-2 ring-emerald-400');
+                showToast(`+${toBnDigit(amount)}টি স্টক যুক্ত হয়েছে। সংরক্ষণ করতে 'স্টক সেভ করুন' বাটনে চাপুন।`, 'info');
+            }
+        }
+
+        // Dedicated Quantity Restock Handler for Stock Out Products
+        async function saveStockOutChanges(uuid) {
+            const draft = stockOutDrafts[uuid];
+            if (!draft) return;
+
+            const $btn = $(`#soSaveBtn_${uuid}`);
+            if ($btn.prop('disabled')) return;
+            const originalBtnHtml = $btn.html();
+            $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed').html(`
+                <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
+                <span>সেভ হচ্ছে...</span>
+            `);
+            lucide.createIcons();
 
             try {
-                const res = await StoreApi.post(`products/${uuid}/adjust-stock`, { change: qty });
+                const payload = {
+                    stock: draft.stock
+                };
+                if (draft.sizes && draft.sizes.length > 0) {
+                    payload.sizes = draft.sizes;
+                }
+                if (draft.colors && draft.colors.length > 0) {
+                    payload.colors = draft.colors;
+                }
+
+                const res = await StoreApi.post(`products/${uuid}/stock`, payload);
                 if (res.success && res.data) {
                     const prod = productsData.find(p => p.uuid === uuid);
                     if (prod) {
+                        const prevStock = prod.stock;
                         prod.stock = res.data.stock;
+                        if (res.data.sizes) prod.sizes = res.data.sizes;
+                        if (res.data.colors) prod.colors = res.data.colors;
+
+                        const addedQty = Math.max(0, prod.stock - prevStock);
                         recentlyRestocked[uuid] = {
-                            added: (recentlyRestocked[uuid] ? recentlyRestocked[uuid].added : 0) + qty,
+                            added: addedQty,
                             total: prod.stock
                         };
+
+                        draft.isModified = false;
+
                         updateProductStats(productsData);
                         renderProducts(productsData);
                         renderStockOutProducts(productsData);
+                        renderStockManagementProducts(productsData);
 
                         Swal.fire({
                             icon: 'success',
-                            title: 'স্টক সফলভাবে যোগ হয়েছে!',
-                            text: `"${prod.name}"-এ ${qty}টি স্টক যোগ করা হয়েছে। (বর্তমান স্টক: ${prod.stock}টি)`,
+                            title: 'স্টক সফলভাবে সংরক্ষিত হয়েছে!',
+                            text: `"${prod.name}"-এর নতুন স্টক: ${toBnDigit(prod.stock)} টি`,
                             timer: 1600,
                             showConfirmButton: false
                         });
@@ -2332,13 +2656,16 @@
                 } else {
                     Swal.fire({
                         icon: 'error',
+                        title: 'ব্যর্থ হয়েছে',
                         text: res.message || 'স্টক আপডেট ব্যর্থ হয়েছে।'
                     });
+                    $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
+                    lucide.createIcons();
                 }
             } catch (err) {
-                Swal.fire({ icon: 'error', text: err.message });
-            } finally {
-                $btn.prop('disabled', false).removeClass('opacity-60 cursor-not-allowed');
+                Swal.fire({ icon: 'error', text: err.message || 'নেটওয়ার্ক ত্রুটি' });
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
+                lucide.createIcons();
             }
         }
 
@@ -2357,6 +2684,7 @@
                         updateProductStats(productsData);
                         renderProducts(productsData);
                         renderStockOutProducts(productsData);
+                        renderStockManagementProducts(productsData);
 
                         if (currentDetailProduct && currentDetailProduct.uuid === uuid) {
                             $('#detailStockCount').text(prod.stock);
@@ -2369,6 +2697,642 @@
                 console.error('Failed to adjust stock:', err);
             }
         }
+
+        // ========================================================
+        // 5.3 COMPREHENSIVE STOCK MANAGEMENT SYSTEM (ALL PRODUCTS)
+        // ========================================================
+        let currentStockManagementFilter = 'all'; // 'all' | 'inStock' | 'outStock' | 'hasVariants'
+        let stockManagementDrafts = {}; // { [uuid]: { sizes: [...], colors: [...], stock: number, isModified: boolean } }
+        let stockManagementOpenCards = {}; // { [uuid]: boolean }
+        let stockManagementCurrentPage = 1;
+        let stockManagementPerPage = 6; // default 6 items per page for balanced grid
+
+        function setStockManagementFilter(mode) {
+            currentStockManagementFilter = mode;
+            stockManagementCurrentPage = 1;
+            ['all', 'inStock', 'outStock', 'hasVariants'].forEach(m => {
+                const $btn = $(`#smFilterBtn_${m}`);
+                const capM = m.charAt(0).toUpperCase() + m.slice(1);
+                const $cnt = $(`#smFilterCount${capM}`);
+                if (m === mode) {
+                    $btn.removeClass('bg-white hover:bg-slate-100 text-slate-700 border border-slate-200')
+                        .addClass('bg-brand-600 text-white shadow-2xs border-transparent');
+                    $cnt.removeClass('bg-emerald-50 text-emerald-700 bg-rose-50 text-rose-700 bg-indigo-50 text-indigo-700 bg-slate-100 text-slate-700 border border-emerald-200 border-rose-200 border-indigo-200 border-slate-200')
+                        .addClass('bg-white/25 text-white font-black');
+                } else {
+                    $btn.removeClass('bg-brand-600 text-white shadow-2xs border-transparent')
+                        .addClass('bg-white hover:bg-slate-100 text-slate-700 border border-slate-200');
+                    $cnt.removeClass('bg-white/25 text-white');
+                    if (m === 'all') {
+                        $cnt.addClass('bg-slate-100 text-slate-700 border border-slate-200 font-bold');
+                    } else if (m === 'inStock') {
+                        $cnt.addClass('bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold');
+                    } else if (m === 'outStock') {
+                        $cnt.addClass('bg-rose-50 text-rose-700 border border-rose-200 font-bold');
+                    } else if (m === 'hasVariants') {
+                        $cnt.addClass('bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold');
+                    }
+                }
+            });
+            renderStockManagementProducts(productsData);
+        }
+
+        function toggleStockManagementCard(uuid) {
+            const $content = $(`#smCollapsible_${uuid}`);
+            const $chevron = $(`#smChevron_${uuid}`);
+            const $label = $(`#smToggleLabel_${uuid}`);
+            const $btn = $(`#smToggleBtn_${uuid}`);
+
+            const isCurrentlyHidden = $content.hasClass('hidden');
+            if (isCurrentlyHidden) {
+                $content.removeClass('hidden');
+                $chevron.addClass('rotate-180 text-indigo-600');
+                $label.text('সংকুচিত করুন');
+                $btn.addClass('bg-indigo-50/70 border-indigo-200 text-indigo-900').removeClass('bg-slate-50 border-slate-200 text-slate-700');
+                stockManagementOpenCards[uuid] = true;
+            } else {
+                $content.addClass('hidden');
+                $chevron.removeClass('rotate-180 text-indigo-600');
+                $label.text('স্টক পরিবর্তন');
+                $btn.removeClass('bg-indigo-50/70 border-indigo-200 text-indigo-900').addClass('bg-slate-50 border-slate-200 text-slate-700');
+                stockManagementOpenCards[uuid] = false;
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function changeStockManagementPerPage(val) {
+            stockManagementPerPage = (val === 'all') ? 'all' : (parseInt(val) || 6);
+            stockManagementCurrentPage = 1;
+            renderStockManagementProducts(productsData);
+        }
+
+        function changeStockManagementPage(page) {
+            stockManagementCurrentPage = page;
+            renderStockManagementProducts(productsData);
+            const container = document.getElementById('tabContentStockManagement');
+            if (container) {
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function renderStockManagementPaginationButtons(totalPages) {
+            const $btnContainer = $('#smPaginationButtons');
+            $btnContainer.empty();
+
+            if (totalPages <= 1) return;
+
+            // Previous Button
+            const prevDisabled = stockManagementCurrentPage <= 1;
+            $btnContainer.append(`
+                <button type="button" onclick="changeStockManagementPage(${stockManagementCurrentPage - 1})" ${prevDisabled ? 'disabled' : ''}
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">
+                    ‹ পূর্ববর্তী
+                </button>
+            `);
+
+            // Smart Page Numbers Window
+            let startPage = Math.max(1, stockManagementCurrentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+
+            if (startPage > 1) {
+                $btnContainer.append(`
+                    <button type="button" onclick="changeStockManagementPage(1)"
+                        class="w-7 h-7 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ${toBnDigit(1)}
+                    </button>
+                `);
+                if (startPage > 2) {
+                    $btnContainer.append(`<span class="px-1 text-xs text-slate-400">...</span>`);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = (i === stockManagementCurrentPage);
+                $btnContainer.append(`
+                    <button type="button" onclick="changeStockManagementPage(${i})"
+                        class="w-7 h-7 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center ${isActive ? 'bg-indigo-600 text-white shadow-2xs' : 'border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs'}">
+                        ${toBnDigit(i)}
+                    </button>
+                `);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    $btnContainer.append(`<span class="px-1 text-xs text-slate-400">...</span>`);
+                }
+                $btnContainer.append(`
+                    <button type="button" onclick="changeStockManagementPage(${totalPages})"
+                        class="w-7 h-7 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ${toBnDigit(totalPages)}
+                    </button>
+                `);
+            }
+
+            // Next Button
+            const nextDisabled = stockManagementCurrentPage >= totalPages;
+            $btnContainer.append(`
+                <button type="button" onclick="changeStockManagementPage(${stockManagementCurrentPage + 1})" ${nextDisabled ? 'disabled' : ''}
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">
+                    পরবর্তী ›
+                </button>
+            `);
+        }
+
+        function renderStockManagementProducts(list) {
+            const $grid = $('#stockManagementGridContainer');
+            const $pagination = $('#stockManagementPagination');
+            if (!$grid.length) return;
+            $grid.empty();
+
+            const search = $('#stockManagementSearchInput').val() ? $('#stockManagementSearchInput').val().trim().toLowerCase() : '';
+
+            const filteredList = list.filter(p => {
+                const status = getProductStockOutStatus(p);
+                const stock = parseInt(p.stock) || 0;
+
+                let matchesFilter = false;
+                if (currentStockManagementFilter === 'all') {
+                    matchesFilter = true;
+                } else if (currentStockManagementFilter === 'inStock') {
+                    matchesFilter = stock > 0;
+                } else if (currentStockManagementFilter === 'outStock') {
+                    matchesFilter = stock <= 0;
+                } else if (currentStockManagementFilter === 'hasVariants') {
+                    matchesFilter = status.parsedSizes.length > 0 || status.parsedColors.length > 0;
+                }
+
+                if (!matchesFilter) return false;
+
+                if (!search) return true;
+
+                const nameMatch = (p.name || '').toLowerCase().includes(search);
+                const catMatch = (p.category_name || '').toLowerCase().includes(search);
+                const sizeMatch = status.parsedSizes.some(s => s.name.toLowerCase().includes(search));
+                const colorMatch = status.parsedColors.some(c => c.name.toLowerCase().includes(search));
+
+                return nameMatch || catMatch || sizeMatch || colorMatch;
+            });
+
+            if (filteredList.length === 0) {
+                let emptyMsg = 'কোনো পণ্য পাওয়া যায়নি!';
+                let emptySub = 'আপনার অনুসন্ধানের সাথে মিলে এমন কোনো পণ্য পাওয়া যায়নি।';
+                if (currentStockManagementFilter === 'outStock') {
+                    emptyMsg = 'স্টক শেষ এমন কোনো পণ্য নেই!';
+                    emptySub = 'স্টোরের সকল পণ্যের পর্যাপ্ত স্টক অবশিষ্ট রয়েছে।';
+                }
+
+                $grid.append(`
+                    <div class="col-span-full py-16 text-center flex flex-col items-center justify-center space-y-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                        <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-xs">
+                            <i data-lucide="package-search" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">${emptyMsg}</h4>
+                        <p class="text-xs text-slate-500 max-w-sm">${emptySub}</p>
+                    </div>
+                `);
+                if ($pagination.length) $pagination.addClass('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            // Pagination calculation
+            const totalItems = filteredList.length;
+            const perPage = (stockManagementPerPage === 'all') ? totalItems : (parseInt(stockManagementPerPage) || 6);
+            const totalPages = perPage > 0 ? Math.ceil(totalItems / perPage) : 1;
+
+            if (stockManagementCurrentPage > totalPages) {
+                stockManagementCurrentPage = Math.max(1, totalPages);
+            }
+
+            const startIndex = (stockManagementCurrentPage - 1) * perPage;
+            const endIndex = Math.min(startIndex + perPage, totalItems);
+            const paginatedSlice = (stockManagementPerPage === 'all') ? filteredList : filteredList.slice(startIndex, endIndex);
+
+            // Update Pagination UI
+            if ($pagination.length) {
+                $pagination.removeClass('hidden');
+                $('#smPaginationSummary').text(`${toBnDigit(startIndex + 1)} থেকে ${toBnDigit(endIndex)} (মোট ${toBnDigit(totalItems)}টি পণ্য)`);
+                renderStockManagementPaginationButtons(totalPages);
+            }
+
+            paginatedSlice.forEach(p => {
+                const status = getProductStockOutStatus(p);
+                const retailerPrice = parseFloat(p.retailer_price) || 0;
+                const imgThumbUrl = (p.images && p.images[0]) ? p.images[0] : null;
+
+                if (!stockManagementDrafts[p.uuid] || !stockManagementDrafts[p.uuid].isModified) {
+                    stockManagementDrafts[p.uuid] = {
+                        sizes: JSON.parse(JSON.stringify(status.parsedSizes)),
+                        colors: JSON.parse(JSON.stringify(status.parsedColors)),
+                        stock: status.stock,
+                        isModified: false
+                    };
+                }
+                const draft = stockManagementDrafts[p.uuid];
+
+                const hasSizes = draft.sizes && draft.sizes.length > 0;
+                const hasColors = draft.colors && draft.colors.length > 0;
+
+                const apparelSizes = ['s', 'm', 'l', 'xl', 'xxl', '2xl', '3xl', 'free size', 'free-size', '28', '30', '32', '34', '36', '38', '40', '42', '44'];
+                const isVariant = hasSizes && draft.sizes.some(s => s.name && !apparelSizes.includes(s.name.trim().toLowerCase()));
+                const variantHeading = isVariant ? 'ভ্যারিয়েন্ট তালিকা ও স্টক সংখ্যা:' : 'সাইজ তালিকা ও স্টক সংখ্যা:';
+
+                // Status Badge
+                let statusBadge = '';
+                if (draft.stock <= 0) {
+                    statusBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs shrink-0"><i data-lucide="alert-octagon" class="w-3.5 h-3.5"></i><span>স্টক শেষ (০)</span></span>`;
+                } else if (status.isPartial) {
+                    const zeroNames = status.zeroSizes.map(s => s.name).join(', ') || status.zeroColors.map(c => c.name).join(', ');
+                    statusBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs shrink-0"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i><span>সাইজ সতর্কতা (${escapeHtml(zeroNames)})</span></span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs shrink-0"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i><span>স্টকে আছে (${toBnDigit(draft.stock)} টি)</span></span>`;
+                }
+
+                // Sizes / Variants rows
+                let sizesHtml = '';
+                if (hasSizes) {
+                    sizesHtml = `
+                        <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <i data-lucide="${isVariant ? 'layers' : 'shirt'}" class="w-3.5 h-3.5 text-indigo-600"></i>
+                                    <span>${variantHeading}</span>
+                                </span>
+                                <span class="text-[11px] text-slate-500 font-semibold">মোট স্টক: <b id="smTotalBadge_${p.uuid}" class="text-indigo-600 font-black">${toBnDigit(draft.stock)} টি</b></span>
+                            </div>
+                            <div class="space-y-1.5 max-h-48 overflow-y-auto pr-0.5" id="smSizeRows_${p.uuid}">
+                                ${draft.sizes.map((s, idx) => {
+                                    const isZero = (parseInt(s.stock) || 0) <= 0;
+                                    const rowBorder = isZero ? 'border-rose-200 bg-rose-50/50 hover:border-rose-300' : 'border-slate-200 bg-slate-50/70 hover:border-indigo-200';
+                                    const tagBadge = isZero
+                                        ? `<span id="smTag_${p.uuid}_size_${idx}" class="text-[10px] font-bold text-rose-600 bg-rose-100/90 px-1.5 py-0.5 rounded border border-rose-200">স্টক ০ (শেষ)</span>`
+                                        : `<span id="smTag_${p.uuid}_size_${idx}" class="text-[10px] font-semibold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">${toBnDigit(s.stock)} টি</span>`;
+
+                                    return `
+                                        <div id="smRow_${p.uuid}_size_${idx}" class="flex items-center justify-between px-2.5 py-1.5 ${rowBorder} border rounded-xl text-xs transition">
+                                            <div class="flex items-center space-x-2 min-w-0 pr-1">
+                                                <span class="w-5 h-5 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-[10px] shrink-0">${toBnDigit(idx + 1)}</span>
+                                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-slate-800 text-xs truncate max-w-[120px]">${escapeHtml(s.name)}</span>
+                                                ${tagBadge}
+                                            </div>
+                                            <div class="flex items-center space-x-1 shrink-0">
+                                                <button type="button" onclick="changeStockManagementItem('${p.uuid}', 'size', ${idx}, -1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95" title="১ কমান">-</button>
+                                                <input type="number" min="0" value="${s.stock}" id="smInput_${p.uuid}_size_${idx}" oninput="onStockManagementInput('${p.uuid}', 'size', ${idx}, this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveStockManagementChanges('${p.uuid}'); }" class="w-12 h-8 sm:h-7 text-center py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white shadow-2xs">
+                                                <button type="button" onclick="changeStockManagementItem('${p.uuid}', 'size', ${idx}, 1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 border border-indigo-600 text-white flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95" title="১ বাড়ান">+</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Colors rows
+                let colorsHtml = '';
+                if (hasColors) {
+                    colorsHtml = `
+                        <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-bold text-slate-700 flex items-center space-x-1.5">
+                                    <i data-lucide="palette" class="w-3.5 h-3.5 text-blue-600"></i>
+                                    <span>রঙ তালিকা ও স্টক সংখ্যা:</span>
+                                </span>
+                            </div>
+                            <div class="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
+                                ${draft.colors.map((c, idx) => {
+                                    const isZero = (parseInt(c.stock) || 0) <= 0;
+                                    const rowBorder = isZero ? 'border-rose-200 bg-rose-50/50' : 'border-slate-200 bg-slate-50/70';
+                                    const tagBadge = isZero
+                                        ? `<span id="smTag_${p.uuid}_color_${idx}" class="text-[10px] font-bold text-rose-600 bg-rose-100/90 px-1.5 py-0.5 rounded border border-rose-200">স্টক ০ (শেষ)</span>`
+                                        : `<span id="smTag_${p.uuid}_color_${idx}" class="text-[10px] font-semibold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200">${toBnDigit(c.stock)} টি</span>`;
+
+                                    return `
+                                        <div id="smRow_${p.uuid}_color_${idx}" class="flex items-center justify-between px-2.5 py-1.5 ${rowBorder} border rounded-xl text-xs transition">
+                                            <div class="flex items-center space-x-2 min-w-0 pr-1">
+                                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                                                <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-slate-800 text-xs truncate max-w-[120px]">${escapeHtml(c.name)}</span>
+                                                ${tagBadge}
+                                            </div>
+                                            <div class="flex items-center space-x-1 shrink-0">
+                                                <button type="button" onclick="changeStockManagementItem('${p.uuid}', 'color', ${idx}, -1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95">-</button>
+                                                <input type="number" min="0" value="${c.stock}" id="smInput_${p.uuid}_color_${idx}" oninput="onStockManagementInput('${p.uuid}', 'color', ${idx}, this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveStockManagementChanges('${p.uuid}'); }" class="w-12 h-8 sm:h-7 text-center py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white shadow-2xs">
+                                                <button type="button" onclick="changeStockManagementItem('${p.uuid}', 'color', ${idx}, 1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 border border-indigo-600 text-white flex items-center justify-center font-black text-sm cursor-pointer select-none shadow-2xs active:scale-95">+</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Simple product
+                let simpleHtml = '';
+                if (!hasSizes && !hasColors) {
+                    simpleHtml = `
+                        <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                                <div>
+                                    <span class="text-xs font-bold text-slate-800 block">ইনভেন্টরি স্টক:</span>
+                                    <span class="text-[10px] text-slate-400">এই পণ্যের কোনো সাইজ বা ভ্যারিয়েন্ট নেই</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <button type="button" onclick="changeStockManagementSimple('${p.uuid}', -1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm cursor-pointer shadow-2xs active:scale-95">-</button>
+                                    <input type="number" min="0" value="${draft.stock}" id="smInput_${p.uuid}_simple" oninput="onStockManagementSimpleInput('${p.uuid}', this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveStockManagementChanges('${p.uuid}'); }" class="w-14 h-8 sm:h-7 text-center py-1 border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white shadow-2xs">
+                                    <button type="button" onclick="changeStockManagementSimple('${p.uuid}', 1)" class="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 border border-indigo-600 text-white flex items-center justify-center font-black text-sm cursor-pointer shadow-2xs active:scale-95">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const imgHtml = imgThumbUrl
+                    ? `<img src="${imgThumbUrl}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover">`
+                    : `<div class="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100"><i data-lucide="package" class="w-6 h-6"></i></div>`;
+
+                // Collapsible State (Alerted products start open, others collapsed)
+                const isOpen = (stockManagementOpenCards[p.uuid] !== undefined) ? !!stockManagementOpenCards[p.uuid] : status.isAny;
+                const variantCount = hasSizes ? draft.sizes.length : (hasColors ? draft.colors.length : 1);
+                const variantTypeLabel = hasSizes ? (isVariant ? 'ভ্যারিয়েন্ট' : 'সাইজ') : (hasColors ? 'রঙ' : 'আইটেম');
+                const toggleBadgeTitle = `${toBnDigit(variantCount)}টি ${variantTypeLabel}`;
+
+                $grid.append(`
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-2xs hover:shadow-sm transition flex flex-col justify-between space-y-3 relative" id="smCard_${p.uuid}">
+                        <!-- Top Metadata Row -->
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center space-x-3 min-w-0">
+                                <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                                    ${imgHtml}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center space-x-1.5 mb-0.5">
+                                        <span class="inline-flex items-center space-x-1 px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded text-[10px] font-semibold truncate max-w-[140px]">
+                                            <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
+                                            <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
+                                        </span>
+                                    </div>
+                                    <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate mb-1" title="${escapeHtml(p.name)}">
+                                        ${escapeHtml(p.name)}
+                                    </h4>
+                                    <div class="text-[11px] text-slate-500 font-medium">
+                                        বিক্রয় মূল্য: <b class="text-slate-900">৳${retailerPrice.toFixed(2)}</b>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                ${statusBadge}
+                            </div>
+                        </div>
+
+                        <!-- Collapsible Toggle Trigger Button -->
+                        <button type="button" onclick="toggleStockManagementCard('${p.uuid}')" id="smToggleBtn_${p.uuid}"
+                            class="w-full flex items-center justify-between px-3 py-2 sm:px-3.5 sm:py-2.5 ${isOpen ? 'bg-indigo-50/70 border-indigo-200 text-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-700'} hover:bg-indigo-50/50 border rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs group">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-6 h-6 rounded-lg ${isOpen ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200/70 text-slate-600'} flex items-center justify-center transition">
+                                    <i data-lucide="${hasSizes ? (isVariant ? 'layers' : 'shirt') : (hasColors ? 'palette' : 'boxes')}" class="w-3.5 h-3.5"></i>
+                                </span>
+                                <span class="font-extrabold text-xs text-slate-800">${hasSizes || hasColors ? 'ভ্যারিয়েন্ট ও স্টক সমন্বয়' : 'স্টক সমন্বয়'} (${toggleBadgeTitle})</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5 text-slate-400 group-hover:text-slate-600">
+                                <span class="text-[11px] font-semibold text-slate-500 hidden sm:inline" id="smToggleLabel_${p.uuid}">${isOpen ? 'সংকুচিত করুন' : 'স্টক পরিবর্তন'}</span>
+                                <i data-lucide="chevron-down" id="smChevron_${p.uuid}" class="w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-indigo-600' : ''}"></i>
+                            </div>
+                        </button>
+
+                        <!-- Collapsible Body (Hidden by default unless alerted or toggled) -->
+                        <div id="smCollapsible_${p.uuid}" class="${isOpen ? '' : 'hidden'} space-y-3 pt-1 border-t border-slate-100 transition-all">
+                            ${sizesHtml}
+                            ${colorsHtml}
+                            ${simpleHtml}
+
+                            <!-- Action Footer inside Collapsible -->
+                            <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <button type="button" onclick="openProductDetailsModal('${p.uuid}')" class="px-3 py-2 text-xs text-slate-600 hover:text-brand-600 hover:bg-brand-50 border border-slate-200 rounded-xl transition flex items-center space-x-1.5 cursor-pointer font-bold shadow-2xs" title="পণ্যের বিস্তারিত দেখুন">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                    <span>বিস্তারিত</span>
+                                </button>
+
+                                <button type="button" onclick="saveStockManagementChanges('${p.uuid}')" id="smSaveBtn_${p.uuid}"
+                                    class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                    <span>স্টক সেভ করুন</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            lucide.createIcons();
+        }
+
+        function changeStockManagementItem(uuid, type, idx, delta) {
+            const draft = stockManagementDrafts[uuid];
+            if (!draft) return;
+
+            const list = type === 'size' ? draft.sizes : draft.colors;
+            if (!list || !list[idx]) return;
+
+            const current = parseInt(list[idx].stock) || 0;
+            const updated = Math.max(0, current + delta);
+            list[idx].stock = updated;
+            draft.isModified = true;
+
+            $(`#smInput_${uuid}_${type}_${idx}`).val(updated);
+
+            const $tag = $(`#smTag_${uuid}_${type}_${idx}`);
+            const $row = $(`#smRow_${uuid}_${type}_${idx}`);
+
+            if (updated === 0) {
+                $tag.removeClass('bg-white text-slate-600 border-slate-200')
+                    .addClass('bg-rose-100/90 text-rose-600 border-rose-200 font-bold')
+                    .text('স্টক ০ (শেষ)');
+                $row.removeClass('border-slate-200 bg-slate-50/70')
+                    .addClass('border-rose-200 bg-rose-50/50');
+            } else {
+                $tag.removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                    .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                    .text(toBnDigit(updated) + ' টি');
+                $row.removeClass('border-rose-200 bg-rose-50/50')
+                    .addClass('border-slate-200 bg-slate-50/70');
+            }
+
+            if (type === 'size' && draft.sizes.length > 0) {
+                draft.stock = draft.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0);
+                $(`#smTotalBadge_${uuid}`).text(toBnDigit(draft.stock) + ' টি');
+            } else if (type === 'color' && (!draft.sizes || draft.sizes.length === 0)) {
+                draft.stock = draft.colors.reduce((sum, c) => sum + (parseInt(c.stock) || 0), 0);
+            }
+
+            $(`#smSaveBtn_${uuid}`).addClass('ring-2 ring-indigo-400');
+        }
+
+        function onStockManagementInput(uuid, type, idx, val) {
+            const draft = stockManagementDrafts[uuid];
+            if (!draft) return;
+
+            const list = type === 'size' ? draft.sizes : draft.colors;
+            if (!list || !list[idx]) return;
+
+            const updated = Math.max(0, parseInt(val) || 0);
+            list[idx].stock = updated;
+            draft.isModified = true;
+
+            const $tag = $(`#smTag_${uuid}_${type}_${idx}`);
+            const $row = $(`#smRow_${uuid}_${type}_${idx}`);
+
+            if (updated === 0) {
+                $tag.removeClass('bg-white text-slate-600 border-slate-200')
+                    .addClass('bg-rose-100/90 text-rose-600 border-rose-200 font-bold')
+                    .text('স্টক ০ (শেষ)');
+                $row.removeClass('border-slate-200 bg-slate-50/70')
+                    .addClass('border-rose-200 bg-rose-50/50');
+            } else {
+                $tag.removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                    .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                    .text(toBnDigit(updated) + ' টি');
+                $row.removeClass('border-rose-200 bg-rose-50/50')
+                    .addClass('border-slate-200 bg-slate-50/70');
+            }
+
+            if (type === 'size' && draft.sizes.length > 0) {
+                draft.stock = draft.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0);
+                $(`#smTotalBadge_${uuid}`).text(toBnDigit(draft.stock) + ' টি');
+            } else if (type === 'color' && (!draft.sizes || draft.sizes.length === 0)) {
+                draft.stock = draft.colors.reduce((sum, c) => sum + (parseInt(c.stock) || 0), 0);
+            }
+
+            $(`#smSaveBtn_${uuid}`).addClass('ring-2 ring-indigo-400');
+        }
+
+        function changeStockManagementSimple(uuid, delta) {
+            const draft = stockManagementDrafts[uuid];
+            if (!draft) return;
+            const updated = Math.max(0, (parseInt(draft.stock) || 0) + delta);
+            draft.stock = updated;
+            draft.isModified = true;
+            $(`#smInput_${uuid}_simple`).val(updated);
+            $(`#smSaveBtn_${uuid}`).addClass('ring-2 ring-indigo-400');
+        }
+
+        function onStockManagementSimpleInput(uuid, val) {
+            const draft = stockManagementDrafts[uuid];
+            if (!draft) return;
+            draft.stock = Math.max(0, parseInt(val) || 0);
+            draft.isModified = true;
+            $(`#smSaveBtn_${uuid}`).addClass('ring-2 ring-indigo-400');
+        }
+
+        function quickStockManagementBatchAdd(uuid, amount = 5) {
+            const draft = stockManagementDrafts[uuid];
+            if (!draft) return;
+
+            let changed = false;
+            if (draft.sizes && draft.sizes.length > 0) {
+                draft.sizes.forEach((s, idx) => {
+                    s.stock = (parseInt(s.stock) || 0) + amount;
+                    changed = true;
+                    $(`#smInput_${uuid}_size_${idx}`).val(s.stock);
+                    $(`#smTag_${uuid}_size_${idx}`).removeClass('bg-rose-100/90 text-rose-600 border-rose-200')
+                        .addClass('bg-white text-slate-600 border-slate-200 font-semibold')
+                        .text(toBnDigit(s.stock) + ' টি');
+                    $(`#smRow_${uuid}_size_${idx}`).removeClass('border-rose-200 bg-rose-50/50')
+                        .addClass('border-slate-200 bg-slate-50/70');
+                });
+                if (changed) {
+                    draft.stock = draft.sizes.reduce((sum, s) => sum + (parseInt(s.stock) || 0), 0);
+                    $(`#smTotalBadge_${uuid}`).text(toBnDigit(draft.stock) + ' টি');
+                }
+            } else if (draft.colors && draft.colors.length > 0) {
+                draft.colors.forEach((c, idx) => {
+                    c.stock = (parseInt(c.stock) || 0) + amount;
+                    changed = true;
+                    $(`#smInput_${uuid}_color_${idx}`).val(c.stock);
+                });
+                if (changed) {
+                    draft.stock = draft.colors.reduce((sum, c) => sum + (parseInt(c.stock) || 0), 0);
+                }
+            } else {
+                draft.stock = (parseInt(draft.stock) || 0) + amount;
+                changed = true;
+                $(`#smInput_${uuid}_simple`).val(draft.stock);
+            }
+
+            if (changed) {
+                draft.isModified = true;
+                $(`#smSaveBtn_${uuid}`).addClass('ring-2 ring-indigo-400');
+                showToast(`+${toBnDigit(amount)}টি স্টক যুক্ত হয়েছে। সেভ করতে 'স্টক সেভ করুন' বাটনে চাপুন।`, 'info');
+            }
+        }
+
+        async function saveStockManagementChanges(uuid) {
+            const draft = stockManagementDrafts[uuid];
+            if (!draft) return;
+
+            const $btn = $(`#smSaveBtn_${uuid}`);
+            if ($btn.prop('disabled')) return;
+            const originalBtnHtml = $btn.html();
+            $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed').html(`
+                <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
+                <span>সেভ হচ্ছে...</span>
+            `);
+            lucide.createIcons();
+
+            try {
+                const payload = {
+                    stock: draft.stock
+                };
+                if (draft.sizes && draft.sizes.length > 0) {
+                    payload.sizes = draft.sizes;
+                }
+                if (draft.colors && draft.colors.length > 0) {
+                    payload.colors = draft.colors;
+                }
+
+                const res = await StoreApi.post(`products/${uuid}/stock`, payload);
+                if (res.success && res.data) {
+                    const prod = productsData.find(p => p.uuid === uuid);
+                    if (prod) {
+                        prod.stock = res.data.stock;
+                        if (res.data.sizes) prod.sizes = res.data.sizes;
+                        if (res.data.colors) prod.colors = res.data.colors;
+
+                        draft.isModified = false;
+
+                        updateProductStats(productsData);
+                        renderProducts(productsData);
+                        renderStockOutProducts(productsData);
+                        renderStockManagementProducts(productsData);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'স্টক সফলভাবে সংরক্ষিত হয়েছে!',
+                            text: `"${prod.name}"-এর নতুন স্টক: ${toBnDigit(prod.stock)} টি`,
+                            timer: 1600,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ব্যর্থ হয়েছে',
+                        text: res.message || 'স্টক আপডেট ব্যর্থ হয়েছে।'
+                    });
+                    $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', text: err.message || 'নেটওয়ার্ক ত্রুটি' });
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
+                lucide.createIcons();
+            }
+        }
+
+        $('#stockManagementSearchInput').on('input', () => renderStockManagementProducts(productsData));
 
         // ==========================================
         // 5.5 PRODUCT DETAILS MODAL (CLICK CARD)
@@ -2427,18 +3391,82 @@
             // Sizes & Colors
             const $sizes = $('#detailSizesContainer');
             $sizes.empty();
-            if (p.sizes && p.sizes.length > 0) {
-                p.sizes.forEach(s => $sizes.append(`<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-semibold">${escapeHtml(s)}</span>`));
+
+            let sizesList = p.sizes;
+            if (typeof sizesList === 'string') {
+                try { sizesList = JSON.parse(sizesList); } catch(e) { sizesList = []; }
+            }
+            if (!Array.isArray(sizesList)) sizesList = [];
+
+            let hasVariantStyle = false;
+            const apparelSizes = ['s', 'm', 'l', 'xl', 'xxl', '2xl', '3xl', 'free size', 'free-size', '28', '30', '32', '34', '36', '38', '40', '42', '44'];
+
+            if (sizesList.length > 0) {
+                sizesList.forEach(s => {
+                    let name = '';
+                    let stock = null;
+                    if (typeof s === 'object' && s !== null) {
+                        const rawName = s.name || s.size || s.variant || s.val || s.value || s.title || '';
+                        name = (typeof rawName === 'object' && rawName !== null) ? (rawName.name || rawName.size || JSON.stringify(rawName)) : String(rawName || '');
+                        stock = s.stock !== undefined ? parseInt(s.stock) : (s.quantity !== undefined ? parseInt(s.quantity) : null);
+                    } else {
+                        name = String(s || '');
+                    }
+                    if (!name || name === '[object Object]') name = 'ভেরিয়েন্ট';
+
+                    if (name && !apparelSizes.includes(name.trim().toLowerCase())) {
+                        hasVariantStyle = true;
+                    }
+                    $sizes.append(`
+                        <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-800 rounded-lg text-xs font-bold shadow-2xs">
+                            <span>${escapeHtml(name)}</span>
+                            ${stock !== null ? `<span class="text-[10px] text-slate-500 font-semibold bg-white px-1.5 py-0.5 rounded border border-slate-200">${toBnDigit(stock)}টি</span>` : ''}
+                        </span>
+                    `);
+                });
             } else {
-                $sizes.append('<span class="text-slate-400 text-[11px]">-</span>');
+                $sizes.append('<span class="text-slate-400 text-xs">-</span>');
+            }
+
+            // Update label dynamically: ভ্যারিয়েন্টসমূহ vs সাইজসমূহ
+            if (hasVariantStyle) {
+                $('#detailSizesLabel').text('ভ্যারিয়েন্টসমূহ (Variants)');
+            } else {
+                $('#detailSizesLabel').text('সাইজসমূহ (Sizes)');
             }
 
             const $colors = $('#detailColorsContainer');
             $colors.empty();
-            if (p.colors && p.colors.length > 0) {
-                p.colors.forEach(c => $colors.append(`<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-semibold">${escapeHtml(c)}</span>`));
+
+            let colorsList = p.colors;
+            if (typeof colorsList === 'string') {
+                try { colorsList = JSON.parse(colorsList); } catch(e) { colorsList = []; }
+            }
+            if (!Array.isArray(colorsList)) colorsList = [];
+
+            if (colorsList.length > 0) {
+                colorsList.forEach(c => {
+                    let name = '';
+                    let stock = null;
+                    if (typeof c === 'object' && c !== null) {
+                        const rawName = c.name || c.color || c.val || c.value || c.title || '';
+                        name = (typeof rawName === 'object' && rawName !== null) ? (rawName.name || JSON.stringify(rawName)) : String(rawName || '');
+                        stock = c.stock !== undefined ? parseInt(c.stock) : (c.quantity !== undefined ? parseInt(c.quantity) : null);
+                    } else {
+                        name = String(c || '');
+                    }
+                    if (!name || name === '[object Object]') name = 'রঙ';
+
+                    $colors.append(`
+                        <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-xs font-semibold shadow-2xs">
+                            <span class="w-2 h-2 rounded-full bg-brand-600 inline-block"></span>
+                            <span>${escapeHtml(name)}</span>
+                            ${stock !== null ? `<span class="text-[10px] text-blue-600 font-bold bg-white px-1.5 py-0.5 rounded border border-blue-200">${toBnDigit(stock)}টি</span>` : ''}
+                        </span>
+                    `);
+                });
             } else {
-                $colors.append('<span class="text-slate-400 text-[11px]">-</span>');
+                $colors.append('<span class="text-slate-400 text-xs">-</span>');
             }
 
             // Description & Category
@@ -2455,10 +3483,6 @@
                 closeProductDetailsModal();
                 deleteProduct(uuid, p.name);
             });
-
-            $('#btnDetailStockDec').off('click').on('click', () => adjustQuickStock(uuid, -1));
-            $('#btnDetailStockInc').off('click').on('click', () => adjustQuickStock(uuid, 1));
-            $('#btnDetailStockInc5').off('click').on('click', () => adjustQuickStock(uuid, 5));
 
             $('#modalProductDetails').removeClass('hidden').css('display', 'flex');
             $('body').addClass('overflow-hidden');
@@ -2513,78 +3537,782 @@
             }
         }
 
-        function openCreateProductModal() {
-            try {
-                $('#productForm')[0].reset();
-                $('#prodEditUuid').val('');
-                $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
-                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
-                $('#imageValidationError').addClass('hidden');
-                if (defaultCategoryUuid) {
-                    $('#fProdCategory').val(defaultCategoryUuid);
+        // ==========================================
+        // 3-STEP DEDICATED PRODUCT WIZARD & VARIANTS
+        // ==========================================
+        let currentProductWizardStep = 1;
+        let currentVariantMode = 'size';
+        let savedSizeList = [
+            { name: 'S', stock: 5 },
+            { name: 'M', stock: 5 },
+            { name: 'L', stock: 5 },
+            { name: 'XL', stock: 5 }
+        ];
+        let savedVariantList = [
+            { name: '128GB', stock: 5 },
+            { name: '256GB', stock: 5 }
+        ];
+        let selectedVariants = [...savedSizeList];
+        let selectedColors = [];
+
+        function toBnDigit(num) {
+            const bnDigits = {'0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'};
+            return (num !== null && num !== undefined) ? num.toString().replace(/\d/g, d => bnDigits[d]) : '০';
+        }
+
+        function autoSlugFromName(name) {
+            if (!name) {
+                $('#fProdSlug').val('');
+                $('#previewSlugUrl').text('-');
+                return '';
+            }
+            let slug = name.toString().trim()
+                .toLowerCase()
+                .replace(/[\s\t\n\r_]+/g, '-')
+                .replace(/[^\p{L}\p{M}\p{N}-]+/gu, '')
+                .replace(/-+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            
+            if (!slug) {
+                slug = 'product-' + Date.now().toString().slice(-6);
+            }
+            $('#fProdSlug').val(slug);
+            $('#previewSlugUrl').text('/' + slug);
+            return slug;
+        }
+
+        function setVariantMode(mode) {
+            if (currentVariantMode === mode) return;
+
+            // Cache current items to respective list
+            if (currentVariantMode === 'size') {
+                savedSizeList = [...selectedVariants];
+            } else {
+                savedVariantList = [...selectedVariants];
+            }
+
+            currentVariantMode = mode;
+
+            if (mode === 'size') {
+                $('#boxSizeMode').removeClass('hidden');
+                $('#boxVariantMode').addClass('hidden');
+                $('#btnModeSize').addClass('text-brand-600 bg-white shadow-2xs').removeClass('text-slate-600 hover:text-slate-900');
+                $('#btnModeVariant').removeClass('text-brand-600 bg-white shadow-2xs').addClass('text-slate-600 hover:text-slate-900');
+                $('#variantListHeading').text('সাইজ তালিকা ও স্টক সংখ্যা:');
+
+                selectedVariants = (savedSizeList && savedSizeList.length > 0) ? [...savedSizeList] : [
+                    { name: 'S', stock: 5 },
+                    { name: 'M', stock: 5 },
+                    { name: 'L', stock: 5 },
+                    { name: 'XL', stock: 5 }
+                ];
+            } else {
+                $('#boxSizeMode').addClass('hidden');
+                $('#boxVariantMode').removeClass('hidden');
+                $('#btnModeVariant').addClass('text-brand-600 bg-white shadow-2xs').removeClass('text-slate-600 hover:text-slate-900');
+                $('#btnModeSize').removeClass('text-brand-600 bg-white shadow-2xs').addClass('text-slate-600 hover:text-slate-900');
+                $('#variantListHeading').text('ভ্যারিয়েন্ট তালিকা ও স্টক সংখ্যা:');
+
+                selectedVariants = (savedVariantList && savedVariantList.length > 0) ? [...savedVariantList] : [
+                    { name: '128GB', stock: 5 },
+                    { name: '256GB', stock: 5 }
+                ];
+            }
+
+            renderVariantItems();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function toggleVariantSection(checked) {
+            $('#variantSectionContainer').removeClass('hidden');
+            updateTotalStockFromVariants();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function addVariantItem(name, defaultStock = 5) {
+            const cleanName = (name || '').trim();
+            if (!cleanName) return;
+
+            const exists = selectedVariants.some(v => v.name.toLowerCase() === cleanName.toLowerCase());
+            if (exists) {
+                Toast.info(`"${cleanName}" ইতিমধ্যে যুক্ত করা আছে।`);
+                return;
+            }
+
+            selectedVariants.push({
+                name: cleanName,
+                stock: Math.max(0, parseInt(defaultStock) || 5)
+            });
+
+            renderVariantItems();
+        }
+
+        function addCustomVariant(type) {
+            const inputId = type === 'size' ? '#inputCustomSize' : '#inputCustomVariant';
+            const val = $(inputId).val().trim();
+            if (!val) return;
+            addVariantItem(val);
+            $(inputId).val('');
+        }
+
+        function removeVariantItem(index) {
+            selectedVariants.splice(index, 1);
+            renderVariantItems();
+        }
+
+        function changeVariantStock(index, delta) {
+            if (selectedVariants[index]) {
+                const current = parseInt(selectedVariants[index].stock) || 0;
+                selectedVariants[index].stock = Math.max(0, current + delta);
+                renderVariantItems();
+            }
+        }
+
+        function onVariantStockInput(index, val) {
+            if (selectedVariants[index]) {
+                selectedVariants[index].stock = Math.max(0, parseInt(val) || 0);
+                updateTotalStockFromVariants();
+            }
+        }
+
+        function onBaseStockManualChange() {
+            updateTotalStockFromVariants();
+        }
+
+        function updateTotalStockFromVariants() {
+            // Strictly auto-calculate from variant counting
+            const total = selectedVariants.reduce((sum, item) => sum + (parseInt(item.stock) || 0), 0);
+            $('#fStock').val(total);
+            $('#sumStock').text(total);
+            $('#displayTotalStockBadge').text(toBnDigit(total) + ' টি');
+            updateColorSyncBadge();
+        }
+
+        function renderVariantItems() {
+            const container = $('#variantItemsList');
+            container.empty();
+
+            if (selectedVariants.length === 0) {
+                const emptyNoticeText = currentVariantMode === 'size'
+                    ? 'কোনো সাইজ এখনো যুক্ত করা হয়নি। ওপরের বাটন চেপে সাইজ যোগ করুন।'
+                    : 'কোনো ভ্যারিয়েন্ট এখনো যুক্ত করা হয়নি। ওপরের বক্সে লিখে প্লাস (+) বাটন চেপে যোগ করুন।';
+                container.html(`
+                    <div class="text-center py-2 text-xs text-slate-400 bg-white border border-dashed border-slate-200 rounded-lg" id="emptyVariantNotice">
+                        ${emptyNoticeText}
+                    </div>
+                `);
+                $('#variantCountLabel').text('০টি যুক্ত');
+                updateTotalStockFromVariants();
+                return;
+            }
+
+            $('#variantCountLabel').text(`${toBnDigit(selectedVariants.length)}টি যুক্ত`);
+
+            selectedVariants.forEach((item, i) => {
+                container.append(`
+                    <div class="flex items-center justify-between px-2.5 py-2 sm:px-2.5 sm:py-1 bg-slate-50/80 border border-slate-200 rounded-xl sm:rounded-lg text-xs hover:border-brand-200 transition">
+                        <div class="flex items-center space-x-1.5 sm:space-x-2 min-w-0 pr-1">
+                            <span class="w-5 h-5 rounded bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-[10px] shrink-0">${toBnDigit(i + 1)}</span>
+                            <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md sm:rounded font-bold text-slate-800 text-xs truncate">${escapeHtml(item.name)}</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
+                            <button type="button" onclick="changeVariantStock(${i}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm sm:text-xs cursor-pointer select-none shadow-2xs active:scale-95">-</button>
+                            <input type="number" min="0" value="${item.stock}" oninput="onVariantStockInput(${i}, this.value)" class="w-11 sm:w-12 text-center py-1 sm:py-0.5 border border-slate-300 rounded-lg sm:rounded text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white">
+                            <button type="button" onclick="changeVariantStock(${i}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm sm:text-xs cursor-pointer select-none shadow-2xs active:scale-95">+</button>
+                            <button type="button" onclick="removeVariantItem(${i})" class="w-7 h-7 sm:w-6 sm:h-6 text-slate-400 hover:text-red-600 flex items-center justify-center transition cursor-pointer active:scale-95" title="মুছুন">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `);
+            });
+
+            updateTotalStockFromVariants();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Color Management with Strict Stock Synchronization
+        function updateColorSyncBadge() {
+            const badge = $('#colorStockSyncBadge');
+            if (!badge.length) return;
+
+            if (selectedColors.length === 0) {
+                badge.addClass('hidden');
+                return;
+            }
+
+            const totalStock = parseInt($('#fStock').val()) || 0;
+            const colorSum = selectedColors.reduce((sum, item) => sum + (parseInt(item.stock) || 0), 0);
+
+            badge.removeClass('hidden');
+            if (colorSum === totalStock && totalStock > 0) {
+                badge.removeClass('bg-rose-50 border-rose-200 text-rose-700 bg-amber-50 border-amber-200 text-amber-800')
+                     .addClass('bg-emerald-50 border-emerald-200 text-emerald-700')
+                     .html(`<i data-lucide="check" class="w-3 h-3 inline mr-1"></i> রঙের মোট স্টক মিলেছে (${toBnDigit(colorSum)}/${toBnDigit(totalStock)})`);
+            } else if (colorSum < totalStock) {
+                const diff = totalStock - colorSum;
+                badge.removeClass('bg-emerald-50 border-emerald-200 text-emerald-700 bg-rose-50 border-rose-200 text-rose-700')
+                     .addClass('bg-amber-50 border-amber-200 text-amber-800')
+                     .html(`⚠️ রঙের স্টক অসম্পূর্ণ (${toBnDigit(colorSum)}/${toBnDigit(totalStock)} - বাকি ${toBnDigit(diff)}টি)`);
+            } else {
+                const excess = colorSum - totalStock;
+                badge.removeClass('bg-emerald-50 border-emerald-200 text-emerald-700 bg-amber-50 border-amber-200 text-amber-800')
+                     .addClass('bg-rose-50 border-rose-200 text-rose-700')
+                     .html(`❌ রঙের স্টক অতিরিক্ত (${toBnDigit(colorSum)}/${toBnDigit(totalStock)} - অতিরিক্ত ${toBnDigit(excess)}টি)`);
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function addColorItem(name, defaultStock = 5) {
+            const cleanName = (name || '').trim();
+            if (!cleanName) return;
+
+            const exists = selectedColors.some(c => c.name.toLowerCase() === cleanName.toLowerCase());
+            if (exists) {
+                Toast.info(`"${cleanName}" রঙ ইতিমধ্যে যুক্ত আছে।`);
+                return;
+            }
+
+            selectedColors.push({
+                name: cleanName,
+                stock: Math.max(0, parseInt(defaultStock) || 5)
+            });
+
+            renderColorItems();
+        }
+
+        function addCustomColor() {
+            const val = $('#inputCustomColor').val().trim();
+            if (!val) return;
+            addColorItem(val);
+            $('#inputCustomColor').val('');
+        }
+
+        function removeColorItem(index) {
+            selectedColors.splice(index, 1);
+            renderColorItems();
+        }
+
+        function changeColorStock(index, delta) {
+            if (selectedColors[index]) {
+                const current = parseInt(selectedColors[index].stock) || 0;
+                selectedColors[index].stock = Math.max(0, current + delta);
+                renderColorItems();
+            }
+        }
+
+        function onColorStockInput(index, val) {
+            if (selectedColors[index]) {
+                selectedColors[index].stock = Math.max(0, parseInt(val) || 0);
+                updateColorSyncBadge();
+            }
+        }
+
+        function renderColorItems() {
+            const container = $('#colorItemsList');
+            container.empty();
+
+            if (selectedColors.length === 0) {
+                updateColorSyncBadge();
+                return;
+            }
+
+            selectedColors.forEach((item, i) => {
+                container.append(`
+                    <div class="flex items-center justify-between px-2.5 py-2 sm:px-2.5 sm:py-1 bg-slate-50/80 border border-slate-200 rounded-xl sm:rounded-lg text-xs">
+                        <div class="flex items-center space-x-1.5 sm:space-x-2 min-w-0 pr-1">
+                            <i data-lucide="palette" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                            <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md sm:rounded text-xs font-semibold text-slate-800 truncate">${escapeHtml(item.name)}</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-1.5 shrink-0">
+                            <button type="button" onclick="changeColorStock(${i}, -1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm sm:text-xs cursor-pointer select-none shadow-2xs active:scale-95">-</button>
+                            <input type="number" min="0" value="${item.stock}" oninput="onColorStockInput(${i}, this.value)" class="w-11 sm:w-12 text-center py-1 sm:py-0.5 border border-slate-300 rounded-lg sm:rounded text-xs font-bold text-slate-900 focus:outline-none focus:border-brand-600 bg-white">
+                            <button type="button" onclick="changeColorStock(${i}, 1)" class="w-7 h-7 sm:w-6 sm:h-6 rounded-lg sm:rounded bg-white hover:bg-slate-100 active:bg-slate-200 border border-slate-300 text-slate-800 flex items-center justify-center font-black text-sm sm:text-xs cursor-pointer select-none shadow-2xs active:scale-95">+</button>
+                            <button type="button" onclick="removeColorItem(${i})" class="w-7 h-7 sm:w-6 sm:h-6 text-slate-400 hover:text-red-600 flex items-center justify-center transition cursor-pointer active:scale-95" title="মুছুন">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                `);
+            });
+
+            updateColorSyncBadge();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Wizard Step Navigation with Per-Step Validation
+        function goToStep(targetStep) {
+            // Validation if moving forward from Step 1
+            if (targetStep > 1 && currentProductWizardStep === 1) {
+                const prodName = $('#fProdName').val().trim();
+                if (!prodName || prodName.length < 2) {
+                    $('#fProdName').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                    Toast.warning('প্রোডাক্টের নাম লিখুন (কমপক্ষে ২ অক্ষর)।');
+                    return;
                 }
-                const title = (i18n[currentLang] && i18n[currentLang].modalAddProdTitle) 
-                    ? i18n[currentLang].modalAddProdTitle 
-                    : 'নতুন প্রোডাক্ট যোগ করুন';
-                $('#modalProductTitle').text(title);
-                existingImages = [];
-                selectedNewFiles = [];
-                renderImagePreviews();
-                calculateProfitPreview();
-            } catch (err) {
-                console.error('Error preparing product modal:', err);
+                $('#fProdName').removeClass('border-rose-500 ring-2 ring-rose-100');
+
+                let slug = $('#fProdSlug').val().trim();
+                if (!slug) {
+                    autoSlugFromName(prodName);
+                }
             }
-            $('#modalProduct').removeClass('hidden').css('display', 'flex');
-            $('body').addClass('overflow-hidden');
-            lucide.createIcons();
+
+            // Validation if moving forward from Step 2
+            if (targetStep > 2 && (currentProductWizardStep === 2 || currentProductWizardStep === 1)) {
+                const mainPrice = parseFloat($('#fMainPrice').val());
+                if (isNaN(mainPrice) || mainPrice <= 0) {
+                    goToStep(2);
+                    $('#fMainPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                    Toast.warning('মেইন বা কেনা দাম (Cost Price) শূন্যের বেশি দিন।');
+                    return;
+                }
+                $('#fMainPrice').removeClass('border-rose-500 ring-2 ring-rose-100');
+
+                const retailerPrice = parseFloat($('#fRetailerPrice').val());
+                if (isNaN(retailerPrice) || retailerPrice <= 0) {
+                    goToStep(2);
+                    $('#fRetailerPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                    Toast.warning('বিক্রয় মূল্য (Selling Price) শূন্যের বেশি দিন।');
+                    return;
+                }
+                $('#fRetailerPrice').removeClass('border-rose-500 ring-2 ring-rose-100');
+
+                // Strict Size/Variant Validation
+                const totalStock = parseInt($('#fStock').val()) || 0;
+                if (selectedVariants.length === 0) {
+                    goToStep(2);
+                    Toast.warning('কমপক্ষে একটি সাইজ বা ভ্যারিয়েন্ট যোগ করুন।');
+                    return;
+                }
+                if (totalStock <= 0) {
+                    goToStep(2);
+                    Toast.warning('সাইজসমূহের মোট স্টক কমপক্ষে ১টি হতে হবে।');
+                    return;
+                }
+
+                // Strict Color Stock Matching Validation
+                if (selectedColors.length > 0) {
+                    const colorSum = selectedColors.reduce((sum, item) => sum + (parseInt(item.stock) || 0), 0);
+                    if (colorSum !== totalStock) {
+                        goToStep(2);
+                        Toast.warning(`রঙের মোট স্টক (${toBnDigit(colorSum)}টি) এবং সাইজের মোট স্টক (${toBnDigit(totalStock)}টি) সমান হতে হবে।`);
+                        return;
+                    }
+                }
+            }
+
+            currentProductWizardStep = targetStep;
+
+            // Show/Hide Step Sections
+            $('#stepSection1').toggleClass('hidden', targetStep !== 1);
+            $('#stepSection2').toggleClass('hidden', targetStep !== 2);
+            $('#stepSection3').toggleClass('hidden', targetStep !== 3);
+
+            // Update Wizard Buttons
+            [1, 2, 3].forEach(s => {
+                const btn = $('#wizardStepBtn' + s);
+                if (s === targetStep) {
+                    btn.addClass('text-brand-600 bg-brand-50 border border-brand-200/60 shadow-2xs')
+                       .removeClass('text-slate-500 hover:text-slate-800 hover:bg-slate-50');
+                } else {
+                    btn.removeClass('text-brand-600 bg-brand-50 border border-brand-200/60 shadow-2xs')
+                       .addClass('text-slate-500 hover:text-slate-800 hover:bg-slate-50');
+                }
+            });
+
+            // Update Step Badge
+            $('#stepNumberBadge').text(`${toBnDigit(targetStep)} / ৩`);
+
+            // Step 3 Recap
+            if (targetStep === 3) {
+                const ret = parseFloat($('#fRetailerPrice').val()) || 0;
+                const cost = parseFloat($('#fMainPrice').val()) || 0;
+                const profit = ret - cost;
+                $('#sumRetailPrice').text('৳' + ret.toFixed(2));
+                $('#sumProfit').text('৳' + profit.toFixed(2));
+                $('#sumStock').text($('#fStock').val() || 0);
+            }
+
+            if (window.lucide) lucide.createIcons();
+
+            // Smooth scroll to top of wizard
+            const el = document.getElementById('tabContentProductCreate');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
-        function openEditProductModal(uuid) {
-            try {
-                const p = productsData.find(item => item.uuid === uuid);
-                if (!p) return;
-
-                $('#prodEditUuid').val(p.uuid);
-                $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
-                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
-                $('#imageValidationError').addClass('hidden');
-                const titlePrefix = (i18n[currentLang] && i18n[currentLang].modalEditProdTitle)
-                    ? i18n[currentLang].modalEditProdTitle
-                    : 'প্রোডাক্ট সম্পাদনা: ';
-                $('#modalProductTitle').text(titlePrefix + p.name);
-                $('#fProdName').val(p.name);
-                $('#fProdCategory').val(p.category_uuid || defaultCategoryUuid);
-                $('#fMainPrice').val(p.main_price);
-                $('#fRetailerPrice').val(p.retailer_price);
-                $('#fStock').val(p.stock);
-                $('#fDescription').val(p.description || '');
-
-                $('#fSizes').val((p.sizes || []).join(', '));
-                $('#fColors').val((p.colors || []).join(', '));
-
-                existingImages = [...(p.images || [])];
-                selectedNewFiles = [];
-                renderImagePreviews();
-                calculateProfitPreview();
-            } catch (err) {
-                console.error('Error in openEditProductModal:', err);
-            }
-            $('#modalProduct').removeClass('hidden').css('display', 'flex');
+        function showPackageLimitModal(msg, current, max) {
+            const rem = Math.max(0, (max || 0) - (current || 0));
+            if (msg) $('#modalLimitReachedMsg').text(msg);
+            if (current !== undefined) $('#modalLimitReachedCurrent').text(toBnDigit(current) + ' টি');
+            if (max !== undefined) $('#modalLimitReachedMax').text(toBnDigit(max) + ' টি');
+            $('#modalLimitReachedRemaining').text(toBnDigit(rem) + ' টি');
+            $('#modalPackageProductLimit').css('display', 'flex').removeClass('hidden');
             $('body').addClass('overflow-hidden');
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
         }
 
-        function closeProductModal() {
-            $('#modalProduct').addClass('hidden').css('display', 'none');
+        function closePackageLimitModal() {
+            $('#modalPackageProductLimit').css('display', 'none').addClass('hidden');
             $('body').removeClass('overflow-hidden');
         }
 
-        // Close modals on backdrop click
-        $('#modalProduct').on('click', function(e) {
+        $('#modalPackageProductLimit').on('click', function(e) {
             if (e.target === this) {
-                closeProductModal();
+                closePackageLimitModal();
             }
         });
+
+        function updateCreatePageLimitNotice(isEdit) {
+            const currentCount = Array.isArray(productsData) ? productsData.length : 0;
+            const pkgLimit = parseInt(storeData && storeData.product_limit !== undefined ? storeData.product_limit : 50, 10);
+            const isUnlimited = (pkgLimit <= 0);
+            const remaining = isUnlimited ? null : Math.max(0, pkgLimit - currentCount);
+            const pkgName = storeData && storeData.package_name ? storeData.package_name : 'প্যাকেজ';
+
+            $('#createLimitPackageName').text(pkgName);
+
+            if (isEdit) {
+                $('#createLimitUsedCount').text(toBnDigit(currentCount));
+                $('#createLimitTotalMax').text(isUnlimited ? '∞' : toBnDigit(pkgLimit));
+                $('#createLimitRemainingBadge').removeClass('bg-rose-600 bg-amber-500').addClass('bg-slate-700').text('সম্পাদনা মোড');
+                return;
+            }
+
+            $('#createLimitUsedCount').text(toBnDigit(currentCount));
+            $('#createLimitTotalMax').text(isUnlimited ? '∞' : toBnDigit(pkgLimit));
+
+            if (isUnlimited) {
+                $('#createLimitRemainingBadge').removeClass('bg-rose-600 bg-amber-500').addClass('bg-emerald-600').text('আনলিমিটেড বাকি');
+            } else if (remaining <= 0) {
+                $('#createLimitRemainingBadge').removeClass('bg-emerald-600 bg-amber-500').addClass('bg-rose-600 animate-pulse').text('আর বাকি নেই: ০ টি');
+            } else {
+                $('#createLimitRemainingBadge').removeClass('bg-emerald-600 bg-rose-600').addClass('bg-amber-500').text(`আর বাকি আছে: ${toBnDigit(remaining)} টি`);
+            }
+        }
+
+        function openProductCreatePage() {
+            // Check Package Product Upload Limit
+            const currentCount = Array.isArray(productsData) ? productsData.length : 0;
+            const pkgLimit = parseInt(storeData && storeData.product_limit !== undefined ? storeData.product_limit : 50, 10);
+            const isUnlimited = (pkgLimit <= 0);
+
+            if (!isUnlimited && currentCount >= pkgLimit) {
+                showPackageLimitModal(
+                    `আপনার প্রোডাক্ট আপলোডের লিমিট শেষ হয়ে গেছে। আপনার প্যাকেজের আওতায় সর্বোচ্চ ${toBnDigit(pkgLimit)}টি প্রোডাক্ট যোগ করার সীমা পূর্ণ হয়ে গেছে। আপনি আর নতুন প্রোডাক্ট যোগ করতে পারবেন না।`,
+                    currentCount,
+                    pkgLimit
+                );
+                Toast.error(`প্রোডাক্ট আপলোডের লিমিট (${toBnDigit(pkgLimit)}টি) শেষ হয়ে গেছে।`);
+                return;
+            }
+
+            try {
+                $('#productForm')[0].reset();
+                $('#prodEditUuid').val('');
+                $('#productPageTitle').text('নতুন প্রোডাক্ট যোগ করুন');
+                $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
+                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').addClass('hidden');
+
+                existingImages = [];
+                selectedNewFiles = [];
+                currentVariantMode = 'size';
+                savedSizeList = [
+                    { name: 'S', stock: 5 },
+                    { name: 'M', stock: 5 },
+                    { name: 'L', stock: 5 },
+                    { name: 'XL', stock: 5 }
+                ];
+                savedVariantList = [
+                    { name: '128GB', stock: 5 },
+                    { name: '256GB', stock: 5 }
+                ];
+                selectedVariants = [...savedSizeList];
+                selectedColors = [];
+
+                $('#boxSizeMode').removeClass('hidden');
+                $('#boxVariantMode').addClass('hidden');
+                $('#btnModeSize').addClass('text-brand-600 bg-white shadow-2xs').removeClass('text-slate-600 hover:text-slate-900');
+                $('#btnModeVariant').removeClass('text-brand-600 bg-white shadow-2xs').addClass('text-slate-600 hover:text-slate-900');
+                $('#variantListHeading').text('সাইজ তালিকা ও স্টক সংখ্যা:');
+
+                $('#variantSectionContainer').removeClass('hidden');
+                $('#fStatus').val('active');
+                $('#previewSlugUrl').text('-');
+
+                renderVariantItems();
+                renderColorItems();
+                renderImagePreviews();
+                calculateProfitPreview();
+                updateTotalStockFromVariants();
+
+                // Ensure categories loaded and default selected
+                if (categoriesData && categoriesData.length > 0) {
+                    populateCategoryDropdown(categoriesData);
+                } else if (defaultCategoryUuid) {
+                    $('#fProdCategory').val(defaultCategoryUuid);
+                }
+
+                updateCreatePageLimitNotice(false);
+                goToStep(1);
+                switchTab('productCreate');
+            } catch (err) {
+                console.error('Error in openProductCreatePage:', err);
+            }
+        }
+
+        function openProductEditPage(uuid) {
+            try {
+                const p = productsData.find(item => item.uuid === uuid);
+                if (!p) {
+                    Toast.error('প্রোডাক্ট পাওয়া যায়নি।');
+                    return;
+                }
+
+                $('#productForm')[0].reset();
+                $('#prodEditUuid').val(p.uuid);
+                $('#productPageTitle').text('প্রোডাক্ট সম্পাদনা: ' + p.name);
+                $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
+                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').addClass('hidden');
+
+                $('#fProdName').val(p.name);
+                $('#fProdSlug').val(p.slug);
+                $('#previewSlugUrl').text('/' + (p.slug || ''));
+                $('#fDescription').val(p.description || '');
+                $('#fMainPrice').val(p.main_price);
+                $('#fRetailerPrice').val(p.retailer_price);
+                $('#fStock').val(p.stock);
+                $('#fStatus').val(p.status || 'active');
+
+                // Populate categories
+                if (categoriesData && categoriesData.length > 0) {
+                    populateCategoryDropdown(categoriesData);
+                }
+                $('#fProdCategory').val(p.category_uuid || defaultCategoryUuid);
+
+                // Parse variants (sizes)
+                selectedVariants = [];
+                const editSizesList = parseJsonSafeList(p.sizes);
+                if (editSizesList.length > 0) {
+                    editSizesList.forEach(s => {
+                        let name = '';
+                        let stock = 0;
+                        if (typeof s === 'object' && s !== null) {
+                            name = s.name || s.size || s.variant || s.val || s.value || '';
+                            stock = parseInt(s.stock !== undefined ? s.stock : s.quantity) || 0;
+                        } else if (typeof s === 'string' && s.trim()) {
+                            name = s.trim();
+                            stock = Math.floor((p.stock || 10) / editSizesList.length) || 1;
+                        }
+                        if (name) {
+                            selectedVariants.push({ name: String(name), stock: stock });
+                        }
+                    });
+                }
+
+                // Parse colors
+                selectedColors = [];
+                const editColorsList = parseJsonSafeList(p.colors);
+                if (editColorsList.length > 0) {
+                    editColorsList.forEach(c => {
+                        let name = '';
+                        let stock = 0;
+                        if (typeof c === 'object' && c !== null) {
+                            name = c.name || c.color || c.val || c.value || '';
+                            stock = parseInt(c.stock !== undefined ? c.stock : c.quantity) || 0;
+                        } else if (typeof c === 'string' && c.trim()) {
+                            name = c.trim();
+                            stock = Math.floor((p.stock || 10) / editColorsList.length) || 1;
+                        }
+                        if (name) {
+                            selectedColors.push({ name: String(name), stock: stock });
+                        }
+                    });
+                }
+
+                $('#variantSectionContainer').removeClass('hidden');
+
+                existingImages = [...(p.images || [])];
+                selectedNewFiles = [];
+
+                renderVariantItems();
+                renderColorItems();
+                renderImagePreviews();
+                calculateProfitPreview();
+
+                updateCreatePageLimitNotice(true);
+                goToStep(1);
+                switchTab('productCreate');
+            } catch (err) {
+                console.error('Error in openProductEditPage:', err);
+            }
+        }
+
+        function cancelProductForm() {
+            switchTab('products');
+        }
+
+        // Backward compatibility modal aliases
+        function openCreateProductModal() { openProductCreatePage(); }
+        function openEditProductModal(uuid) { openProductEditPage(uuid); }
+        function closeProductModal() { cancelProductForm(); }
+
+        // Comprehensive 3-Step Wizard Form Submission
+        async function submitProductWizard() {
+            const editUuid = $('#prodEditUuid').val();
+            const isEdit = !!editUuid;
+
+            // Check Package Product Upload Limit for new product creation
+            if (!isEdit) {
+                const currentCount = Array.isArray(productsData) ? productsData.length : 0;
+                const pkgLimit = parseInt(storeData && storeData.product_limit !== undefined ? storeData.product_limit : 50, 10);
+                const isUnlimited = (pkgLimit <= 0);
+
+                if (!isUnlimited && currentCount >= pkgLimit) {
+                    showPackageLimitModal(
+                        `আপনার প্রোডাক্ট আপলোডের লিমিট শেষ হয়ে গেছে। আপনার প্যাকেজের আওতায় সর্বোচ্চ ${toBnDigit(pkgLimit)}টি প্রোডাক্ট যোগ করার সীমা পূর্ণ হয়ে গেছে। আপনি আর নতুন প্রোডাক্ট যোগ করতে পারবেন না।`,
+                        currentCount,
+                        pkgLimit
+                    );
+                    Toast.error(`প্রোডাক্ট আপলোডের লিমিট (${toBnDigit(pkgLimit)}টি) শেষ হয়ে গেছে।`);
+                    return;
+                }
+            }
+
+            const productName = $('#fProdName').val().trim();
+
+            // Validate Step 1
+            if (!productName || productName.length < 2) {
+                goToStep(1);
+                $('#fProdName').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Toast.warning('প্রোডাক্টের নাম লিখুন (কমপক্ষে ২ অক্ষর)।');
+                return;
+            }
+
+            const categoryUuid = $('#fProdCategory').val() || defaultCategoryUuid;
+
+            // Validate Step 2
+            const mainPrice = parseFloat($('#fMainPrice').val());
+            if (isNaN(mainPrice) || mainPrice <= 0) {
+                goToStep(2);
+                $('#fMainPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Toast.warning('মেইন বা কেনা দাম (Cost Price) শূন্যের বেশি দিন।');
+                return;
+            }
+
+            const retailerPrice = parseFloat($('#fRetailerPrice').val());
+            if (isNaN(retailerPrice) || retailerPrice <= 0) {
+                goToStep(2);
+                $('#fRetailerPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Toast.warning('বিক্রয় মূল্য (Selling Price) শূন্যের বেশি দিন।');
+                return;
+            }
+
+            // Strict Size/Variant Validation
+            const totalStock = parseInt($('#fStock').val()) || 0;
+            if (selectedVariants.length === 0) {
+                goToStep(2);
+                Toast.warning('কমপক্ষে একটি সাইজ বা ভ্যারিয়েন্ট যোগ করুন।');
+                return;
+            }
+            if (totalStock <= 0) {
+                goToStep(2);
+                Toast.warning('সাইজসমূহের মোট স্টক কমপক্ষে ১টি হতে হবে।');
+                return;
+            }
+
+            // Strict Color Stock Matching Validation
+            if (selectedColors.length > 0) {
+                const colorSum = selectedColors.reduce((sum, item) => sum + (parseInt(item.stock) || 0), 0);
+                if (colorSum !== totalStock) {
+                    goToStep(2);
+                    Toast.warning(`রঙের মোট স্টক (${toBnDigit(colorSum)}টি) এবং সাইজের মোট স্টক (${toBnDigit(totalStock)}টি) সমান হতে হবে।`);
+                    return;
+                }
+            }
+
+            // Validate Step 3: Images
+            const totalImages = existingImages.length + selectedNewFiles.length;
+            if (totalImages === 0) {
+                goToStep(3);
+                $('#imageDropzone').addClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').removeClass('hidden');
+                Toast.warning('কমপক্ষে একটি ছবি আপলোড করতে হবে।');
+                return;
+            }
+            if (totalImages > 5) {
+                goToStep(3);
+                Toast.warning('সর্বোচ্চ ৫টি ছবি রাখা যাবে। অতিরিক্ত ছবি মুছে ফেলুন।');
+                return;
+            }
+
+            $('#btnSaveProduct').prop('disabled', true);
+            $('#btnSaveProductText').text('সংরক্ষণ হচ্ছে...');
+
+            try {
+                // Convert new files to Base64 (WAF-proof)
+                let newImagesBase64 = [];
+                if (selectedNewFiles.length > 0) {
+                    const base64Promises = selectedNewFiles.map(file => {
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                    });
+                    newImagesBase64 = await Promise.all(base64Promises);
+                }
+
+                // Format sizes & colors payload
+                const sizesPayload = selectedVariants;
+                const colorsPayload = selectedColors;
+
+                const payload = {
+                    store_uuid: STORE_UUID,
+                    name: productName,
+                    slug: $('#fProdSlug').val().trim() || autoSlugFromName(productName),
+                    category_uuid: categoryUuid,
+                    main_price: mainPrice,
+                    retailer_price: retailerPrice,
+                    stock: totalStock,
+                    status: $('#fStatus').val() || 'active',
+                    description: $('#fDescription').val().trim(),
+                    sizes: sizesPayload,
+                    colors: colorsPayload,
+                    images: existingImages,
+                    images_base64: newImagesBase64
+                };
+
+                let res;
+                if (isEdit) {
+                    res = await StoreApi.put(`products/${editUuid}?store=${STORE_UUID}`, payload);
+                } else {
+                    res = await StoreApi.post(`products?store=${STORE_UUID}`, payload);
+                }
+
+                if (res.success && res.data) {
+                    Toast.success('প্রোডাক্ট সফলভাবে সংরক্ষণ করা হয়েছে!');
+                    await loadProducts();
+                    switchTab('products');
+                } else {
+                    if (res.data && res.data.limit_reached) {
+                        showPackageLimitModal(res.message, res.data.current_count, res.data.product_limit);
+                    }
+                    Toast.error(res.message || 'প্রোডাক্ট সংরক্ষণ ব্যর্থ হয়েছে।');
+                }
+            } catch (err) {
+                console.error('Error saving product:', err);
+                Toast.error(err.message || 'নেটওয়ার্ক ত্রুটি ঘটেছে।');
+            } finally {
+                $('#btnSaveProduct').prop('disabled', false);
+                $('#btnSaveProductText').text('প্রোডাক্ট সংরক্ষণ ও প্রকাশ করুন');
+            }
+        }
 
         $('#modalCategory').on('click', function(e) {
             if (e.target === this) {
@@ -2614,26 +4342,21 @@
         function processSelectedFiles(fileList) {
             if (!fileList || fileList.length === 0) return;
             const files = Array.from(fileList);
-            const totalCount = existingImages.length + selectedNewFiles.length;
+            const currentCount = existingImages.length + selectedNewFiles.length;
 
-            files.forEach(f => {
-                if (f.type && !f.type.startsWith('image/')) {
-                    return; // Ignore non-images
-                }
-                if (existingImages.length + selectedNewFiles.length < 5) {
-                    selectedNewFiles.push(f);
-                }
-            });
-
-            if (files.length + totalCount > 5) {
-                Swal.fire({
-                    icon: 'info',
-                    text: 'একটি প্রোডাক্টে সর্বোচ্চ ৫টি ছবি যুক্ত করা যাবে।',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+            if (currentCount >= 5) {
+                Toast.warning('একটি প্রোডাক্টে সর্বোচ্চ ৫টি ছবি আপলোড করা যাবে। ছবির সীমা পূর্ণ হয়েছে।');
+                return;
             }
 
+            const allowed = 5 - currentCount;
+            const validFiles = files.filter(f => f.type && f.type.startsWith('image/'));
+
+            if (validFiles.length > allowed) {
+                Toast.info(`সর্বোচ্চ ৫টি ছবির সীমা অনুযায়ী প্রথম ${toBnDigit(allowed)}টি ছবি গ্রহণ করা হয়েছে।`);
+            }
+
+            validFiles.slice(0, allowed).forEach(f => selectedNewFiles.push(f));
             renderImagePreviews();
         }
 
@@ -2666,6 +4389,9 @@
             });
 
             dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('border-brand-500', 'bg-brand-50/50');
                 if (e.dataTransfer && e.dataTransfer.files) {
                     processSelectedFiles(e.dataTransfer.files);
                 }
@@ -2686,16 +4412,27 @@
             const container = $('#imagePreviewGrid');
             container.empty();
 
+            const totalCount = existingImages.length + selectedNewFiles.length;
+
+            // Strictly toggle dropzone vs 5-image limit badge
+            if (totalCount >= 5) {
+                $('#imageDropzone').addClass('hidden');
+                $('#imageLimitReachedBadge').removeClass('hidden');
+            } else {
+                $('#imageDropzone').removeClass('hidden');
+                $('#imageLimitReachedBadge').addClass('hidden');
+            }
+
             // 1. Existing uploaded images
             existingImages.forEach((url, i) => {
                 container.append(`
-                    <div class="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square bg-slate-50">
+                    <div class="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square bg-slate-50 shadow-2xs">
                         <img src="${url}" class="w-full h-full object-cover">
                         <button type="button" onclick="removeExistingImage(${i})" 
-                            class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-90 hover:opacity-100 shadow transition" title="মুছুন">
+                            class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow transition cursor-pointer" title="মুছুন">
                             <i data-lucide="x" class="w-3 h-3"></i>
                         </button>
-                        <span class="absolute bottom-1 left-1 bg-slate-900/70 text-white text-[9px] px-1 rounded font-mono">#${i+1}</span>
+                        <span class="absolute bottom-1 left-1 bg-slate-900/80 text-white text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">#${toBnDigit(i+1)}</span>
                     </div>
                 `);
             });
@@ -2704,229 +4441,93 @@
             selectedNewFiles.forEach((f, i) => {
                 const objectUrl = URL.createObjectURL(f);
                 container.append(`
-                    <div class="relative group rounded-xl overflow-hidden border-2 border-brand-400 aspect-square bg-slate-50">
+                    <div class="relative group rounded-xl overflow-hidden border-2 border-brand-500 aspect-square bg-slate-50 shadow-2xs">
                         <img src="${objectUrl}" class="w-full h-full object-cover">
                         <button type="button" onclick="removeNewFile(${i})" 
-                            class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-90 hover:opacity-100 shadow transition" title="মুছুন">
+                            class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 shadow transition cursor-pointer" title="মুছুন">
                             <i data-lucide="x" class="w-3 h-3"></i>
                         </button>
-                        <span class="absolute bottom-1 left-1 bg-brand-600 text-white text-[9px] px-1 rounded font-bold">নতুন</span>
+                        <span class="absolute bottom-1 left-1 bg-brand-600 text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-2xs">নতুন</span>
                     </div>
                 `);
             });
 
             lucide.createIcons();
 
-            if (existingImages.length + selectedNewFiles.length > 0) {
+            if (totalCount > 0) {
                 $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
                 $('#imageValidationError').addClass('hidden');
             }
         }
 
-        // Form Submit: Multi-image compress & product create/update
-        $('#productForm').on('submit', async function(e) {
+        // Form Submit: Route to 3-step wizard submit
+        $('#productForm').on('submit', function(e) {
             e.preventDefault();
-
-            const editUuid = $('#prodEditUuid').val();
-            const isEdit = !!editUuid;
-            const productName = $('#fProdName').val().trim();
-
-            // Clear previous validation styling
-            $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
-            $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
-            $('#imageValidationError').addClass('hidden');
-
-            // 1. Validation: Product Name
-            if (!productName || productName.length < 2) {
-                $('#fProdName').focus().addClass('border-rose-500 ring-2 ring-rose-100');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'প্রোডাক্টের নাম আবশ্যক',
-                    text: 'অনুগ্রহ করে প্রোডাক্টের নাম লিখুন (কমপক্ষে ২ অক্ষর)।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
-            }
-
-            // 2. Validation: Category
-            const categoryUuid = $('#fProdCategory').val() || defaultCategoryUuid;
-            if (!categoryUuid) {
-                $('#fProdCategory').focus().addClass('border-rose-500 ring-2 ring-rose-100');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'ক্যাটাগরি আবশ্যক',
-                    text: 'অনুগ্রহ করে একটি ক্যাটাগরি নির্বাচন করুন।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
-            }
-
-            // 3. Validation: Main / Cost Price
-            const mainPriceRaw = $('#fMainPrice').val().trim();
-            const mainPrice = parseFloat(mainPriceRaw);
-            if (mainPriceRaw === '' || isNaN(mainPrice) || mainPrice <= 0) {
-                $('#fMainPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'কেনা দাম আবশ্যক',
-                    text: 'মেইন বা কেনা দাম (Cost Price) শূন্যের বেশি একটি সঠিক সংখ্যা হতে হবে।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
-            }
-
-            // 4. Validation: Retailer Selling Price
-            const retailerPriceRaw = $('#fRetailerPrice').val().trim();
-            const retailerPrice = parseFloat(retailerPriceRaw);
-            if (retailerPriceRaw === '' || isNaN(retailerPrice) || retailerPrice <= 0) {
-                $('#fRetailerPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'বিক্রয় মূল্য আবশ্যক',
-                    text: 'বিক্রয় মূল্য (Retailer Selling Price) শূন্যের বেশি একটি সঠিক সংখ্যা হতে হবে।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
-            }
-
-            // 5. Validation: Stock Quantity
-            const stockRaw = $('#fStock').val().trim();
-            const stockVal = parseInt(stockRaw);
-            if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
-                $('#fStock').focus().addClass('border-rose-500 ring-2 ring-rose-100');
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'স্টক সংখ্যা আবশ্যক',
-                    text: 'ইনভেন্টরি স্টক সংখ্যা ০ বা তার বেশি হতে হবে।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
-            }
-
-            // 6. Mandatory Image Upload Validation (Must have at least 1 image)
-            const totalImages = existingImages.length + selectedNewFiles.length;
-            if (totalImages === 0) {
-                $('#imageDropzone').addClass('border-rose-500 bg-rose-50/20');
-                $('#imageValidationError').removeClass('hidden');
-                document.getElementById('imageDropzone').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'ছবি আপলোড আবশ্যক',
-                    text: 'পণ্য যোগ করতে কমপক্ষে একটি ছবি আপলোড করতে হবে। ছবি ছাড়া প্রোডাক্ট সংরক্ষণ করা সম্ভব নয়।',
-                    confirmButtonColor: '#ea580c'
-                });
-                return;
-            }
-
-            $('#btnSaveProduct').prop('disabled', true);
-            $('#btnSaveProductText').text(i18n[currentLang].savingProduct);
-
-            try {
-                let finalImages = [...existingImages];
-
-                // 1. If new files selected, upload to Mother API to compress to ~200KB
-                if (selectedNewFiles.length > 0) {
-                    const formData = new FormData();
-                    formData.append('product_name', productName);
-                    selectedNewFiles.forEach((file, index) => {
-                        formData.append(`images[${index}]`, file);
-                    });
-
-                    const uploadRes = await StoreApi.post('products/upload-images', formData);
-                    if (uploadRes.success && uploadRes.data && Array.isArray(uploadRes.data.urls)) {
-                        finalImages = finalImages.concat(uploadRes.data.urls).slice(0, 5);
-                    } else {
-                        throw new Error(uploadRes.message || 'ইমেজ আপলোড ও কম্প্রেশন ব্যর্থ হয়েছে।');
-                    }
-                }
-
-                // Parse Sizes and Colors
-                const sizes = $('#fSizes').val().split(',').map(s => s.trim()).filter(Boolean);
-                const colors = $('#fColors').val().split(',').map(c => c.trim()).filter(Boolean);
-
-                const payload = {
-                    name: productName,
-                    slug: $('#fProdSlug').val().trim(),
-                    main_price: parseFloat($('#fMainPrice').val()) || 0,
-                    retailer_price: parseFloat($('#fRetailerPrice').val()) || 0,
-                    stock: parseInt($('#fStock').val()) || 0,
-                    status: $('#fStatus').val(),
-                    description: $('#fDescription').val().trim(),
-                    sizes: sizes,
-                    colors: colors,
-                    images: finalImages
-                };
-
-                let res;
-                if (isEdit) {
-                    res = await StoreApi.put(`products/${editUuid}`, payload);
-                } else {
-                    res = await StoreApi.post('products', payload);
-                }
-
-                if (res.success && res.data) {
-                    closeProductModal();
-                    await loadProducts();
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: i18n[currentLang].saveSuccessTitle,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'ত্রুটি',
-                        text: res.message || 'প্রোডাক্ট সংরক্ষণ ব্যর্থ হয়েছে।',
-                        confirmButtonColor: '#ea580c'
-                    });
-                }
-            } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ত্রুটি',
-                    text: err.message,
-                    confirmButtonColor: '#ea580c'
-                });
-            } finally {
-                $('#btnSaveProduct').prop('disabled', false);
-                $('#btnSaveProductText').text(i18n[currentLang].btnSaveProduct);
-            }
+            submitProductWizard();
         });
 
-        // Delete Product
-        async function deleteProduct(uuid, name) {
-            Swal.fire({
-                title: i18n[currentLang].confirmDeleteProd,
-                text: name,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: i18n[currentLang].deleteBtn,
-                cancelButtonText: i18n[currentLang].btnCancel
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const res = await StoreApi.delete(`products/${uuid}`);
-                        if (res.success) {
-                            await loadProducts();
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'মুছে ফেলা হয়েছে',
-                                timer: 1200,
-                                showConfirmButton: false
-                            });
-                        } else {
-                            Swal.fire({ icon: 'error', text: res.message || 'Delete failed' });
-                        }
-                    } catch (err) {
-                        Swal.fire({ icon: 'error', text: err.message });
-                    }
-                }
-            });
+        // ==========================================
+        // PRODUCT DELETE WITH DEDICATED YES / NO MODAL
+        // ==========================================
+        let pendingDeleteProductUuid = null;
+
+        function confirmDeleteProduct(uuid, name) {
+            const prod = productsData.find(item => item.uuid === uuid);
+            const prodName = name || (prod ? prod.name : 'এই পণ্যটি');
+            pendingDeleteProductUuid = uuid;
+
+            $('#modalConfirmDelete h3').text('পণ্যটি মুছে ফেলতে চান?');
+            $('#modalConfirmDelete p').html(`আপনি কি নিশ্চিতভাবে <b id="confirmDeleteProdName" class="text-rose-600 font-bold">"${escapeHtml(prodName)}"</b> প্রোডাক্টটি মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা সম্ভব হবে না।`);
+            $('#btnExecuteDelete').off('click').on('click', executeDeleteProduct);
+            $('#modalConfirmDelete').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
         }
+
+        function closeConfirmDeleteModal() {
+            $('#modalConfirmDelete').addClass('hidden').css('display', 'none');
+            $('body').removeClass('overflow-hidden');
+            pendingDeleteProductUuid = null;
+        }
+
+        async function executeDeleteProduct() {
+            if (!pendingDeleteProductUuid) return;
+            const uuid = pendingDeleteProductUuid;
+            const prod = productsData.find(item => item.uuid === uuid);
+            const prodName = prod ? prod.name : 'পণ্য';
+
+            const $btn = $('#btnExecuteDelete');
+            const originalBtnHtml = $btn.html();
+            $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed').html('<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin inline mr-1"></i> মুছে ফেলা হচ্ছে...');
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const res = await StoreApi.delete(`products/${uuid}`);
+                if (res.success) {
+                    closeConfirmDeleteModal();
+                    await loadProducts();
+                    Toast.success(`"${prodName}" সফলভাবে মুছে ফেলা হয়েছে`);
+                } else {
+                    Toast.error(res.message || 'ডিলিট সম্পন্ন করা যায়নি।');
+                }
+            } catch (err) {
+                Toast.error(err.message || 'নেটওয়ার্ক সমস্যা হয়েছে।');
+            } finally {
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnHtml);
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        function deleteProduct(uuid, name) {
+            confirmDeleteProduct(uuid, name);
+        }
+
+        // Close delete confirmation on backdrop click
+        $('#modalConfirmDelete').on('click', function(e) {
+            if (e.target === this) {
+                closeConfirmDeleteModal();
+            }
+        });
 
         // ==========================================
         // 7. STORE PROFILE EDIT LOGIC
@@ -3331,7 +4932,7 @@
                                         ${escapeHtml(ord.upazilla || '')}, ${escapeHtml(ord.district || '')}, ${escapeHtml(ord.division || '')}
                                     </div>
                                     <div class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800">
-                                        ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)'}
+                                        ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'} (৳${formatPrice(ord.delivery_charge)})
                                     </div>
                                 </div>
                             </div>
@@ -3500,11 +5101,19 @@
                                         <span>তথ্য দেখুন</span>
                                     </button>
                                 </div>
-                                <button type="button" onclick="revertCompletedOrder('${ord.uuid}')"
-                                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer shadow-2xs" title="ভুলবশত সম্পন্ন হলে পুনরায় অর্ডার ম্যানেজমেন্টে ফেরত পাঠান">
-                                    <i data-lucide="undo-2" class="w-3 h-3 text-amber-600"></i>
-                                    <span>Undo (রিভার্ট)</span>
-                                </button>
+                                <div class="inline-flex items-center rounded-lg bg-amber-50 border border-amber-200 p-0.5 shadow-2xs">
+                                    <button type="button" onclick="revertCompletedOrder('${ord.uuid}', 'pending')"
+                                        class="px-2 py-0.5 text-amber-800 hover:bg-amber-100 rounded text-[10px] font-bold flex items-center space-x-1 transition cursor-pointer" title="পেন্ডিং তালিকায় ফেরত পাঠান">
+                                        <i data-lucide="undo-2" class="w-3 h-3 text-amber-600"></i>
+                                        <span>রিডো পেন্ডিং</span>
+                                    </button>
+                                    <div class="h-3 w-px bg-amber-200 mx-0.5"></div>
+                                    <button type="button" onclick="revertCompletedOrder('${ord.uuid}', 'processing')"
+                                        class="px-2 py-0.5 text-blue-800 hover:bg-blue-100 rounded text-[10px] font-bold flex items-center space-x-1 transition cursor-pointer" title="প্রসেসিং তালিকায় ফেরত পাঠান">
+                                        <i data-lucide="arrow-left-right" class="w-3 h-3 text-blue-600"></i>
+                                        <span>প্রসেসিং</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -3557,7 +5166,7 @@
                                         ${escapeHtml(ord.upazilla || '')}, ${escapeHtml(ord.district || '')}, ${escapeHtml(ord.division || '')}
                                     </div>
                                     <div class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                                        ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)'}
+                                        ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'} (৳${formatPrice(ord.delivery_charge)})
                                     </div>
                                 </div>
                             </div>
@@ -3575,11 +5184,19 @@
                                     <span class="text-emerald-700 font-bold">আদায়কৃত মোট: <strong class="text-sm font-black text-emerald-700 font-mono">৳${formatPrice(ord.total_amount)}</strong></span>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <button type="button" onclick="revertCompletedOrder('${ord.uuid}')"
-                                        class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer" title="ভুলবশত সম্পন্ন হলে পুনরায় পেন্ডিং তালিকায় ফিরিয়ে নিন">
-                                        <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
-                                        <span>Undo (রিভার্ট)</span>
-                                    </button>
+                                    <div class="inline-flex items-center rounded-xl bg-amber-50 border border-amber-200 p-0.5 shadow-2xs">
+                                        <button type="button" onclick="revertCompletedOrder('${ord.uuid}', 'pending')"
+                                            class="px-2.5 py-1 text-amber-800 hover:bg-amber-100 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" title="পেন্ডিং তালিকায় ফিরিয়ে নিন">
+                                            <i data-lucide="undo-2" class="w-3.5 h-3.5 text-amber-600"></i>
+                                            <span>রিডো &bull; পেন্ডিং</span>
+                                        </button>
+                                        <div class="h-4 w-px bg-amber-200"></div>
+                                        <button type="button" onclick="revertCompletedOrder('${ord.uuid}', 'processing')"
+                                            class="px-2.5 py-1 text-blue-800 hover:bg-blue-100 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer" title="প্রসেসিং তালিকায় ফিরিয়ে নিন">
+                                            <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-blue-600"></i>
+                                            <span>রিডো &bull; প্রসেসিং</span>
+                                        </button>
+                                    </div>
                                     <button type="button" onclick="openOrderDetailsModal('${ord.uuid}')"
                                         class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
                                         <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
@@ -3812,12 +5429,13 @@
             }
         }
 
-        async function revertCompletedOrder(orderUuid) {
+        async function revertCompletedOrder(orderUuid, targetStatus = 'pending') {
             showTopLoader();
             try {
-                const res = await StoreApi.put('orders/' + orderUuid + '/status', { status: 'pending' });
+                const res = await StoreApi.put('orders/' + orderUuid + '/status', { status: targetStatus });
                 if (res && res.success) {
-                    showToast('অর্ডারটি পুনরায় অর্ডার ম্যানেজমেন্টে (পেন্ডিং তালিকায়) ফিরিয়ে আনা হয়েছে!', 'success');
+                    const statusName = targetStatus === 'processing' ? 'প্রসেসিং' : 'পেন্ডিং';
+                    showToast(`অর্ডারটি পুনরায় অর্ডার ম্যানেজমেন্টে (${statusName} তালিকায়) ফিরিয়ে আনা হয়েছে!`, 'success');
                     await loadOrders();
                     renderCompletedOrders(ordersData);
                     renderOrders(ordersData);
@@ -4049,7 +5667,7 @@ ${itemsText}
                 </a>
             `);
 
-            const zoneName = (ord.delivery_zone === 'outside_dhaka') ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)';
+            const zoneName = (ord.delivery_zone === 'outside_dhaka') ? `ঢাকার বাইরে (৳${formatPrice(ord.delivery_charge)})` : `ঢাকার ভেতরে (৳${formatPrice(ord.delivery_charge)})`;
             $('#invDeliveryZone').text(zoneName);
             $('#invFullAddress').text(`${ord.delivery_address}, ${ord.upazilla || ''}, ${ord.district || ''}, ${ord.division || ''}`);
             $('#invPaymentMethod').text(`পেমেন্ট: ${ord.payment_method === 'cod' ? 'ক্যাশ অন ডেলিভারি (COD)' : ord.payment_method}`);
@@ -4209,10 +5827,21 @@ ${itemsText}
                                 </div>
                             </div>
 
-                            <!-- Expiry Info -->
-                            <div class="mt-2 text-[10px] text-slate-500 flex items-center space-x-1">
-                                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i>
-                                <span>মেয়াদ শেষ: <strong>${endsAt}</strong></span>
+                            <!-- Expiry Info & Live Countdown -->
+                            <div class="space-y-1.5 mt-2.5">
+                                <div class="text-[10px] text-slate-500 flex items-center space-x-1">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                                    <span>মেয়াদ শেষ: <strong>${endsAt}</strong></span>
+                                </div>
+                                <div class="p-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 rounded-xl flex items-center justify-between text-xs shadow-2xs">
+                                    <span class="text-amber-800 font-bold flex items-center space-x-1.5">
+                                        <i data-lucide="timer" class="w-3.5 h-3.5 text-orange-600 animate-pulse"></i>
+                                        <span>অফার বাকি:</span>
+                                    </span>
+                                    <span class="font-mono font-black text-amber-950 bg-white px-2 py-0.5 rounded border border-amber-200 text-[11px] discount-countdown-timer shadow-2xs" data-ends="${prod.discount_ends_at || ''}">
+                                        হিসাব হচ্ছে...
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -4234,6 +5863,42 @@ ${itemsText}
 
             $container.html(cardsHtml);
             if (window.lucide) lucide.createIcons();
+
+            if (!window.discountCountdownInterval) {
+                window.discountCountdownInterval = setInterval(updateDiscountCountdowns, 1000);
+            }
+            updateDiscountCountdowns();
+        }
+
+        function updateDiscountCountdowns() {
+            $('.discount-countdown-timer').each(function() {
+                const endsAtStr = $(this).attr('data-ends');
+                if (!endsAtStr) {
+                    $(this).text('মেয়াদহীন অফার');
+                    return;
+                }
+                const endsTime = new Date(endsAtStr.replace(/-/g, '/')).getTime();
+                const now = Date.now();
+                const diff = endsTime - now;
+
+                if (diff <= 0) {
+                    $(this).html('<span class="text-rose-600 font-bold">মেয়াদ শেষ</span>');
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                let text = '';
+                if (days > 0) {
+                    text = `${toBnDigit(days)} দিন ${toBnDigit(hours)} ঘ. ${toBnDigit(minutes)} মি. ${toBnDigit(seconds)} সে.`;
+                } else {
+                    text = `${toBnDigit(String(hours).padStart(2, '0'))}:${toBnDigit(String(minutes).padStart(2, '0'))}:${toBnDigit(String(seconds).padStart(2, '0'))}`;
+                }
+                $(this).text(text);
+            });
         }
 
         function openSetDiscountModal(productUuid = null) {
@@ -4319,15 +5984,15 @@ ${itemsText}
             const endsAtRaw = $('#discEndsAt').val();
 
             if (!uuid) {
-                Swal.fire({ icon: 'warning', text: 'অনুগ্রহ করে একটি পণ্য নির্বাচন করুন।' });
+                Toast.warning('অনুগ্রহ করে একটি পণ্য নির্বাচন করুন।');
                 return;
             }
             if (percent < 1 || percent > 99) {
-                Swal.fire({ icon: 'warning', text: 'ডিসকাউন্ট শতকরা ১% থেকে ৯৯% এর মধ্যে হতে হবে।' });
+                Toast.warning('ডিসকাউন্ট শতকরা ১% থেকে ৯৯% এর মধ্যে হতে হবে।');
                 return;
             }
             if (!endsAtRaw) {
-                Swal.fire({ icon: 'warning', text: 'অফারের মেয়াদ শেষ হওয়ার তারিখ ও সময় দিন।' });
+                Toast.warning('অফারের মেয়াদ শেষ হওয়ার তারিখ ও সময় দিন।');
                 return;
             }
 
@@ -4338,7 +6003,8 @@ ${itemsText}
                 String(endsDate.getHours()).padStart(2, '0') + ':' +
                 String(endsDate.getMinutes()).padStart(2, '0') + ':00';
 
-            $('#btnSaveDiscount').prop('disabled', true).text('সংরক্ষণ হচ্ছে...');
+            $('#btnSaveDiscount').prop('disabled', true).html('<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-1"></i><span>সক্রিয় হচ্ছে...</span>');
+            if (window.lucide) lucide.createIcons();
 
             try {
                 const res = await StoreApi.put('products/' + encodeURIComponent(uuid) + '/discount', {
@@ -4347,46 +6013,54 @@ ${itemsText}
                 });
 
                 if (res.success) {
-                    showToast('ডিসকাউন্ট সফলভাবে চালু করা হয়েছে!', 'success');
+                    Toast.success('ডিসকাউন্ট সফলভাবে চালু করা হয়েছে!');
                     closeSetDiscountModal();
                     await loadProducts();
                     renderDiscountsTable(productsData);
                 } else {
-                    Swal.fire({ icon: 'error', text: res.message || 'ডিসকাউন্ট সেট করতে সমস্যা হয়েছে।' });
+                    Toast.error(res.message || 'ডিসকাউন্ট সেট করতে সমস্যা হয়েছে।');
                 }
             } catch (err) {
-                Swal.fire({ icon: 'error', text: err.message });
+                Toast.error(err.message || 'নেটওয়ার্ক সমস্যা হয়েছে।');
             } finally {
-                $('#btnSaveDiscount').prop('disabled', false).html('<i data-lucide="check" class="w-4 h-4"></i><span>ডিসকাউন্ট সক্রিয় করুন</span>');
+                $('#btnSaveDiscount').prop('disabled', false).html('<i data-lucide="check" class="w-4 h-4 inline mr-1"></i><span>ডিসকাউন্ট সক্রিয় করুন</span>');
                 if (window.lucide) lucide.createIcons();
             }
         }
 
-        async function removeProductDiscount(uuid) {
-            const result = await Swal.fire({
-                title: 'ডিসকাউন্ট বাতিল করবেন?',
-                text: 'এই পণ্যের উপর থেকে স্পেশাল অফার সরিয়ে দেওয়া হবে এবং নিয়মিত মূল্য কার্যকর হবে।',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'হ্যাঁ, বাতিল করুন',
-                cancelButtonText: 'না, রাখুন',
-                confirmButtonColor: '#e11d48'
+        function removeProductDiscount(uuid) {
+            const prod = (productsData || []).find(p => p.uuid === uuid);
+            const prodName = prod ? prod.name : 'পণ্য';
+
+            pendingDeleteProductUuid = null;
+            $('#modalConfirmDelete h3').text('ডিসকাউন্ট বাতিল করতে চান?');
+            $('#modalConfirmDelete p').html(`আপনি কি নিশ্চিতভাবে <b class="text-rose-600 font-bold">"${escapeHtml(prodName)}"</b> এর স্পেশাল অফার সরিয়ে নিতে চান? পণ্যটিতে নিয়মিত বিক্রয়মূল্য কার্যকর হবে।`);
+            
+            $('#btnExecuteDelete').off('click').on('click', async function() {
+                const $btn = $(this);
+                const originalHtml = $btn.html();
+                $btn.prop('disabled', true).addClass('opacity-70').html('<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin inline mr-1"></i> বাতিল হচ্ছে...');
+                try {
+                    const res = await StoreApi.delete('products/' + encodeURIComponent(uuid) + '/discount');
+                    if (res.success) {
+                        closeConfirmDeleteModal();
+                        await loadProducts();
+                        renderDiscountsTable(productsData);
+                        Toast.info('ডিসকাউন্ট সফলভাবে বাতিল করা হয়েছে।');
+                    } else {
+                        Toast.error(res.message || 'বাতিল করা সম্ভব হয়নি।');
+                    }
+                } catch(err) {
+                    Toast.error(err.message || 'নেটওয়ার্ক সমস্যা');
+                } finally {
+                    $btn.prop('disabled', false).removeClass('opacity-70').html(originalHtml);
+                    if (window.lucide) lucide.createIcons();
+                }
             });
 
-            if (!result.isConfirmed) return;
-
-            try {
-                const res = await StoreApi.delete('products/' + encodeURIComponent(uuid) + '/discount');
-                if (res.success) {
-                    showToast('ডিসকাউন্ট বাতিল করা হয়েছে।', 'info');
-                    await loadProducts();
-                    renderDiscountsTable(productsData);
-                } else {
-                    Swal.fire({ icon: 'error', text: res.message || 'ডিসকাউন্ট বাতিল করা সম্ভব হয়নি।' });
-                }
-            } catch (err) {
-                Swal.fire({ icon: 'error', text: err.message });
-            }
+            $('#modalConfirmDelete').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
         }
 
 

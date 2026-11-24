@@ -87,8 +87,11 @@
                                 <span class="text-xs font-semibold text-slate-600" data-i18n="statTotalProducts">মোট প্রোডাক্ট</span>
                                 <i data-lucide="package" class="w-4 h-4 text-brand-600"></i>
                             </div>
-                            <div class="text-2xl font-black text-slate-900" id="dashTotalProducts">0</div>
-                            <div class="text-[11px] text-slate-500 mt-0.5" data-i18n="statActiveInCatalog">ক্যাটালগে প্রদর্শিত</div>
+                            <div class="flex items-baseline space-x-2">
+                                <div class="text-2xl font-black text-slate-900" id="dashTotalProducts">0</div>
+                                <span id="dashProductLimitRemaining" class="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 hidden"></span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 mt-0.5" id="dashProductLimitSubtext" data-i18n="statActiveInCatalog">ক্যাটালগে প্রদর্শিত</div>
                         </div>
 
                         <!-- Card 2: Total Stock Inventory -->

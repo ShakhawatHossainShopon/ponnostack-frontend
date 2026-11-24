@@ -42,6 +42,7 @@ require_once __DIR__ . '/includes/topbar.php';
             require_once __DIR__ . '/pages/dashboard.php';
             require_once __DIR__ . '/pages/orders.php';
             require_once __DIR__ . '/pages/products.php';
+            require_once __DIR__ . '/pages/product_create.php';
             require_once __DIR__ . '/pages/design_website.php';
             require_once __DIR__ . '/pages/payments.php';
 
@@ -50,6 +51,7 @@ require_once __DIR__ . '/includes/topbar.php';
             require_once __DIR__ . '/pages/cancelled_orders.php';
             require_once __DIR__ . '/pages/categories.php';
             require_once __DIR__ . '/pages/stock_out.php';
+            require_once __DIR__ . '/pages/stock_management.php';
             require_once __DIR__ . '/pages/discounts.php';
             require_once __DIR__ . '/pages/delivery_charges.php';
             require_once __DIR__ . '/pages/upload_banner.php';

@@ -48,6 +48,10 @@ function renderUniversalProductCard(array $prod, int $tplNum, string $currency =
             $sizes = is_array($dec) ? $dec : array_filter(array_map('trim', explode(',', $prod['sizes'])));
         }
     }
+    $sizes = array_values(array_filter(array_map(function($item) {
+        if (is_array($item)) return $item['name'] ?? $item['label'] ?? $item['size'] ?? '';
+        return is_scalar($item) ? trim((string)$item) : '';
+    }, $sizes)));
 
     // Real colors (ONLY if exists in database)
     $colors = [];
@@ -59,6 +63,10 @@ function renderUniversalProductCard(array $prod, int $tplNum, string $currency =
             $colors = is_array($dec) ? $dec : array_filter(array_map('trim', explode(',', $prod['colors'])));
         }
     }
+    $colors = array_values(array_filter(array_map(function($item) {
+        if (is_array($item)) return $item['name'] ?? $item['label'] ?? $item['color'] ?? '';
+        return is_scalar($item) ? trim((string)$item) : '';
+    }, $colors)));
 
     $prodSlug = !empty($prod['slug']) ? $prod['slug'] : ($prod['uuid'] ?? '');
     $prodUrl = 'product?slug=' . urlencode((string)$prodSlug);
@@ -943,8 +951,14 @@ function renderCategoryProductCard(array $prod, string $currency = 'BDT'): strin
     $hasDiscount = !empty($prod['has_discount']);
     $discountPercent = (int)($prod['discount_percent'] ?? 0);
     $effectivePrice = (float)($prod['effective_price'] ?? $retailerPrice);
-    $sizes = is_array($prod['sizes'] ?? null) ? $prod['sizes'] : [];
-    $colors = is_array($prod['colors'] ?? null) ? $prod['colors'] : [];
+    $sizes = array_values(array_filter(array_map(function($item) {
+        if (is_array($item)) return $item['name'] ?? $item['label'] ?? $item['size'] ?? '';
+        return is_scalar($item) ? trim((string)$item) : '';
+    }, is_array($prod['sizes'] ?? null) ? $prod['sizes'] : [])));
+    $colors = array_values(array_filter(array_map(function($item) {
+        if (is_array($item)) return $item['name'] ?? $item['label'] ?? $item['color'] ?? '';
+        return is_scalar($item) ? trim((string)$item) : '';
+    }, is_array($prod['colors'] ?? null) ? $prod['colors'] : [])));
     $prodSlug = !empty($prod['slug']) ? $prod['slug'] : ($prod['uuid'] ?? '');
     $prodUrl = 'product?slug=' . urlencode((string)$prodSlug);
 

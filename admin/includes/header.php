@@ -97,7 +97,7 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
             info: function(msg) { this.show(msg, 'info'); }
         };
 
-        // Complete override: Swal will never open
+        // Lightweight Swal bridge to Toast
         window.Swal = {
             fire: function(opts) {
                 let msg = typeof opts === 'string' ? opts : (opts.text || opts.title || '');
@@ -109,8 +109,10 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
                 else if (icon === 'error') Toast.error(msg);
                 else if (icon === 'warning') Toast.warning(msg);
                 else Toast.info(msg);
-                return Promise.resolve({ isConfirmed: true, value: true });
-            }
+                return Promise.resolve({ isConfirmed: false, isDismissed: true });
+            },
+            showLoading: function() {},
+            close: function() {}
         };
     </script>
 

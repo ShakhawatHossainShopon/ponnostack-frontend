@@ -6,11 +6,14 @@
                         <!-- Header & Actions Toolbar -->
                         <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <h2 class="text-base font-bold text-slate-900" data-i18n="productsTitle">প্রোডাক্ট ও ইনভেন্টরি স্টক</h2>
+                                <div class="flex items-center space-x-2.5">
+                                    <h2 class="text-base font-bold text-slate-900" data-i18n="productsTitle">প্রোডাক্ট ও ইনভেন্টরি স্টক</h2>
+                                    <div id="productLimitBadge"></div>
+                                </div>
                                 <p class="text-xs text-slate-500 mt-0.5" data-i18n="productsSubtitle">নতুন প্রোডাক্ট আপলোড করুন, ২০০KB কম্প্রেসড ইমেজ সংরক্ষণ করুন এবং ইনভেন্টরি স্টক নিয়ন্ত্রণ করুন।</p>
                             </div>
-                            <button type="button" onclick="openCreateProductModal()"
-                                class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center space-x-2 transition shadow-xs self-start sm:self-auto">
+                            <button type="button" onclick="openProductCreatePage()"
+                                class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center space-x-2 transition shadow-xs self-start sm:self-auto cursor-pointer">
                                 <i data-lucide="plus" class="w-4 h-4"></i>
                                 <span data-i18n="btnAddProduct">নতুন প্রোডাক্ট যোগ করুন</span>
                             </button>

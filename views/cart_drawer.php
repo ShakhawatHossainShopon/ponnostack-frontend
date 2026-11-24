@@ -239,7 +239,13 @@
         const maxStock = parseInt(item.stock);
 
         // Stock Validation when clicking "+"
-        if (change > 0 && !isNaN(maxStock) && maxStock > 0) {
+        if (change > 0 && !isNaN(maxStock)) {
+            if (maxStock <= 0) {
+                if (typeof window.showToast === 'function') {
+                    showToast('দুঃখিত, পণ্যটি বর্তমানে স্টকে নেই।', 'error');
+                }
+                return;
+            }
             if (item.quantity >= maxStock) {
                 if (typeof window.showToast === 'function') {
                     showToast(`দুঃখিত, এই পণ্যের সর্বোচ্চ ${maxStock} টি স্টক উপলব্ধ রয়েছে।`, 'warning');

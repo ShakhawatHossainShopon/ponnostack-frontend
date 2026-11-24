@@ -118,6 +118,13 @@ require_once __DIR__ . '/views/header.php';
                         </div>
                     </div>
 
+                    <!-- Email Address (Optional for receiving copy of invoice) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">ইমেইল ঠিকানা (ঐচ্ছিক — অর্ডারের ইনভয়েস ও রসিদ পেতে)</label>
+                        <input type="email" id="chkEmail" placeholder="আপনার ইমেইল দিন (e.g. customer@example.com)"
+                            class="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-500 transition shadow-2xs">
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <!-- Division Dropdown -->
                         <div>
@@ -524,11 +531,27 @@ require_once __DIR__ . '/views/header.php';
             return;
         }
 
+        // Strict Stock Verification before Order Submission
+        for (const it of checkoutItems) {
+            const itemStock = parseInt(it.stock, 10);
+            if (!isNaN(itemStock)) {
+                if (itemStock <= 0) {
+                    showToast(`দুঃখিত, "${it.name}" বর্তমানে আউট অফ স্টক রয়েছে। এটি অর্ডার করা যাবে না।`, 'error');
+                    return;
+                }
+                if (it.quantity > itemStock) {
+                    showToast(`দুঃখিত, "${it.name}" এর সর্বোচ্চ স্টক ${itemStock} টি। কার্টে পরিমাণ কমিয়ে আবার চেষ্টা করুন।`, 'warning');
+                    return;
+                }
+            }
+        }
+
         showTopLoader();
 
         const payload = {
             customer_name: name,
             customer_phone: phone,
+            customer_email: $('#chkEmail').val().trim() || null,
             division: division,
             district: district,
             upazilla: upazilla,

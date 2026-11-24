@@ -155,6 +155,16 @@
                                 <span id="badgeStockOutCount" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">0</span>
                             </button>
 
+                            <!-- Tab: Stock Management (সকল পণ্যের স্টক সমন্বয়) -->
+                            <button type="button" onclick="switchTab('stockManagement')" id="navTabStockManagement"
+                                class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900 hover:bg-slate-50">
+                                <div class="flex items-center space-x-2.5">
+                                    <i data-lucide="boxes" class="w-4 h-4 text-indigo-600"></i>
+                                    <span>স্টক ম্যানেজমেন্ট</span>
+                                </div>
+                                <span id="badgeStockManagementCount" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">0</span>
+                            </button>
+
                             <!-- Tab 5: Store Profile / Settings -->
                             <!-- Tab: Discounts & Deals List -->
                             <button type="button" onclick="switchTab('discounts')" id="navTabDiscounts"

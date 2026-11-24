@@ -257,6 +257,35 @@
 
     <script>
         lucide.createIcons();
+
+        // Storefront Live Discount Countdown Ticker
+        function updateStorefrontDiscountTimers() {
+            const timers = document.querySelectorAll('.home-discount-countdown');
+            if (!timers.length) return;
+            const now = Date.now();
+            timers.forEach(el => {
+                const endsAt = el.getAttribute('data-ends');
+                if (!endsAt) return;
+                const diff = new Date(endsAt.replace(/-/g, '/')).getTime() - now;
+                if (diff <= 0) {
+                    el.textContent = 'মেয়াদ শেষ';
+                    return;
+                }
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                const bn = d => ('' + d).replace(/\d/g, x => ({'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'})[x]);
+                if (days > 0) {
+                    el.textContent = `${bn(days)} দিন ${bn(hours)} ঘণ্টা ${bn(minutes)} মি. ${bn(seconds)} সে.`;
+                } else {
+                    el.textContent = `${bn(('0'+hours).slice(-2))}:${bn(('0'+minutes).slice(-2))}:${bn(('0'+seconds).slice(-2))}`;
+                }
+            });
+        }
+        setInterval(updateStorefrontDiscountTimers, 1000);
+        updateStorefrontDiscountTimers();
     </script>
 </body>
 </html>

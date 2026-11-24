@@ -41,12 +41,31 @@ require_once __DIR__ . '/views/header.php';
 
     <!-- 1. HOT DEALS / FLASH SALE / DISCOUNT SHOWCASE (FIRST SECTION - TOPMOST) -->
     <?php if (!empty($discountedProducts)): ?>
+    <?php 
+        $earliestEnd = null;
+        foreach ($discountedProducts as $dp) {
+            if (!empty($dp['discount_ends_at'])) {
+                if (!$earliestEnd || $dp['discount_ends_at'] < $earliestEnd) {
+                    $earliestEnd = $dp['discount_ends_at'];
+                }
+            }
+        }
+    ?>
     <section class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-brand-600 via-brand-700 to-brand-800 text-white shadow-lg space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="space-y-1">
-                <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider">
-                    <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-300 animate-pulse"></i>
-                    <span>ধামাকা অফার (Hot Deals)</span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider">
+                        <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-300 animate-pulse"></i>
+                        <span>ধামাকা অফার (Hot Deals)</span>
+                    </div>
+                    <?php if ($earliestEnd): ?>
+                    <div class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-black/30 backdrop-blur-md text-amber-300 text-[11px] font-bold border border-white/20">
+                        <i data-lucide="timer" class="w-3.5 h-3.5 text-amber-300"></i>
+                        <span>অফার বাকি:</span>
+                        <span class="font-mono font-black text-white home-discount-countdown" data-ends="<?= htmlspecialchars($earliestEnd) ?>">--:--:--</span>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <h2 class="text-xl sm:text-2xl font-black">সীমিত সময়ের বিশেষ মূল্যছাড়!</h2>
             </div>
