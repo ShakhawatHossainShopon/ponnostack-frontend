@@ -57,17 +57,11 @@ $storeAddress  = $store['address'] ?? '';
 $socials       = $store['social_links'] ?? [];
 $logoUrl       = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUrl($store['logo'] ?? null);
 
-// Build full URLs for store hero carousel banners (up to 5 high-quality banners)
+// Build full URLs for store hero carousel banners (strictly live banners uploaded by store owner, up to 5)
 $rawBanners   = is_array($store['banners'] ?? null) ? $store['banners'] : [];
 $storeBanners = !empty($store['banner_urls']) && is_array($store['banner_urls'])
     ? array_values(array_filter(array_slice($store['banner_urls'], 0, 5)))
     : array_values(array_filter(array_map(fn($b) => ApiClient::assetUrl($b), array_slice($rawBanners, 0, 5))));
-if (empty($storeBanners)) {
-    $storeBanners = [
-        'assets/banners/black-friday-super-sale-facebook-cover-banner-template_120329-5177.avif',
-        'assets/banners/gradient-shopping-discount-horizontal-sale-banner_23-2150321996.avif'
-    ];
-}
 
 require_once __DIR__ . '/themes.php';
 

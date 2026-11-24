@@ -46,8 +46,7 @@ if (typeof window.StoreApi === 'undefined') {
                 let url = `${_apiUrl}/${cleanEndpoint}`;
 
                 const headers = {
-                    'Accept': 'application/json',
-                    'X-Store-UUID': _storeUuid
+                    'Accept': 'application/json'
                 };
 
                 const token = this.getToken();

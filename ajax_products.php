@@ -63,21 +63,8 @@ try {
 
     $total = count($filtered);
     $offset = ($page - 1) * $limit;
-
-    // Seamless pagination: in sample fallback mode, support smooth extended scrolling for previewing
-    if ($isSample && $offset >= $total && $total > 0 && $page <= 12) {
-        $pagedItems = [];
-        for ($i = 0; $i < $limit; $i++) {
-            $baseIndex = ($offset + $i) % $total;
-            $item = $filtered[$baseIndex];
-            $item['uuid'] = $item['uuid'] . '-p' . $page . '-' . $i;
-            $pagedItems[] = $item;
-        }
-        $hasMore = $page < 12;
-    } else {
-        $pagedItems = array_slice($filtered, $offset, $limit);
-        $hasMore = ($offset + count($pagedItems)) < $total;
-    }
+    $pagedItems = array_slice($filtered, $offset, $limit);
+    $hasMore = ($offset + count($pagedItems)) < $total;
 
     // Render cards HTML (trimmed to guarantee clean element parsing)
     $cardsHtml = '';

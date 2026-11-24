@@ -17,13 +17,14 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/sample_data.php';
 require_once __DIR__ . '/views/template_cards.php';
 
-// Fetch active products from API (strictly live tenant data)
+// Fetch active products from API; fallback to sample data if store owner hasn't uploaded products yet
 $productsRes = ApiClient::get('products', ['status' => 'active']);
-$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']))
+$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']) && count($productsRes['data']) > 0)
     ? $productsRes['data']
-    : [];
+    : getSampleProducts();
 
 // Filter flash deals products
 $discountedProducts = array_values(array_filter($allProducts, fn($p) => !empty($p['has_discount'])));
