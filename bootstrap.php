@@ -54,6 +54,7 @@ $ownerName     = $store['owner_name'];
 $ownerEmail    = $store['owner_email'];
 $ownerPhone    = $store['owner_phone'] ?? '';
 $storeAddress  = $store['address'] ?? '';
+$storeBkashNumber = ApiClient::getBkashNumber();
 $socials       = $store['social_links'] ?? [];
 $logoUrl       = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUrl($store['logo'] ?? null);
 
@@ -84,8 +85,12 @@ $activeTemplate = $themeData['template'];
 $activePalette  = $themeData['palette'];
 $brandShades    = $activePalette['shades'];
 
-// Global categories check: if store owner hasn't created any, no category shows
+// Global categories check: Unnamed category is ignored on customer storefront.
+// Only custom categories created by the merchant count towards $hasCategories.
 $categoriesRes  = ApiClient::get('categories');
-$categories     = (!empty($categoriesRes['success']) && is_array($categoriesRes['data'])) ? $categoriesRes['data'] : [];
+$allCategories  = (!empty($categoriesRes['success']) && is_array($categoriesRes['data'])) ? $categoriesRes['data'] : [];
+$categories     = array_values(array_filter($allCategories, function($c) {
+    return empty($c['is_default']) && strtolower((string)($c['slug'] ?? '')) !== 'unnamed' && strtolower((string)($c['name'] ?? '')) !== 'unnamed';
+}));
 $hasCategories  = !empty($categories);
 

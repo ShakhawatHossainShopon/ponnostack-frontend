@@ -29,6 +29,9 @@ return [
     // Customer Portal URL
     'portal_url' => Env::get('PORTAL_URL', 'http://localhost/Ponnostack/portal/login.php'),
 
+    // Universal bKash Number for SaaS Monthly Bill Payments
+    'bkash_number' => Env::get('BKASH_NUMBER', '01642956206'),
+
     // Store Cache duration (in seconds, 0 to disable during development)
     'cache_time' => (int)Env::get('CACHE_TIME', 0),
 

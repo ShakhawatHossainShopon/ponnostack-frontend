@@ -13,9 +13,11 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/sample_data.php';
 require_once __DIR__ . '/views/template_cards.php';
 
-// Fetch active categories
-$categoriesRes = ApiClient::get('categories');
-$categories = (!empty($categoriesRes['success']) && is_array($categoriesRes['data']) && count($categoriesRes['data']) > 0) ? $categoriesRes['data'] : getSampleCategories();
+// If no custom categories exist, merchant does not get a dedicated category page (unless searching for products)
+if (empty($hasCategories) && empty($_GET['q'])) {
+    header('Location: ' . (!empty($clientBasePath) ? $clientBasePath : './'));
+    exit;
+}
 
 // Fetch active products
 $productsRes = ApiClient::get('products', ['status' => 'active']);
@@ -110,6 +112,49 @@ require_once __DIR__ . '/views/header.php';
             </div>
         </div>
     </div>
+
+    <!-- Dedicated Category Grid Showcase (Visible on dedicated category page when viewing all categories) -->
+    <?php if (empty($activeCat) && !empty($categories)): ?>
+    <section class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="text-sm sm:text-base font-extrabold text-slate-900 flex items-center space-x-2">
+                <i data-lucide="grid" class="w-4 h-4 text-brand-600"></i>
+                <span>ক্যাটাগরি সমূহ</span>
+            </h2>
+            <span class="text-xs text-slate-500 font-medium"><?= count($categories) ?> টি ক্যাটাগরি উপলব্ধ</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <?php foreach ($categories as $cat): ?>
+                <?php 
+                    $catSlug = $cat['slug'] ?? $cat['uuid'];
+                    $catCount = $categoryCounts[$cat['uuid']] ?? ($categoryCounts[$cat['name']] ?? 0);
+                    $catImg = !empty($cat['image']) ? ApiClient::assetUrl($cat['image']) : null;
+                ?>
+                <a href="category?cat=<?= urlencode((string)$catSlug) ?>"
+                   class="bg-white border border-slate-200 hover:border-brand-500 rounded-2xl p-3 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group cursor-pointer">
+                    <div class="aspect-square w-full rounded-xl overflow-hidden bg-slate-50 relative mb-2.5 border border-slate-100 flex items-center justify-center">
+                        <?php if ($catImg): ?>
+                            <img src="<?= htmlspecialchars($catImg) ?>" alt="<?= htmlspecialchars($cat['name']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        <?php else: ?>
+                            <div class="w-full h-full flex flex-col items-center justify-center bg-brand-50/50 text-brand-500 group-hover:bg-brand-50 transition">
+                                <i data-lucide="folder" class="w-8 h-8"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-brand-600 transition truncate mb-0.5">
+                            <?= htmlspecialchars($cat['name']) ?>
+                        </h3>
+                        <div class="text-[11px] text-slate-500 font-medium flex items-center justify-between">
+                            <span><?= $catCount ?> টি পণ্য</span>
+                            <span class="text-brand-600 font-bold group-hover:translate-x-0.5 transition-transform">→</span>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <!-- Category Pills Filter Bar (Horizontal Scrollable) -->
     <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs">

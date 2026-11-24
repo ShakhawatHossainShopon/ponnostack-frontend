@@ -54,7 +54,9 @@
                 <h4 class="font-bold <?= $ft['isDark'] ? 'text-white' : 'text-slate-900' ?> text-xs uppercase tracking-wider mb-2">প্রয়োজনীয় লিংক</h4>
                 <div><a href="./" class="hover:text-brand-500 transition">হোমপেজ (Home)</a></div>
                 <div><a href="discount" class="hover:text-brand-500 transition font-bold text-brand-500 flex items-center space-x-1"><span>🔥 ডিসকাউন্ট অফার</span></a></div>
+                <?php if (!empty($hasCategories)): ?>
                 <div><a href="category" class="hover:text-brand-500 transition">ক্যাটাগরি সমূহ</a></div>
+                <?php endif; ?>
                 <div><a href="about" class="hover:text-brand-500 transition">আমাদের সম্পর্কে</a></div>
                 <div><a href="contact" class="hover:text-brand-500 transition">সহায়তা ও যোগাযোগ</a></div>
             </div>

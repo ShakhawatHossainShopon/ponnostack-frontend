@@ -51,6 +51,15 @@ class ApiClient
     }
 
     /**
+     * Get configured Universal bKash Number for monthly bills
+     */
+    public static function getBkashNumber(): string
+    {
+        self::init();
+        return trim(self::$config['bkash_number'] ?? '01642956206');
+    }
+
+    /**
      * Get Mother Platform Root URL (for media/asset resolution)
      */
     public static function getMotherRootUrl(): string

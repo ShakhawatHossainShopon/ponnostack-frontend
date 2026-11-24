@@ -39,7 +39,7 @@ require_once __DIR__ . '/views/header.php';
 
 <main class="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-10 flex-1">
 
-    <!-- 1. FLASH DEALS / HOT DEALS SALE SHOWCASE (1ST SECTION ON LANDING PAGE) -->
+    <!-- 1. HOT DEALS / FLASH SALE / DISCOUNT SHOWCASE (FIRST SECTION - TOPMOST) -->
     <?php if (!empty($discountedProducts)): ?>
     <section class="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-brand-600 via-brand-700 to-brand-800 text-white shadow-lg space-y-5">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -64,7 +64,7 @@ require_once __DIR__ . '/views/header.php';
     </section>
     <?php endif; ?>
 
-    <!-- 2. HERO CAROUSEL BANNER SECTION (2ND SECTION ON LANDING PAGE) -->
+    <!-- 2. HERO CAROUSEL BANNER SECTION (SECOND SECTION - ONLY IF BANNERS EXIST) -->
     <?php if (!empty($storeBanners)): ?>
     <section class="relative overflow-hidden rounded-3xl shadow-lg group bg-slate-900 aspect-[21/9] sm:aspect-[21/8] max-h-[460px]">
         <div id="heroCarouselTrack" class="flex transition-transform duration-500 ease-out h-full w-full">
@@ -101,7 +101,7 @@ require_once __DIR__ . '/views/header.php';
     </section>
     <?php endif; ?>
 
-    <!-- 3. CATEGORY PILLS BAR (Only shows if store owner has created categories) -->
+    <!-- 3. CATEGORY SECTION (THIRD SECTION - AFTER BANNERS; ONLY IF CUSTOM CATEGORIES EXIST) -->
     <?php if (!empty($hasCategories)): ?>
     <section class="space-y-3">
         <div class="flex items-center justify-between">
@@ -114,15 +114,29 @@ require_once __DIR__ . '/views/header.php';
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
             </a>
         </div>
-        <div class="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
-            <a href="category" class="px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap bg-brand-600 text-white shadow-xs">
-                <span>সকল পণ্য (<?= count($allProducts) ?>)</span>
-            </a>
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5 sm:gap-3.5">
             <?php foreach ($categories as $cat): ?>
-            <a href="category?cat=<?= urlencode((string)($cat['slug'] ?? $cat['uuid'])) ?>" 
-               class="px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 whitespace-nowrap bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 shadow-2xs">
-                <span><?= htmlspecialchars($cat['name']) ?></span>
-            </a>
+                <?php
+                    $catSlug = $cat['slug'] ?? $cat['uuid'];
+                    $catImg = !empty($cat['image']) ? ApiClient::assetUrl($cat['image']) : null;
+                ?>
+                <a href="category?cat=<?= urlencode((string)$catSlug) ?>" 
+                   class="group flex flex-col items-center text-center p-2.5 sm:p-3 rounded-2xl bg-white hover:bg-brand-50/30 border border-slate-200/90 hover:border-brand-500 shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer">
+                    <!-- Category Small Image -->
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-slate-50 mb-2 border border-slate-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                        <?php if ($catImg): ?>
+                            <img src="<?= htmlspecialchars($catImg) ?>" alt="<?= htmlspecialchars($cat['name']) ?>" class="w-full h-full object-cover">
+                        <?php else: ?>
+                            <div class="w-full h-full flex items-center justify-center bg-brand-50 text-brand-600">
+                                <i data-lucide="folder" class="w-6 h-6"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <!-- Category Name -->
+                    <span class="text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-brand-600 transition truncate max-w-full block leading-tight" title="<?= htmlspecialchars($cat['name']) ?>">
+                        <?= htmlspecialchars($cat['name']) ?>
+                    </span>
+                </a>
             <?php endforeach; ?>
         </div>
     </section>

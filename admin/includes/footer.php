@@ -758,6 +758,7 @@
         const STORE_UUID = "<?= htmlspecialchars(ApiClient::getStoreUuid()) ?>";
         const API_URL    = "<?= htmlspecialchars(ApiClient::getApiUrl()) ?>";
         const ASSET_URL  = "<?= htmlspecialchars(ApiClient::getMotherRootUrl()) ?>";
+        const STORE_BKASH_NUMBER = "<?= htmlspecialchars($storeBkashNumber ?? ApiClient::getBkashNumber()) ?>";
 
         StoreApi.init({
             apiUrl: API_URL,
@@ -1278,7 +1279,16 @@
 
         // 4. Render Social Badges in Overview
         
-        // 2-Step SaaS bKash Payment & Billing Helper Functions (Live Integration with Mother API)
+        // =========================================================================
+        // 2-Step SaaS bKash Payment, Subscription & Invoices (Live Integration)
+        // =========================================================================
+        let currentTenantMonthlyFee = <?= (float)($store['monthly_fee'] ?? 999.00) ?>;
+        let currentTenantBillingDay = <?= (int)($store['billing_day'] ?? 10) ?>;
+        let saasPaymentsData = [];
+        let saasCurrentPage = 1;
+        const saasPerPage = 5;
+        let currentTenantData = null;
+
         function goToSaasPaymentStep(step) {
             if (step === 1) {
                 $('#saasPayStep1Panel').removeClass('hidden');
@@ -1312,31 +1322,29 @@
         }
 
         function copySaasBkashNumber(num) {
-            navigator.clipboard.writeText(num).then(() => {
+            const targetNum = num || (typeof STORE_BKASH_NUMBER !== 'undefined' ? STORE_BKASH_NUMBER : '') || '01642956206';
+            navigator.clipboard.writeText(targetNum).then(() => {
                 const btn = $('#btnCopyBkashNumber');
                 const text = $('#btnCopyBkashText');
                 btn.removeClass('bg-pink-600 hover:bg-pink-700').addClass('bg-emerald-600 hover:bg-emerald-700');
                 text.text('কপি হয়েছে!');
-                showPaymentToast('বিকাশ নম্বরটি কপি করা হয়েছে: ' + num);
+                showPaymentToast('বিকাশ নম্বরটি কপি করা হয়েছে: ' + targetNum);
                 setTimeout(() => {
                     btn.removeClass('bg-emerald-600 hover:bg-emerald-700').addClass('bg-pink-600 hover:bg-pink-700');
                     text.text('নম্বর কপি করুন');
                 }, 2500);
             }).catch(() => {
-                showPaymentToast('নম্বর: ' + num);
+                showPaymentToast('নম্বর: ' + targetNum);
             });
         }
 
-        let currentTenantMonthlyFee = <?= (float)($store['monthly_fee'] ?? 999.00) ?>;
-        let currentTenantBillingDay = <?= (int)($store['billing_day'] ?? 10) ?>;
-
-        function handleSaasPaymentVerification(e) {
+        async function handleSaasPaymentVerification(e) {
             e.preventDefault();
             const senderNum = $('#inputSenderBkashNumber').val().trim();
             const trxId = $('#inputSenderTrxId').val().trim();
 
-            if (!senderNum) {
-                alert('অনুগ্রহ করে যে বিকাশ নম্বর থেকে টাকা পাঠিয়েছেন তা লিখুন।');
+            if (!senderNum || senderNum.length < 11) {
+                alert('অনুগ্রহ করে সঠিক ১১ ডিজিটের বিকাশ নম্বর প্রদান করুন।');
                 return;
             }
 
@@ -1344,151 +1352,332 @@
             btn.prop('disabled', true).html('<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>জমা হচ্ছে...</span>');
             if (window.lucide) lucide.createIcons();
 
-            $.ajax({
-                url: `${API_URL}/tenants/${STORE_UUID}/payments`,
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
+            try {
+                const res = await StoreApi.post(`tenants/${STORE_UUID}/payments`, {
                     sender_number: senderNum,
                     trx_id: trxId,
                     amount: currentTenantMonthlyFee
-                }),
-                success: function(res) {
-                    btn.prop('disabled', false).html('<i data-lucide="send" class="w-3.5 h-3.5"></i><span>পেমেন্ট তথ্য সাবমিট করুন</span>');
-                    if (res.success) {
-                        $('#saasPayStep2Panel').addClass('hidden');
-                        $('#submittedSenderNumberDisplay').text(senderNum);
-                        $('#saasPaySuccessState').removeClass('hidden');
+                });
 
-                        showPaymentToast('পেমেন্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে!');
-                        loadSaasSubscriptionAndPayments();
-                    } else {
-                        alert(res.message || 'পেমেন্ট জমা দেওয়া সম্ভব হয়নি।');
-                    }
-                    if (window.lucide) lucide.createIcons();
-                },
-                error: function(xhr) {
-                    btn.prop('disabled', false).html('<i data-lucide="send" class="w-3.5 h-3.5"></i><span>পেমেন্ট তথ্য সাবমিট করুন</span>');
-                    const err = xhr.responseJSON ? xhr.responseJSON.message : 'সার্ভার এরর, পুনরায় চেষ্টা করুন।';
-                    alert(err);
-                    if (window.lucide) lucide.createIcons();
+                btn.prop('disabled', false).html('<i data-lucide="send" class="w-3.5 h-3.5"></i><span>পেমেন্ট তথ্য সাবমিট করুন</span>');
+
+                if (res && res.success) {
+                    $('#saasPayStep2Panel').addClass('hidden');
+                    $('#submittedSenderNumberDisplay').text(senderNum);
+                    $('#saasPaySuccessState').removeClass('hidden');
+
+                    showPaymentToast('পেমেন্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে!');
+                    loadSaasSubscriptionAndPayments();
+                } else {
+                    alert((res && res.message) ? res.message : 'পেমেন্ট জমা দেওয়া সম্ভব হয়নি।');
                 }
-            });
+            } catch(err) {
+                btn.prop('disabled', false).html('<i data-lucide="send" class="w-3.5 h-3.5"></i><span>পেমেন্ট তথ্য সাবমিট করুন</span>');
+                alert(err.message || 'সার্ভার এরর, পুনরায় চেষ্টা করুন।');
+            }
+            if (window.lucide) lucide.createIcons();
         }
 
-        function loadSaasSubscriptionAndPayments() {
+        async function loadSaasSubscriptionAndPayments() {
             if (!STORE_UUID) return;
             renderPaymentHistorySkeletons(3);
-            $.ajax({
-                url: `${API_URL}/tenants/${STORE_UUID}/payments`,
-                type: 'GET',
-                success: function(res) {
-                    if (res.success && res.data) {
-                        const tenant = res.data.tenant || {};
-                        const payments = res.data.payments || [];
 
-                        currentTenantMonthlyFee = parseFloat(tenant.monthly_fee) || currentTenantMonthlyFee || 999;
-                        currentTenantBillingDay = parseInt(tenant.billing_day) || currentTenantBillingDay || 10;
+            try {
+                const res = await StoreApi.get(`tenants/${STORE_UUID}/payments`);
+                if (res && res.success && res.data) {
+                    const tenant = res.data.tenant || {};
+                    currentTenantData = tenant;
+                    saasPaymentsData = res.data.payments || [];
+                    const bkashNum = res.data.bkash_number || (typeof STORE_BKASH_NUMBER !== 'undefined' ? STORE_BKASH_NUMBER : '') || '01642956206';
 
-                        const feeBn = currentTenantMonthlyFee.toLocaleString('bn-BD');
-                        $('#saasMonthlyFeeDisplay').text('৳ ' + feeBn);
-                        $('#saasStep1AmountDisplay').text('৳ ' + feeBn);
-                        $('#saasStep1RuleAmountDisplay').text(feeBn);
-                        $('#saasStep2FeeText').text('৳ ' + feeBn);
-                        $('#saasStep2FeeInput').val('৳ ' + feeBn);
-                        $('#saasStep2CycleInput').val(`প্রতি মাসের ${currentTenantBillingDay} তারিখ পর্যন্ত`);
-                        $('#saasNextPaymentDueBadge').text(`প্রতি মাসের ${currentTenantBillingDay} তারিখের মধ্যে প্রদেয়`);
+                    currentTenantMonthlyFee = parseFloat(tenant.monthly_fee) || currentTenantMonthlyFee || 999;
+                    currentTenantBillingDay = parseInt(tenant.billing_day) || currentTenantBillingDay || 10;
 
-                        // 1. Update Validity Card & Warning Banner
-                        let isBlocked = false;
-                        let blockReason = '';
+                    // Update bKash display
+                    $('#saasBkashNumberDisplay').text(bkashNum);
+                    $('#saasStep1RuleNumber').text(bkashNum);
+                    $('#btnCopyBkashNumber').attr('onclick', `copySaasBkashNumber('${bkashNum}')`);
 
-                        if (tenant.subscription_ends_at) {
-                            const expDate = new Date(tenant.subscription_ends_at);
-                            const now = new Date();
-                            const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-                            const dateFormatted = expDate.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
-                            
-                            $('#saasSubscriptionEndDateDisplay').text(dateFormatted);
-                            if (diffDays > 0 && tenant.status === 'active') {
-                                $('#saasSubscriptionDaysBadge').html(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold">${diffDays} দিন বাকি</span><span class="text-slate-400 font-normal">পরবর্তী নবায়ন আবশ্যক</span>`);
-                            } else {
-                                isBlocked = true;
-                                blockReason = diffDays <= 0 ? 'মেয়াদ শেষ (Expired)' : 'স্থগিত (Suspended)';
-                                $('#saasSubscriptionDaysBadge').html(`<span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-extrabold">মেয়াদ শেষ</span><span class="text-rose-500 font-bold">স্টোর রিনিউ করুন</span>`);
-                            }
-                        }
+                    const feeBn = currentTenantMonthlyFee.toLocaleString('bn-BD');
+                    $('#saasMonthlyFeeDisplay').text('৳ ' + feeBn);
+                    $('#saasStep1AmountDisplay').text('৳ ' + feeBn);
+                    $('#saasStep1RuleAmountDisplay').text(feeBn);
+                    $('#saasStep2FeeText').text('৳ ' + feeBn);
+                    $('#saasStep2FeeInput').val('৳ ' + feeBn);
+                    $('#saasStep2CycleInput').val(`প্রতি মাসের ${currentTenantBillingDay} তারিখ পর্যন্ত`);
+                    $('#saasNextPaymentDueBadge').text(`প্রতি মাসের ${currentTenantBillingDay} তারিখের মধ্যে প্রদেয়`);
 
-                        if (tenant.status === 'suspended' || tenant.status === 'expired' || tenant.status === 'inactive') {
-                            isBlocked = true;
-                            if (tenant.status === 'suspended') blockReason = 'স্থগিত (Suspended)';
-                            else if (tenant.status === 'expired') blockReason = 'মেয়াদ শেষ (Expired)';
-                            else if (tenant.status === 'inactive') blockReason = 'নিষ্ক্রিয় (Inactive)';
-                        }
+                    // 1. Subscription Validity & Countdown
+                    if (tenant.subscription_ends_at) {
+                        const expDate = new Date(tenant.subscription_ends_at);
+                        const dateFormatted = expDate.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+                        $('#saasSubscriptionEndDateDisplay').text(dateFormatted);
 
-                        // Global Banner visibility
-                        if (isBlocked) {
-                            $('#saasBannerAmountDisplay').text('৳ ' + feeBn);
-                            $('#saasBannerStatusBadge').text(blockReason || 'মেয়াদ শেষ');
-                            $('#saasBlockedWarningBanner').removeClass('hidden');
+                        const diffDays = tenant.days_remaining;
+                        if (!tenant.is_overdue && diffDays > 0) {
+                            $('#saasSubscriptionDaysBadge').html(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold">${diffDays} দিন বাকি</span><span class="text-slate-400 font-normal">পরবর্তী নবায়ন আবশ্যক</span>`);
                         } else {
-                            $('#saasBlockedWarningBanner').addClass('hidden');
+                            $('#saasSubscriptionDaysBadge').html(`<span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-extrabold">মেয়াদ শেষ</span><span class="text-rose-500 font-bold">স্টোর রিনিউ করুন</span>`);
                         }
-
-                        // 2. Update Store Status Badge
-                        if (tenant.status === 'active' && !isBlocked) {
-                            $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: সচল (Active)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black flex items-center space-x-1.5');
-                        } else if (tenant.status === 'suspended') {
-                            $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: স্থগিত (Suspended)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-black flex items-center space-x-1.5');
-                        } else {
-                            $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: মেয়াদোত্তীর্ণ (Expired)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-black flex items-center space-x-1.5');
-                        }
-
-                        // 3. Render Real Payment History Table
-                        const $tbody = $('#saasPaymentHistorySection table tbody');
-                        $tbody.empty();
-
-                        if (payments.length === 0) {
-                            $tbody.append('<tr><td colspan="7" class="py-6 text-center text-slate-400">এখনো কোনো পেমেন্ট রেকর্ড নেই। উপরে বিকাশ দিয়ে ফি পরিশোধ করুন।</td></tr>');
-                            return;
-                        }
-
-                        payments.forEach(p => {
-                            let badge = '';
-                            if (p.status === 'approved') {
-                                badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200"><i data-lucide="check" class="w-3 h-3"></i><span>অনুমোদিত</span></span>';
-                            } else if (p.status === 'pending') {
-                                badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>পেন্ডিং (যাচাই বাকি)</span></span>';
-                            } else {
-                                badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200"><i data-lucide="x" class="w-3 h-3"></i><span>প্রত্যাখ্যাত</span></span>';
-                            }
-
-                            const pDate = new Date(p.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' });
-
-                            const tr = `
-                                <tr class="hover:bg-slate-50/80 transition">
-                                    <td class="py-2.5 px-3 font-mono font-bold text-pink-600">INV-SAAS-${p.id}</td>
-                                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${escapeHtml(p.sender_number)}</td>
-                                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${escapeHtml(p.trx_id || 'নেই')}</td>
-                                    <td class="py-2.5 px-3 font-black text-slate-900">৳ ${parseFloat(p.amount).toLocaleString('bn-BD')}</td>
-                                    <td class="py-2.5 px-3 text-slate-500 text-[11px]">${pDate}</td>
-                                    <td class="py-2.5 px-3">${badge}</td>
-                                    <td class="py-2.5 px-3 text-right">
-                                        <button type="button" onclick="showPaymentToast('ইনভয়েস #INV-SAAS-${p.id} ডাউনলোড হচ্ছে...')" class="px-2 py-1 text-slate-600 hover:text-pink-600 hover:bg-pink-50 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 cursor-pointer">
-                                            <i data-lucide="download" class="w-3 h-3"></i>
-                                            <span>রিসিট</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                            $tbody.append(tr);
-                        });
-
-                        if (window.lucide) lucide.createIcons();
                     }
+
+                    // 2. Billing Alert Box (Overdue / Expiring Soon)
+                    const $alertBox = $('#saasSubscriptionAlertContainer');
+                    $alertBox.empty();
+
+                    if (tenant.is_overdue) {
+                        $alertBox.html(`
+                            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div class="flex items-center space-x-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold shrink-0">
+                                        <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-rose-900 font-black block">আপনার স্টোরের সাবস্ক্রিপশন মেয়াদ শেষ হয়েছে (বিল বকেয়া)!</strong>
+                                        <span class="text-rose-700 text-[11px]">সার্ভিস সচল রাখতে অনুগ্রহ করে চলতি মাসের ফি (৳${feeBn}) বিকাশ দিয়ে পরিশোধ করুন।</span>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="goToSaasPaymentStep(1); window.scrollTo({ top: 300, behavior: 'smooth' });" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shrink-0 cursor-pointer self-start sm:self-auto">
+                                    এখনই পরিশোধ করুন
+                                </button>
+                            </div>
+                        `);
+                    } else if (tenant.is_exp_today) {
+                        $alertBox.html(`
+                            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs animate-pulse">
+                                <div class="flex items-center space-x-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold shrink-0">
+                                        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-rose-900 font-black block">আজকেই আপনার স্টোরের মাসিক মেয়াদ শেষ হচ্ছে!</strong>
+                                        <span class="text-rose-700 text-[11px]">নিরবচ্ছিন্ন সার্ভিস নিশ্চিত করতে পরবর্তী মাসের বিল পরিশোধ করে রাখুন।</span>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="goToSaasPaymentStep(1); window.scrollTo({ top: 300, behavior: 'smooth' });" class="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shrink-0 cursor-pointer self-start sm:self-auto">
+                                    বিল দিন
+                                </button>
+                            </div>
+                        `);
+                    } else if (tenant.days_remaining !== null && tenant.days_remaining <= 5) {
+                        $alertBox.html(`
+                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                                <div class="flex items-center space-x-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold shrink-0">
+                                        <i data-lucide="clock" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-amber-900 font-black block">মেয়াদ শেষ হতে আর মাত্র ${tenant.days_remaining} দিন বাকি আছে।</strong>
+                                        <span class="text-amber-700 text-[11px]">স্থায়ী বিলিং ডেট: প্রতি মাসের ${currentTenantBillingDay} তারিখ।</span>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="goToSaasPaymentStep(1); window.scrollTo({ top: 300, behavior: 'smooth' });" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer self-start sm:self-auto">
+                                    বিল দিন
+                                </button>
+                            </div>
+                        `);
+                    }
+
+                    // 3. Store Status Badge
+                    if (tenant.status === 'active' && !tenant.is_overdue) {
+                        $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: সচল (Active)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black flex items-center space-x-1.5');
+                    } else if (tenant.status === 'suspended') {
+                        $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: স্থগিত (Suspended)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-black flex items-center space-x-1.5');
+                    } else {
+                        $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: মেয়াদোত্তীর্ণ (Expired)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-black flex items-center space-x-1.5');
+                    }
+
+                    // 4. Render Paginated Invoices Table
+                    saasCurrentPage = 1;
+                    renderSaasPaymentsTable(saasCurrentPage);
                 }
-            });
+            } catch(e) {
+                console.error('Failed to load subscription & payments:', e);
+            }
+            if (window.lucide) lucide.createIcons();
         }
+
+        function renderSaasPaymentsTable(page = 1) {
+            saasCurrentPage = page;
+            const $tbody = $('#saasPaymentHistoryTableBody');
+            $tbody.empty();
+
+            const total = saasPaymentsData.length;
+            $('#saasPaymentCountBadge').text(`মোট ${total}টি রেকর্ড`);
+
+            if (total === 0) {
+                $tbody.append('<tr><td colspan="8" class="py-8 text-center text-slate-400">এখনো কোনো পেমেন্ট রেকর্ড নেই। উপরে বিকাশ দিয়ে ফি পরিশোধ করুন।</td></tr>');
+                $('#saasPaymentPagination').addClass('hidden');
+                return;
+            }
+
+            $('#saasPaymentPagination').removeClass('hidden');
+
+            const totalPages = Math.ceil(total / saasPerPage);
+            if (saasCurrentPage > totalPages) saasCurrentPage = totalPages;
+            if (saasCurrentPage < 1) saasCurrentPage = 1;
+
+            const startIndex = (saasCurrentPage - 1) * saasPerPage;
+            const endIndex = Math.min(startIndex + saasPerPage, total);
+            const pageRecords = saasPaymentsData.slice(startIndex, endIndex);
+
+            // Update Pagination Summary in Bengali
+            $('#saasPaginationSummary').text(`${(startIndex + 1).toLocaleString('bn-BD')} থেকে ${endIndex.toLocaleString('bn-BD')} (মোট ${total.toLocaleString('bn-BD')}টি ইনভয়েস)`);
+
+            pageRecords.forEach(p => {
+                let badge = '';
+                if (p.status === 'approved') {
+                    badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200"><i data-lucide="check" class="w-3 h-3"></i><span>অনুমোদিত</span></span>';
+                } else if (p.status === 'pending') {
+                    badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>পেন্ডিং</span></span>';
+                } else {
+                    badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200"><i data-lucide="x" class="w-3 h-3"></i><span>প্রত্যাখ্যাত</span></span>';
+                }
+
+                const pDate = p.formatted_date_short || new Date(p.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' });
+                const typeLabel = p.type_label || (p.payment_type === 'initial' ? 'নতুন সাবস্ক্রিপশন' : 'মাসিক রিনিউয়াল');
+
+                const tr = `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-2.5 px-3 font-mono font-bold text-pink-600">${escapeHtml(p.invoice_no || `INV-${p.id}`)}</td>
+                        <td class="py-2.5 px-3 text-slate-500 text-[11px] font-mono">${pDate}</td>
+                        <td class="py-2.5 px-3 font-bold text-slate-800 text-[11px]">${escapeHtml(p.billing_month || 'মাসিক ফি')}</td>
+                        <td class="py-2.5 px-3">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${p.type_badge_cls || 'bg-blue-50 text-blue-700 border border-blue-200'}">
+                                <span>${typeLabel}</span>
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <span class="font-mono font-bold text-slate-800 block">${escapeHtml(p.trx_id || '-')}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(p.payment_method || 'bKash')} (${escapeHtml(p.sender_number || '-')})</span>
+                        </td>
+                        <td class="py-2.5 px-3 font-mono font-black text-slate-900 text-xs">৳ ${parseFloat(p.amount).toLocaleString('bn-BD')}</td>
+                        <td class="py-2.5 px-3">${badge}</td>
+                        <td class="py-2.5 px-3 text-right">
+                            <button type="button" onclick="showAdminInvoice(${p.id})" class="px-2.5 py-1 text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 cursor-pointer">
+                                <i data-lucide="printer" class="w-3 h-3 text-emerald-600"></i>
+                                <span>ইনভয়েস</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                $tbody.append(tr);
+            });
+
+            // Render Pagination Buttons
+            renderPaginationButtons(totalPages);
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderPaginationButtons(totalPages) {
+            const $btnContainer = $('#saasPaginationButtons');
+            $btnContainer.empty();
+
+            if (totalPages <= 1) return;
+
+            // Previous Button
+            const prevDisabled = saasCurrentPage === 1;
+            $btnContainer.append(`
+                <button type="button" onclick="changeSaasPaymentPage(${saasCurrentPage - 1})" ${prevDisabled ? 'disabled' : ''}
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    ‹ পূর্ববর্তী
+                </button>
+            `);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const isActive = (i === saasCurrentPage);
+                $btnContainer.append(`
+                    <button type="button" onclick="changeSaasPaymentPage(${i})"
+                        class="w-7 h-7 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center ${isActive ? 'bg-pink-600 text-white shadow-2xs' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}">
+                        ${i.toLocaleString('bn-BD')}
+                    </button>
+                `);
+            }
+
+            // Next Button
+            const nextDisabled = saasCurrentPage === totalPages;
+            $btnContainer.append(`
+                <button type="button" onclick="changeSaasPaymentPage(${saasCurrentPage + 1})" ${nextDisabled ? 'disabled' : ''}
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                    পরবর্তী ›
+                </button>
+            `);
+        }
+
+        function changeSaasPaymentPage(page) {
+            const totalPages = Math.ceil(saasPaymentsData.length / saasPerPage);
+            if (page < 1 || page > totalPages) return;
+            renderSaasPaymentsTable(page);
+        }
+
+        // =========================================================================
+        // PRINTABLE OFFICIAL INVOICE MODAL
+        // =========================================================================
+        function showAdminInvoice(paymentId) {
+            const p = saasPaymentsData.find(item => item.id == paymentId);
+            if (!p) {
+                showPaymentToast('ইনভয়েস তথ্য পাওয়া যায়নি।');
+                return;
+            }
+
+            const invNo = p.invoice_no || `INV-${p.id}`;
+            $('#admInvSubtitle').text(invNo);
+            $('#admInvDocNo').text(invNo);
+            $('#admInvDocDate').text(p.formatted_date_short || p.created_at);
+            
+            // Status Badge
+            let statusHtml = '';
+            if (p.status === 'approved') {
+                statusHtml = '<span class="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>পরিশোধিত (Paid)</span></span>';
+            } else if (p.status === 'pending') {
+                statusHtml = '<span class="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-200"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span>অপেক্ষমাণ (Pending Verification)</span></span>';
+            } else {
+                statusHtml = '<span class="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i><span>প্রত্যাখ্যাত (Rejected)</span></span>';
+            }
+            $('#admInvStatusBadge').html(statusHtml);
+
+            // Bill To
+            if (currentTenantData) {
+                $('#admInvStoreName').text(currentTenantData.name || '-');
+                $('#admInvOwnerName').text(currentTenantData.owner_name || '-');
+                $('#admInvOwnerPhone').text(currentTenantData.owner_phone || '-');
+                $('#admInvOwnerEmail').text(currentTenantData.owner_email || '-');
+            }
+
+            // Payment Details
+            $('#admInvMethod').text(p.payment_method || 'bKash');
+            $('#admInvSender').text(p.sender_number || '-');
+            $('#admInvTrxId').text(p.trx_id || '-');
+            $('#admInvMonth').text(p.billing_month || 'নভেম্বর ২০২৬');
+
+            // Amount
+            const amtStr = '৳ ' + parseFloat(p.amount).toLocaleString('bn-BD');
+            $('#admInvAmount').text(amtStr);
+            $('#admInvTotalAmount').text(amtStr);
+            $('#admInvTypeBadge').text(p.type_label || (p.payment_type === 'initial' ? 'নতুন সাবস্ক্রিপশন' : 'মাসিক রিনিউয়াল'));
+
+            $('#adminInvoiceModal').removeClass('hidden');
+            $('body').addClass('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeAdminInvoiceModal() {
+            $('#adminInvoiceModal').addClass('hidden');
+            $('body').removeClass('overflow-hidden');
+        }
+
+        // Close on ESC or click outside
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && !$('#adminInvoiceModal').hasClass('hidden')) {
+                closeAdminInvoiceModal();
+            }
+        });
+        $('#adminInvoiceModal').on('click', function(e) {
+            if (e.target === this) {
+                closeAdminInvoiceModal();
+            }
+        });
 
         function resetSaasPaymentFlow() {
             $('#inputSenderBkashNumber').val('');
@@ -4200,7 +4389,7 @@ ${itemsText}
         async function loadDeliveryChargesAdmin() {
             renderDeliveryChargeSkeletons(3);
             try {
-                const res = await StoreApi.get('delivery-charges');
+                const res = await StoreApi.get('delivery-charges', { store: STORE_UUID });
                 if (res && res.success && Array.isArray(res.data)) {
                     deliveryChargesData = res.data;
                 } else {
@@ -4343,7 +4532,7 @@ ${itemsText}
                 return;
             }
 
-            const payload = { title, code, amount, description, status, sort_order, is_default };
+            const payload = { store_uuid: STORE_UUID, title, code, amount, description, status, sort_order, is_default };
 
             try {
                 let res;
@@ -4371,29 +4560,20 @@ ${itemsText}
         }
 
         async function deleteDeliveryCharge(uuid, title) {
-            const confirmed = await Swal.fire({
-                title: 'আপনি কি নিশ্চিত?',
-                text: `"${title}" ডেলিভারি চার্জটি মুছে ফেলা হবে।`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'হ্যাঁ, মুছুন',
-                cancelButtonText: 'বাতিল'
-            });
+            if (!confirm(`"${title}" ডেলিভারি চার্জটি মুছে ফেলতে চান?`)) {
+                return;
+            }
 
-            if (confirmed.isConfirmed) {
-                try {
-                    const res = await StoreApi.delete(`delivery-charges/${uuid}`);
-                    if (res && res.success) {
-                        showToast('ডেলিভারি চার্জ মুছে ফেলা হয়েছে।', 'success');
-                        await loadDeliveryChargesAdmin();
-                    } else {
-                        showToast((res && res.message) || 'ডেলিভারি চার্জ মোছা সম্ভব হয়নি।', 'error');
-                    }
-                } catch (e) {
-                    showToast('সার্ভার যোগাযোগে সমস্যা হয়েছে।', 'error');
+            try {
+                const res = await StoreApi.delete(`delivery-charges/${uuid}?store=${STORE_UUID}`);
+                if (res && res.success) {
+                    showToast('ডেলিভারি চার্জ মুছে ফেলা হয়েছে।', 'success');
+                    await loadDeliveryChargesAdmin();
+                } else {
+                    showToast((res && res.message) || 'ডেলিভারি চার্জ মোছা সম্ভব হয়নি।', 'error');
                 }
+            } catch (e) {
+                showToast('সার্ভার যোগাযোগে সমস্যা হয়েছে।', 'error');
             }
         }
 

@@ -49,6 +49,11 @@ if (typeof window.StoreApi === 'undefined') {
                     'Accept': 'application/json'
                 };
 
+                if (_storeUuid) {
+                    headers['X-Store-UUID'] = _storeUuid;
+                    headers['X-Tenant-UUID'] = _storeUuid;
+                }
+
                 const token = this.getToken();
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`;

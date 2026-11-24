@@ -20,20 +20,20 @@ $deliveryCharges = ($deliveryChargesRes['success'] && !empty($deliveryChargesRes
         [
             'code' => 'inside_dhaka',
             'title' => 'ঢাকার ভেতরে (Inside Dhaka)',
-            'amount' => 60.00,
+            'amount' => 80.00,
             'description' => 'হোম ডেলিভারি (২৪-৪৮ ঘণ্টা)',
             'is_default' => 1
         ],
         [
             'code' => 'outside_dhaka',
             'title' => 'ঢাকার বাইরে (Outside Dhaka)',
-            'amount' => 120.00,
+            'amount' => 150.00,
             'description' => 'কুরিয়ার হোম ডেলিভারি (২-৩ দিন)',
             'is_default' => 0
         ]
     ];
 
-$defaultDeliveryCharge = 60.00;
+$defaultDeliveryCharge = 80.00;
 $defaultDeliveryTitle = 'ঢাকার ভেতরে';
 foreach ($deliveryCharges as $dc) {
     if (!empty($dc['is_default'])) {
@@ -85,10 +85,10 @@ require_once __DIR__ . '/views/header.php';
     </div>
 
     <!-- 2. CHECKOUT MAIN GRID (LEFT: SHIPPING FORM | RIGHT: ORDER SUMMARY) -->
-    <div id="checkoutMainContainer" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div id="checkoutMainContainer" class="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
         
         <!-- LEFT COLUMN: SHIPPING & BILLING FORM -->
-        <div class="lg:col-span-7 space-y-6">
+        <div class="md:col-span-7 space-y-6">
             
             <form id="checkoutOrderForm" onsubmit="submitCheckoutOrder(event)" class="space-y-6">
                 
@@ -230,13 +230,9 @@ require_once __DIR__ . '/views/header.php';
                 </div>
 
                 <!-- Submit Button for Mobile View -->
-                <div class="lg:hidden">
+                <div class="md:hidden">
                     <button type="submit" id="btnSubmitOrderMobile" 
                         class="w-full py-4 px-6 bg-brand-600 hover:bg-brand-700 text-white text-sm font-black rounded-2xl transition shadow-md flex items-center justify-center space-x-2 cursor-pointer">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i>
-                        <span>অর্ডার নিশ্চিত করুন &bull; ৳<span class="btnTotalDisplay">০.০০</span></span>
-                    </button>
-                </div>
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                         <span>অর্ডার নিশ্চিত করুন &bull; ৳<span class="btnTotalDisplay">০.০০</span></span>
                     </button>
@@ -246,7 +242,7 @@ require_once __DIR__ . '/views/header.php';
         </div>
 
         <!-- RIGHT COLUMN: ORDER SUMMARY SIDEBAR -->
-        <div class="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
+        <div class="md:col-span-5 space-y-4 md:sticky md:top-24">
             <div class="bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 shadow-xs space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 class="text-sm font-extrabold text-slate-900">অর্ডার সারসংক্ষেপ (Order Summary)</h3>
