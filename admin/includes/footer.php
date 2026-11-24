@@ -1,0 +1,4841 @@
+
+    <!-- 3. MODAL: ADD / EDIT PRODUCT -->
+    <div id="modalProduct" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8">
+            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
+                        <i data-lucide="package-plus" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900" id="modalProductTitle" data-i18n="modalAddProdTitle">নতুন প্রোডাক্ট যোগ করুন</h3>
+                        <p class="text-[11px] text-slate-500" data-i18n="modalAddProdSub">ইমেজ সর্বোচ্চ ২০০KB-তে অপটিমাইজ হয়ে মাদার এপিআই-তে সংরক্ষিত হবে।</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600 transition p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="productForm" class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <input type="hidden" id="prodEditUuid">
+
+                <!-- Product Name & Slug -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="modalProdName">প্রোডাক্টের নাম (Product Name) *</label>
+                        <input type="text" id="fProdName" required placeholder="যেমন: ক্লাসিক কটন পোলো শার্ট"
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs"
+                            oninput="autoSlugFromName(this.value)">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="modalProdSlug">ইউনিক স্ল্যাগ (URL Slug) *</label>
+                        <input type="text" id="fProdSlug" required placeholder="classic-cotton-polo"
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-mono focus:outline-none focus:border-brand-600 shadow-xs">
+                    </div>
+                </div>
+
+                <!-- 2 Price Fields & Real-time Profit Calculation -->
+                <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 space-y-3">
+                    <div class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                        <i data-lucide="calculator" class="w-3.5 h-3.5 text-brand-600"></i>
+                        <span data-i18n="titlePricingSection">মূল্য ও লাভ নির্ধারণ (Pricing & Profit Calculation)</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="lblMainCostPrice">
+                                মেইন বা কেনা দাম (Cost / Wholesale) *
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-xs">৳</span>
+                                <input type="number" id="fMainPrice" required step="0.01" min="0" placeholder="650.00"
+                                    class="w-full pl-7 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-brand-600 shadow-xs"
+                                    oninput="calculateProfitPreview()">
+                            </div>
+                            <span class="text-[10px] text-slate-400" data-i18n="hintMainPrice">স্টোরফ্রন্ট যে দামে সংগ্রহ করেছে</span>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="lblRetailerSellingPrice">
+                                বিক্রয় মূল্য (Retailer Selling Price) *
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-xs">৳</span>
+                                <input type="number" id="fRetailerPrice" required step="0.01" min="0" placeholder="1250.00"
+                                    class="w-full pl-7 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-brand-600 shadow-xs"
+                                    oninput="calculateProfitPreview()">
+                            </div>
+                            <span class="text-[10px] text-slate-400" data-i18n="hintRetailerPrice">গ্রাহক ওয়েবসাইটে যে দামে ক্রয় করবে</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Profit Calculation Display Banner -->
+                    <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-2 text-emerald-800 font-bold">
+                            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-600"></i>
+                            <span data-i18n="lblProfitPerUnit">প্রতি ইউনিটে লাভ (Profit):</span>
+                            <span id="previewProfitVal" class="text-sm font-black text-emerald-700">৳০.০০</span>
+                        </div>
+                        <div class="text-[11px] font-semibold text-emerald-600" id="previewProfitMargin">০% মার্জিন</div>
+                    </div>
+                </div>
+
+                <!-- Stock Quantity (Inventory) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblStockQty">ইনভেন্টরি স্টক (Stock Quantity) *</label>
+                    <input type="number" id="fStock" required min="0" value="10"
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 font-bold focus:outline-none focus:border-brand-600 shadow-xs">
+                    <p class="text-[10px] text-slate-400 mt-1" data-i18n="hintStock">প্রতিটি বিক্রয়ে এই সংখ্যা থেকে অটোমেটিক স্টক মাইনাস হবে।</p>
+                </div>
+
+                <!-- Sizes & Colors Tags -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblSizes">সাইজসমূহ (Sizes)</label>
+                        <input type="text" id="fSizes" placeholder="M, L, XL, XXL (কমা দিয়ে লিখুন)"
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs">
+                        <div class="flex flex-wrap gap-1 mt-1.5" id="quickSizeButtons">
+                            <button type="button" onclick="appendTag('fSizes', 'S')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+S</button>
+                            <button type="button" onclick="appendTag('fSizes', 'M')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+M</button>
+                            <button type="button" onclick="appendTag('fSizes', 'L')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+L</button>
+                            <button type="button" onclick="appendTag('fSizes', 'XL')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+XL</button>
+                            <button type="button" onclick="appendTag('fSizes', 'XXL')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+XXL</button>
+                            <button type="button" onclick="appendTag('fSizes', 'Free Size')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Free Size</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblColors">রঙসমূহ (Colors)</label>
+                        <input type="text" id="fColors" placeholder="Black, White, Navy (কমা দিয়ে লিখুন)"
+                            class="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs">
+                        <div class="flex flex-wrap gap-1 mt-1.5" id="quickColorButtons">
+                            <button type="button" onclick="appendTag('fColors', 'Black')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Black</button>
+                            <button type="button" onclick="appendTag('fColors', 'White')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+White</button>
+                            <button type="button" onclick="appendTag('fColors', 'Navy')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Navy</button>
+                            <button type="button" onclick="appendTag('fColors', 'Red')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Red</button>
+                            <button type="button" onclick="appendTag('fColors', 'Gray')" class="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-semibold">+Gray</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Description -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblDescription">পণ্যের বিবরণ (Description)</label>
+                    <textarea id="fDescription" rows="2" placeholder="পণ্যের ম্যাটেরিয়াল, ফিচার ও বিস্তারিত বিবরণ..."
+                        class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-600 shadow-xs"></textarea>
+                </div>
+
+                <!-- Multi-Image Upload (Auto-compressed to ~200KB, Max 5 Images) -->
+                <div class="border-t border-slate-200 pt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-900 flex items-center space-x-1">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-brand-600"></i>
+                            <span data-i18n="lblProductImages">প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ৫টি ছবি)</span>
+                            <span class="text-rose-500 font-black">*</span>
+                        </label>
+                        <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" data-i18n="lblAutoCompressBadge">
+                            ⚡ স্বয়ংক্রিয় ২০০KB অপটিমাইজেশন
+                        </span>
+                    </div>
+
+                    <!-- File input & Dropzone -->
+                    <label for="fImagesInput" id="imageDropzone" class="border-2 border-dashed border-slate-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-xl p-5 text-center cursor-pointer transition bg-slate-50/50 block group select-none">
+                        <input type="file" id="fImagesInput" multiple accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only" onchange="handleImageSelection(event)">
+                        <div class="flex flex-col items-center justify-center pointer-events-none">
+                            <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                                <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                            </div>
+                            <div class="text-xs font-bold text-slate-800" data-i18n="dropzonePrompt">ছবি আপলোড করতে ক্লিক করুন (বা ড্র্যাগ করুন)</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5" data-i18n="dropzoneHelp">PNG, JPG, WebP ইত্যাদি (যেকোনো সাইজের ছবি স্বয়ংক্রিয়ভাবে ২০০KB-তে কম্প্রেস হবে)</div>
+                            <div class="mt-2.5 inline-flex items-center space-x-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-brand-600 shadow-2xs group-hover:border-brand-300">
+                                <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+                                <span>কম্পিউটার থেকে ছবি বাছুন (Browse Files)</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Validation Error Message -->
+                    <div id="imageValidationError" class="hidden mt-2 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center space-x-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-500 shrink-0"></i>
+                        <span>কমপক্ষে একটি প্রোডাক্টের ছবি আপলোড করা আবশ্যক। ছবি ছাড়া পণ্য সংরক্ষণ করা যাবে না।</span>
+                    </div>
+
+                    <!-- Live Image Previews Container -->
+                    <div id="imagePreviewGrid" class="grid grid-cols-5 gap-2 mt-3">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+
+                <!-- Hidden Submit Button for Enter key form submission -->
+                <button type="submit" id="hiddenProductSubmit" class="hidden"></button>
+            </form>
+
+            <!-- Modal Footer (Pinned at Bottom) -->
+            <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200 flex items-center justify-end space-x-2 shrink-0">
+                <button type="button" onclick="closeProductModal()" class="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer" data-i18n="btnCancel">বাতিল</button>
+                <button type="button" onclick="$('#productForm').submit()" id="btnSaveProduct" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                    <span id="btnSaveProductText" data-i18n="btnSaveProduct">প্রোডাক্ট সংরক্ষণ করুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. MODAL: ADD / EDIT CATEGORY -->
+    <div id="modalCategory" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] my-auto overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                        <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900" id="modalCategoryTitle">নতুন ক্যাটাগরি যোগ করুন</h3>
+                        <p class="text-[11px] text-slate-500">ক্যাটাগরির নাম ও ১টি কভার ইমেজ যুক্ত করুন।</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="categoryForm" class="p-5 space-y-4 overflow-y-auto flex-1">
+                <input type="hidden" id="catEditUuid">
+
+                <!-- Category Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ক্যাটাগরির নাম (Category Name) *</label>
+                    <input type="text" id="fCatName" required placeholder="যেমন: Men's Clothing বা Electronics"
+                        class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-brand-600 shadow-xs font-medium">
+                </div>
+
+                <!-- 1 Category Image Upload (Auto-compressed to 200KB) -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-slate-900 flex items-center space-x-1.5">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>ক্যাটাগরি ইমেজ (১টি ছবি - ঐচ্ছিক)</span>
+                        </label>
+                        <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            ⚡ ২০০KB কম্প্রেশন
+                        </span>
+                    </div>
+
+                    <!-- Single Image Preview Container -->
+                    <div id="catImagePreviewWrapper" class="hidden mb-2 relative group w-24 h-24 rounded-xl overflow-hidden border border-slate-200 shadow-2xs">
+                        <img id="catImagePreview" src="" alt="Category preview" class="w-full h-full object-cover">
+                        <button type="button" onclick="removeCatImage()" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition shadow-xs cursor-pointer" title="ছবি সরান">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+
+                    <!-- File input & Dropzone -->
+                    <label for="fCatImageInput" id="catImageDropzone" class="border-2 border-dashed border-slate-300 hover:border-brand-500 hover:bg-brand-50/20 rounded-xl p-4 text-center cursor-pointer transition bg-slate-50/50 block group select-none">
+                        <input type="file" id="fCatImageInput" accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only" onchange="handleCatImageSelection(event)">
+                        <div class="flex flex-col items-center justify-center pointer-events-none">
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-1.5 group-hover:scale-110 transition">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-xs font-bold text-slate-800">ছবি আপলোড করতে ক্লিক করুন</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">যেকোনো সাইজের ছবি স্বয়ংক্রিয় ২০০KB-তে অপটিমাইজ হবে</div>
+                        </div>
+                    </label>
+                </div>
+            </form>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-200 flex items-center justify-end space-x-2 shrink-0">
+                <button type="button" onclick="closeCategoryModal()" class="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer">বাতিল</button>
+                <button type="button" onclick="$('#categoryForm').submit()" id="btnSaveCategory" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                    <span id="btnSaveCategoryText">ক্যাটাগরি সংরক্ষণ করুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MODAL: PRODUCT DETAILS (CLICK CARD) -->
+    <div id="modalProductDetails" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-xl shadow-2xl flex flex-col max-h-[92vh] my-auto overflow-hidden">
+            <!-- Modal Header (Pinned) -->
+            <div class="px-5 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70 shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold">
+                        <i data-lucide="package" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900" id="detailProdTitle">প্রোডাক্টের বিবরণ</h3>
+                    </div>
+                </div>
+                <button type="button" onclick="closeProductDetailsModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+                
+                <!-- Main Image Preview & Thumbnails Gallery -->
+                <div id="detailGallerySection" class="space-y-2">
+                    <div class="aspect-video w-full rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                        <img id="detailMainImage" src="" class="w-full h-full object-contain">
+                        <div id="detailNoImagePlaceholder" class="hidden flex flex-col items-center justify-center text-slate-400">
+                            <i data-lucide="image-off" class="w-10 h-10 mb-1"></i>
+                            <span class="text-xs">কোনো ছবি নেই</span>
+                        </div>
+                    </div>
+                    <div id="detailThumbnailsRow" class="flex gap-2 overflow-x-auto pb-1">
+                        <!-- Thumbnails populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Stock Units & Quick Inventory Stepper -->
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50/50 border border-emerald-200/80 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <span class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center space-x-1.5">
+                            <i data-lucide="boxes" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <span data-i18n="lblStockQty">ইনভেন্টরি স্টক (Stock Quantity)</span>
+                        </span>
+                        <div class="flex items-baseline space-x-2 mt-1">
+                            <span class="text-2xl font-black text-emerald-950" id="detailStockCount">0</span>
+                            <span class="text-xs text-emerald-700 font-semibold" data-i18n="statStockUnits">উপলব্ধ আইটেম/ইউনিট</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stepper (+5 / +1 / -1) -->
+                    <div class="flex items-center space-x-1.5 self-start sm:self-auto">
+                        <button type="button" id="btnDetailStockDec" class="px-2.5 py-1.5 bg-white border border-emerald-200 hover:bg-emerald-100/60 rounded-lg font-black text-slate-700 shadow-2xs transition cursor-pointer" title="১টি কমান">-১</button>
+                        <button type="button" id="btnDetailStockInc" class="px-2.5 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-black shadow-2xs transition cursor-pointer" title="১টি বাড়ান">+১</button>
+                        <button type="button" id="btnDetailStockInc5" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-black shadow-2xs transition cursor-pointer" title="৫টি বাড়ান">+৫</button>
+                    </div>
+                </div>
+
+                <!-- Pricing & Profit Overview Card -->
+                <div class="grid grid-cols-3 gap-2 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                    <div>
+                        <span class="text-[10px] text-slate-500 block font-medium" data-i18n="thMainPrice">কেনা দাম (Main)</span>
+                        <span class="text-xs sm:text-sm font-black text-slate-800" id="detailMainPrice">৳০.০০</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block font-medium" data-i18n="thRetailerPrice">বিক্রয় মূল্য (Retailer)</span>
+                        <span class="text-xs sm:text-sm font-black text-brand-600" id="detailRetailerPrice">৳০.০০</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-emerald-700 font-bold block" data-i18n="thProfitUnit">লাভ / ইউনিট</span>
+                        <span class="text-xs sm:text-sm font-black text-emerald-700" id="detailProfitVal">+৳০.০০</span>
+                        <span class="text-[9px] text-emerald-600 font-semibold block" id="detailProfitMargin">০% মার্জিন</span>
+                    </div>
+                </div>
+
+                <!-- Sizes & Colors Tags -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="p-3 bg-slate-50/70 border border-slate-200/70 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-700 block mb-1.5" data-i18n="lblSizes">সাইজসমূহ (Sizes)</span>
+                        <div id="detailSizesContainer" class="flex flex-wrap gap-1">
+                            <!-- Populated -->
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50/70 border border-slate-200/70 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-700 block mb-1.5" data-i18n="lblColors">রঙসমূহ (Colors)</span>
+                        <div id="detailColorsContainer" class="flex flex-wrap gap-1">
+                            <!-- Populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <span class="text-[11px] font-bold text-slate-700 block mb-1" data-i18n="lblDescription">পণ্যের বিবরণ (Description)</span>
+                    <div id="detailDescription" class="p-3 bg-slate-50 rounded-xl text-slate-700 text-xs leading-relaxed border border-slate-200/80 whitespace-pre-wrap"></div>
+                </div>
+
+                <!-- Category & Potential Profit -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                        <span class="text-slate-500 font-medium">ক্যাটাগরি:</span>
+                        <span id="detailCategory" class="text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200 font-bold text-[10px]"></span>
+                    </div>
+                    <div class="flex items-center justify-between p-2.5 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+                        <span class="text-emerald-800 font-semibold">মোট সম্ভাব্য লাভ:</span>
+                        <span id="detailTotalPotentialProfit" class="font-black text-emerald-700">৳০.০০</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Pinned Actions) -->
+            <div class="px-5 sm:px-6 py-3.5 bg-slate-50/80 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <button type="button" id="btnDetailDelete" class="px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span data-i18n="deleteBtn">ডিলিট</span>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="closeProductDetailsModal()" class="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer" data-i18n="btnCancel">বন্ধ করুন</button>
+                    <button type="button" id="btnDetailEdit" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        <span>সম্পাদনা করুন</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details & Printable Invoice Modal -->
+    <div id="modalOrderDetails" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 my-8 overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 print:hidden">
+                <div class="flex items-center space-x-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <i data-lucide="receipt" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">অর্ডার ইনভয়েস ও বিবরণ</h3>
+                        <p class="text-[11px] text-slate-500 font-mono" id="modalOrderInvoiceNo">ORD-XXXXXX</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="copyOrderInfo(activeModalOrder ? activeModalOrder.uuid : '')" class="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 shadow-2xs cursor-pointer" title="কুরিয়ার বা মেসেজের জন্য সম্পূর্ণ তথ্য কপি করুন">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>তথ্য কপি করুন</span>
+                    </button>
+                    <button type="button" onclick="printOrderInvoice()" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        <span>চালান প্রিন্ট</span>
+                    </button>
+                    <button type="button" onclick="closeOrderDetailsModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body (Printable Area) -->
+            <div id="printableInvoiceArea" class="p-6 space-y-5 max-h-[78vh] overflow-y-auto">
+                <!-- Status Changer Bar -->
+                <div class="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 print:hidden">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-slate-700">বর্তমান স্ট্যাটাস:</span>
+                        <span id="modalCurrentStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold"></span>
+                    </div>
+                    <div class="flex items-center space-x-2 w-full sm:w-auto">
+                        <label class="text-xs font-semibold text-slate-600 whitespace-nowrap">স্ট্যাটাস পরিবর্তন:</label>
+                        <select id="modalStatusSelect" onchange="changeOrderStatusFromModal()"
+                            class="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-orange-500">
+                            <option value="pending">🟡 পেন্ডিং (Pending)</option>
+                            <option value="processing">🔵 প্রসেসিং (Processing)</option>
+                            <option value="delivered">🟢 ডেলিভারি সম্পন্ন (Delivered)</option>
+                            <option value="cancel">🔴 বাতিল (Cancel)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Invoice Header for Print / Display -->
+                <div class="flex justify-between items-start border-b border-slate-200 pb-4">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-900" id="invStoreName"><?= htmlspecialchars($store['name']) ?></h2>
+                        <p class="text-xs text-slate-500" id="invStoreAddress"><?= htmlspecialchars($store['address'] ?? '') ?></p>
+                        <p class="text-xs text-slate-500 font-mono" id="invStorePhone"><?= htmlspecialchars($store['phone'] ?? '') ?></p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs font-black text-orange-600 tracking-wider uppercase">INVOICE / চালান</div>
+                        <div class="text-xs font-mono font-bold text-slate-800 mt-0.5" id="invOrderNumber">ORD-0000</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5" id="invOrderDate">2026-11-11</div>
+                    </div>
+                </div>
+
+                <!-- Customer & Delivery Information Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">গ্রাহকের তথ্য</div>
+                        <div class="text-xs font-black text-slate-900" id="invCustomerName">Customer Name</div>
+                        <div class="text-xs text-slate-600 font-mono mt-0.5" id="invCustomerPhone">017XXXXXXXX</div>
+                        <div class="mt-2.5 flex items-center space-x-2 print:hidden" id="invCustomerActions">
+                            <!-- Quick Call & WhatsApp -->
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ডেলিভারি ঠিকানা ও জোন</div>
+                        <div class="text-xs font-bold text-slate-800" id="invDeliveryZone">ঢাকার ভেতরে (৳৬০)</div>
+                        <div class="text-xs text-slate-600 mt-0.5" id="invFullAddress">বিভাগ: ঢাকা, জেলা: ঢাকা...</div>
+                        <div class="text-[11px] text-slate-500 mt-1" id="invPaymentMethod">পেমেন্ট: ক্যাশ অন ডেলিভারি (COD)</div>
+                    </div>
+                </div>
+
+                <!-- Order Items Table -->
+                <div>
+                    <div class="text-xs font-bold text-slate-800 mb-2">অর্ডারকৃত পণ্য তালিকা</div>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">পণ্য</th>
+                                    <th class="py-2.5 px-2 text-center">সাইজ ও কালার</th>
+                                    <th class="py-2.5 px-2 text-right">মূল্য</th>
+                                    <th class="py-2.5 px-2 text-center">পরিমাণ</th>
+                                    <th class="py-2.5 px-3 text-right">মোট</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invItemsTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Price Calculations Summary -->
+                <div class="flex justify-end">
+                    <div class="w-full sm:w-64 space-y-1.5 text-xs">
+                        <div class="flex justify-between text-slate-600">
+                            <span>সাব-টোটাল:</span>
+                            <span class="font-bold text-slate-900" id="invSubtotal">৳০</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>ডেলিভারি চার্জ:</span>
+                            <span class="font-bold text-slate-900" id="invDeliveryCharge">৳০</span>
+                        </div>
+                        <div class="border-t border-slate-200 pt-1.5 flex justify-between text-sm font-extrabold text-orange-600">
+                            <span>সর্বমোট প্রদেয়:</span>
+                            <span id="invTotalAmount">৳০</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Printable Footer Note -->
+                <div class="pt-4 border-t border-slate-200 text-center text-[11px] text-slate-400">
+                    আমাদের স্টোরে কেনাকাটার জন্য ধন্যবাদ! যে কোনো প্রয়োজনে যোগাযোগ করুন: <span id="invFooterPhone"><?= htmlspecialchars($store['phone'] ?? '') ?></span>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200 flex items-center justify-between print:hidden">
+                <button type="button" onclick="closeOrderDetailsModal()" class="px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer">বন্ধ করুন</button>
+                <button type="button" onclick="printOrderInvoice()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                    <span>চালান প্রিন্ট করুন</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Special Discount Modal -->
+    <div id="modalSetDiscount" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 my-8 overflow-hidden transform transition-all">
+            <!-- Header -->
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div class="flex items-center space-x-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <i data-lucide="percent" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900" id="modalSetDiscountTitle">স্পেশাল ডিসকাউন্ট নির্ধারণ করুন</h3>
+                        <p class="text-[11px] text-slate-500">পণ্য নির্বাচন করে ছাড়ের শতাংশ ও মেয়াদ সেট করুন</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSetDiscountModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form id="formSetDiscount" onsubmit="submitSetDiscount(event)" class="p-5 space-y-4 text-xs">
+                <!-- 1. Product Selection -->
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-slate-700">পণ্য নির্বাচন করুন <span class="text-red-500">*</span></label>
+                    <select id="discProductUuid" onchange="onDiscountProductSelect()" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="">-- পণ্য বেছে নিন --</option>
+                    </select>
+                </div>
+
+                <!-- 2. Discount Percentage with Quick Chips -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="font-bold text-slate-700">ডিসকাউন্ট পারসেন্ট (%) <span class="text-red-500">*</span></label>
+                        <span id="discPercentDisplay" class="text-xs font-black text-orange-600 font-mono">20%</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="discPercent" min="1" max="99" value="20" oninput="calcDiscountPreview()" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <span class="text-base font-bold text-slate-400">%</span>
+                    </div>
+                    <!-- Quick Percentage Chips -->
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="setQuickDiscPercent(10)" class="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 rounded-lg text-[11px] font-bold text-slate-600 transition">10%</button>
+                        <button type="button" onclick="setQuickDiscPercent(15)" class="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 rounded-lg text-[11px] font-bold text-slate-600 transition">15%</button>
+                        <button type="button" onclick="setQuickDiscPercent(20)" class="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 rounded-lg text-[11px] font-bold text-slate-600 transition">20%</button>
+                        <button type="button" onclick="setQuickDiscPercent(25)" class="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 rounded-lg text-[11px] font-bold text-slate-600 transition">25%</button>
+                        <button type="button" onclick="setQuickDiscPercent(30)" class="px-2.5 py-1 bg-slate-100 hover:bg-orange-50 hover:text-orange-600 rounded-lg text-[11px] font-bold text-slate-600 transition">30%</button>
+                        <button type="button" onclick="setQuickDiscPercent(50)" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-[11px] font-bold transition">50%</button>
+                    </div>
+                </div>
+
+                <!-- 3. Live Price Calculation Card -->
+                <div class="p-3.5 bg-orange-50/60 border border-orange-200/80 rounded-2xl space-y-2">
+                    <div class="text-[11px] font-bold text-orange-900 uppercase tracking-wider">হিসাব প্রিভিউ (Live Preview)</div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-white p-2 rounded-xl border border-orange-100 shadow-2xs">
+                            <span class="text-[10px] text-slate-400 block">মূল দাম</span>
+                            <span id="discPrevRegular" class="text-xs font-black text-slate-700 font-mono">৳ 0.00</span>
+                        </div>
+                        <div class="bg-white p-2 rounded-xl border border-orange-100 shadow-2xs">
+                            <span class="text-[10px] text-slate-400 block">ছাড়ের পরিমাণ</span>
+                            <span id="discPrevSavings" class="text-xs font-black text-red-600 font-mono">৳ 0.00</span>
+                        </div>
+                        <div class="bg-white p-2 rounded-xl border border-orange-200 shadow-2xs">
+                            <span class="text-[10px] text-slate-400 block">নতুন বিক্রয়মূল্য</span>
+                            <span id="discPrevFinal" class="text-xs font-black text-emerald-600 font-mono">৳ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Discount Timing -->
+                <div class="space-y-1.5">
+                    <label class="block font-bold text-slate-700">অফারের মেয়াদ শেষ হওয়ার তারিখ ও সময় <span class="text-red-500">*</span></label>
+                    <input type="datetime-local" id="discEndsAt" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <p class="text-[10px] text-slate-400">⏱️ অফারটি শুরু হবে: <strong>এই মুহূর্ত থেকেই</strong> (স্বয়ংক্রিয়)</p>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeSetDiscountModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer">বাতিল</button>
+                    <button type="submit" id="btnSaveDiscount" class="px-5 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-extrabold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>ডিসকাউন্ট সক্রিয় করুন</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Order Copy & Courier Entry Modal (One-by-One Copy) -->
+    <div id="modalOrderQuickCopy" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 my-8 overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                <div class="flex items-center space-x-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">অর্ডার ও কুরিয়ার কপি তথ্য</h3>
+                        <p class="text-[11px] text-slate-500 font-mono" id="qcopyOrderNumber">ORD-XXXXXX</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeOrderCopyModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (One-by-one copy rows) -->
+            <div class="p-5 space-y-3.5 max-h-[75vh] overflow-y-auto text-xs">
+                
+                <!-- Notice Bar -->
+                <div class="p-2.5 bg-orange-50/70 border border-orange-200/80 rounded-xl text-[11px] text-orange-800 flex items-center justify-between gap-2">
+                    <span>💡 কুরিয়ারে বুকিং করতে প্রতিটি তথ্য এক ক্লিকে আলাদাভাবে কপি করুন।</span>
+                    <button type="button" onclick="copyOrderInfo(activeCopyOrder ? activeCopyOrder.uuid : '')" class="px-2.5 py-1 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition shrink-0 cursor-pointer shadow-2xs">সব তথ্য কপি</button>
+                </div>
+
+                <!-- 1. Customer Name -->
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">গ্রাহকের নাম</span>
+                        <span class="text-xs font-bold text-slate-900 truncate block mt-0.5" id="qcopyCustomerName">-</span>
+                    </div>
+                    <button type="button" onclick="copyFieldText('#qcopyCustomerName', 'গ্রাহকের নাম')" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg font-bold flex items-center space-x-1 shadow-2xs transition shrink-0 cursor-pointer">
+                        <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>কপি</span>
+                    </button>
+                </div>
+
+                <!-- 2. Customer Phone -->
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">মোবাইল নম্বর</span>
+                        <span class="text-xs font-bold text-slate-900 font-mono block mt-0.5" id="qcopyCustomerPhone">-</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5 shrink-0">
+                        <a href="#" id="qcopyCallBtn" class="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center transition" title="কল করুন">
+                            <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                        </a>
+                        <a href="#" id="qcopyWaBtn" target="_blank" class="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center transition" title="WhatsApp">
+                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                        </a>
+                        <button type="button" onclick="copyFieldText('#qcopyCustomerPhone', 'মোবাইল নম্বর')" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg font-bold flex items-center space-x-1 shadow-2xs transition cursor-pointer">
+                            <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span>কপি</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. Delivery Address -->
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ডেলিভারি ঠিকানা</span>
+                        <span class="text-xs font-semibold text-slate-800 block mt-0.5 leading-relaxed" id="qcopyAddress">-</span>
+                    </div>
+                    <button type="button" onclick="copyFieldText('#qcopyAddress', 'ডেলিভারি ঠিকানা')" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg font-bold flex items-center space-x-1 shadow-2xs transition shrink-0 cursor-pointer mt-1">
+                        <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>কপি</span>
+                    </button>
+                </div>
+
+                <!-- 4. Area / Upazilla / District Grid -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-1.5">
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block">থানা / উপজেলা</span>
+                            <span class="text-xs font-bold text-slate-800 truncate block" id="qcopyUpazilla">-</span>
+                        </div>
+                        <button type="button" onclick="copyFieldText('#qcopyUpazilla', 'থানা/উপজেলা')" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-lg transition shrink-0 cursor-pointer" title="কপি করুন">
+                            <i data-lucide="copy" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <div class="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-1.5">
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase block">জেলা</span>
+                            <span class="text-xs font-bold text-slate-800 truncate block" id="qcopyDistrict">-</span>
+                        </div>
+                        <button type="button" onclick="copyFieldText('#qcopyDistrict', 'জেলা')" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-lg transition shrink-0 cursor-pointer" title="কপি করুন">
+                            <i data-lucide="copy" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5. COD Collection Amount (Courier Pure Amount) -->
+                <div class="p-3 bg-amber-50/60 border border-amber-200/80 rounded-xl flex items-center justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">কুরিয়ার কালেকশন এমাউন্ট (COD Amount)</span>
+                        <div class="flex items-center space-x-2 mt-0.5">
+                            <span class="text-sm font-black text-amber-800 font-mono" id="qcopyCodDisplay">৳০</span>
+                            <span class="text-[10px] text-amber-600 font-mono" id="qcopyCodRaw" style="display:none;">0</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="copyPureCodAmount()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold flex items-center space-x-1 shadow-2xs transition shrink-0 cursor-pointer" title="কুরিয়ার পোর্টালে সরাসরি পেস্ট করতে সংখ্যাটি কপি করুন">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>টাকা কপি</span>
+                    </button>
+                </div>
+
+                <!-- 6. Products / Item List Summary -->
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">অর্ডারের পণ্যসমূহ (পার্সেল নোট)</span>
+                        <span class="text-xs font-medium text-slate-700 block mt-0.5 whitespace-pre-line leading-relaxed font-mono" id="qcopyItemsSummary">-</span>
+                    </div>
+                    <button type="button" onclick="copyFieldText('#qcopyItemsSummary', 'পণ্যের বিবরণ')" class="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg font-bold flex items-center space-x-1 shadow-2xs transition shrink-0 cursor-pointer mt-1">
+                        <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>কপি</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3.5 bg-slate-50/80 border-t border-slate-200 flex items-center justify-between gap-2">
+                <button type="button" onclick="closeOrderCopyModal()" class="px-3.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer">বন্ধ করুন</button>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="openInvoiceFromCopyModal()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                        <span>চালান দেখুন</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <div>
+                &copy; <?= date('Y') ?> <strong class="text-slate-700" id="footStoreName"><?= htmlspecialchars($store['name']) ?></strong> &bull; Client Storefront Dashboard
+            </div>
+            <div class="flex items-center space-x-3 text-slate-400">
+                <span data-i18n="footTenantSaas">হেডলেস মাল্টি-টেন্যান্ট ই-কমার্স সিস্টেম</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+        const STORE_UUID = "<?= htmlspecialchars(ApiClient::getStoreUuid()) ?>";
+        const API_URL    = "<?= htmlspecialchars(ApiClient::getApiUrl()) ?>";
+
+        StoreApi.init({
+            apiUrl: API_URL,
+            storeUuid: STORE_UUID
+        });
+
+        // 1. Guard check: Ensure token is present
+        const token = StoreApi.getToken();
+        if (!token) {
+            window.location.href = 'login.php';
+        }
+
+        let storeData = <?= json_encode($store, JSON_UNESCAPED_UNICODE) ?>;
+        let productsData = [];
+        let categoriesData = [];
+        let defaultCategoryUuid = '';
+        let recentlyRestocked = {}; // Tracks restocked items in current session: { [uuid]: { added: number, total: number } }
+        let selectedCatImageFile = null;
+        let existingCatImageUrl = '';
+        let existingImages = []; // List of image URLs
+        let selectedNewFiles = []; // Array of File objects selected for upload
+
+        // 2. Bilingual Dictionary
+        const i18n = {
+            bn: {
+                pageTitle: 'অ্যাডমিন ড্যাশবোর্ড | ' + "<?= addslashes($store['name']) ?>",
+                badgeStoreAdmin: 'ক্লায়েন্ট অ্যাডমিন প্যানেল',
+                btnVisitStore: 'স্টোরফ্রন্ট দেখুন',
+                tabDashboard: 'ড্যাশবোর্ড (Dashboard)',
+                tabOrders: 'অর্ডার ব্যবস্থাপনা (Order Management)',
+                tabAllOrders: 'সকল অর্ডার (All Orders)',
+                tabProducts: 'প্রোডাক্ট ও ইনভেন্টরি',
+                tabDesignWebsite: 'ওয়েবসাইট ডিজাইন (Design Website)',
+                tabPayments: 'পেমেন্ট ও বিলিং (Payments)',
+                tabUploadBanner: 'ব্যানার আপলোড (Upload Banner)',
+                navMoreMenu: 'অন্যান্য মেনু ও সেটিংস',
+                tabCompletedOrders: 'সম্পন্ন অর্ডার ও হিসাব',
+                tabCancelledOrders: 'বাতিল অর্ডার (Trash)',
+                tabCategories: 'ক্যাটাগরি (Category)',
+                tabStockOut: 'স্টক আউট (Stock Out)',
+                tabUserInfo: 'ইউজার তথ্য ও স্টোর সেটিংস',
+                categoryTitle: 'ক্যাটাগরি ব্যবস্থাপনা (Categories)',
+                categorySubtitle: 'পণ্য সুশৃঙ্খলভাবে সাজানোর জন্য ক্যাটাগরি তৈরি ও পরিচালনা করুন। "Unnamed" ডিফল্ট ক্যাটাগরি হিসেবে থাকবে।',
+                stockOutTitle: 'স্টক আউট প্রোডাক্ট (Stock Out)',
+                stockOutSubtitle: 'যেসব পণ্যের স্টক শেষ বা ০ হয়ে গেছে। নির্দিষ্ট পরিমাণ লিখে "স্টক যোগ করুন" বাটনে ক্লিক করে ইনভেন্টরি বাড়ান।',
+                noStockOutFound: 'কোনো স্টক আউট প্রোডাক্ট নেই! আপনার স্টোরের সব পণ্য স্টকে রয়েছে।',
+                statusLive: 'স্টোরফ্রন্ট সক্রিয় ও লাইভ',
+                lblStoreId: 'স্টোর আইডি:',
+                helloWorldBadge: 'হ্যালো ওয়ার্ল্ড! স্বাগতম',
+                welcomeMsg: 'স্বাগতম,',
+                welcomeSub: 'এটি আপনার স্টোরফ্রন্টের কেন্দ্রীয় অ্যাডমিন ড্যাশবোর্ড। এখান থেকে আপনি স্টোরের প্রোডাক্ট আপলোড, ইনভেন্টরি স্টক এবং কেনা-বেচার লাভ পরিচালনা করতে পারবেন।',
+                btnAddProductQuick: 'প্রোডাক্ট যোগ করুন',
+                btnViewLive: 'ওয়েবসাইট দেখুন',
+                statTotalProducts: 'মোট প্রোডাক্ট',
+                statActiveInCatalog: 'ক্যাটালগে প্রদর্শিত',
+                statTotalStock: 'মোট ইনভেন্টরি স্টক',
+                statStockUnits: 'উপলব্ধ আইটেম/ইউনিট',
+                statEstimatedProfit: 'সম্ভাব্য মুনাফা',
+                statProfitFormula: '(বিক্রয় - কেনা দাম) × স্টক',
+                cardStatus: 'স্টোর স্ট্যাটাস',
+                statusActive: 'সক্রিয় (Active)',
+                statusSub: 'মাদার কন্ট্রোল দ্বারা অনুমোদিত',
+                socialOverviewTitle: 'সংযুক্ত সোশ্যাল মিডিয়া চ্যানেলসমূহ',
+                socialOverviewSub: 'আপনার স্টোরফ্রন্টের উপরের বারে এই লিংকগুলো গ্রাহকদের নিকট প্রদর্শিত হয়।',
+                btnManageSocial: 'পরিবর্তন করুন →',
+                productsTitle: 'প্রোডাক্ট ও ইনভেন্টরি স্টক',
+                productsSubtitle: 'নতুন প্রোডাক্ট আপলোড করুন, ২০০KB কম্প্রেসড ইমেজ সংরক্ষণ করুন এবং ইনভেন্টরি স্টক নিয়ন্ত্রণ করুন।',
+                btnAddProduct: 'নতুন প্রোডাক্ট যোগ করুন',
+                optAllProducts: 'সকল প্রোডাক্ট',
+                thProductItem: 'প্রোডাক্ট ও ছবি',
+                thMainPrice: 'কেনা দাম (Main)',
+                thRetailerPrice: 'বিক্রয় মূল্য (Retailer)',
+                thProfitUnit: 'লাভ / ইউনিট',
+                thStock: 'ইনভেন্টরি স্টক',
+                thVariants: 'সাইজ ও রঙ',
+                thStatus: 'স্ট্যাটাস',
+                thActions: 'অ্যাকশন',
+                loading: 'লোড হচ্ছে...',
+                noProductsFound: 'কোনো প্রোডাক্ট পাওয়া যায়নি। নতুন পণ্য যুক্ত করতে "নতুন প্রোডাক্ট যোগ করুন" বাটনে ক্লিক করুন।',
+                modalAddProdTitle: 'নতুন প্রোডাক্ট যোগ করুন',
+                modalEditProdTitle: 'প্রোডাক্ট সম্পাদনা: ',
+                modalAddProdSub: 'ইমেজ সর্বোচ্চ ২০০KB-তে অপটিমাইজ হয়ে মাদার এপিআই-তে সংরক্ষিত হবে।',
+                modalProdName: 'প্রোডাক্টের নাম (Product Name) *',
+                modalProdSlug: 'ইউনিক স্ল্যাগ (URL Slug) *',
+                titlePricingSection: 'মূল্য ও লাভ নির্ধারণ (Pricing & Profit Calculation)',
+                lblMainCostPrice: 'মেইন বা কেনা দাম (Cost / Wholesale) *',
+                hintMainPrice: 'স্টোরফ্রন্ট যে দামে সংগ্রহ করেছে',
+                lblRetailerSellingPrice: 'বিক্রয় মূল্য (Retailer Selling Price) *',
+                hintRetailerPrice: 'গ্রাহক ওয়েবসাইটে যে দামে ক্রয় করবে',
+                lblProfitPerUnit: 'প্রতি ইউনিটে লাভ (Profit):',
+                lblStockQty: 'ইনভেন্টরি স্টক (Stock Quantity) *',
+                hintStock: 'প্রতিটি বিক্রয়ে এই সংখ্যা থেকে অটোমেটিক স্টক মাইনাস হবে।',
+                lblStatus: 'প্রোডাক্ট স্ট্যাটাস (Status)',
+                optActive: 'সক্রিয় (Active - শপে প্রদর্শিত হবে)',
+                optInactive: 'নিষ্ক্রিয় (Inactive - লুকানো থাকবে)',
+                lblSizes: 'সাইজসমূহ (Sizes)',
+                lblColors: 'রঙসমূহ (Colors)',
+                lblDescription: 'পণ্যের বিবরণ (Description)',
+                lblProductImages: 'প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ৫টি ছবি)',
+                lblAutoCompressBadge: '⚡ স্বয়ংক্রিয় ২০০KB অপটিমাইজেশন',
+                dropzonePrompt: 'ছবি আপলোড করতে ক্লিক করুন (বা ড্র্যাগ করুন)',
+                dropzoneHelp: 'PNG, JPG, WebP ইত্যাদি (যেকোনো সাইজের ছবি স্বয়ংক্রিয়ভাবে ২০০KB-তে কম্প্রেস হবে)',
+                btnCancel: 'বাতিল',
+                btnSaveProduct: 'প্রোডাক্ট সংরক্ষণ করুন',
+                savingProduct: 'সংরক্ষণ ও ইমেজ প্রসেসিং হচ্ছে...',
+                userProfileTitle: 'ইউজার তথ্য ও স্টোর সেটিংস',
+                userProfileSub: 'আপনার স্টোরের নাম, স্ল্যাগ, যোগাযোগের ঠিকানা ও সোশ্যাল মিডিয়া প্রোফাইল লিংক আপডেট করুন।',
+                fieldStoreName: 'স্টোরের নাম (Store Name) *',
+                fieldStoreSlug: 'ইউনিক স্টোর স্ল্যাগ (Store Slug) *',
+                fieldOwnerName: 'স্বত্বাধিকারীর নাম (Owner Name)',
+                fieldOwnerEmail: 'অ্যাকাউন্ট ইমেইল (Login Email)',
+                hintManagedByMother: 'মাদার প্ল্যাটফর্ম দ্বারা নিয়ন্ত্রিত',
+                fieldPhone: 'ফোন নম্বর (Phone Number)',
+                fieldPassword: 'পাসওয়ার্ড পরিবর্তন (নতুন পাসওয়ার্ড)',
+                fieldAddress: 'স্টোর বা অফিসের ঠিকানা (Address)',
+                titleSocialSection: 'সোশ্যাল মিডিয়া লিংকসমূহ (Social Media Links)',
+                lblFacebook: 'ফেসবুক পেজ (Facebook URL)',
+                lblInstagram: 'ইনস্টাগ্রাম (Instagram URL)',
+                lblWhatsapp: 'হোয়াটসঅ্যাপ (WhatsApp Number/Link)',
+                lblYoutube: 'ইউটিউব চ্যানেল (YouTube Channel)',
+                btnSaveProfile: 'পরিবর্তন সংরক্ষণ করুন',
+                savingText: 'সংরক্ষণ করা হচ্ছে...',
+                saveSuccessTitle: 'সফলভাবে সংরক্ষিত!',
+                saveSuccessText: 'আপনার স্টোরের তথ্য সফলভাবে আপডেট হয়েছে।',
+                confirmLogoutTitle: 'আপনি কি লগআউট করতে চান?',
+                confirmLogoutBtn: 'হ্যাঁ, লগআউট করুন',
+                cancelLogoutBtn: 'না',
+                footTenantSaas: 'হেডলেস মাল্টি-টেন্যান্ট ই-কমার্স সিস্টেম',
+                connected: 'যুক্ত আছে',
+                notConnected: 'যুক্ত নেই',
+                inStock: 'স্টকে আছে',
+                outOfStock: 'স্টক শেষ',
+                confirmDeleteProd: 'আপনি কি নিশ্চিত এই প্রোডাক্টটি মুছে ফেলতে চান?',
+                deleteBtn: 'হ্যাঁ, ডিলিট করুন'
+            },
+            en: {
+                pageTitle: 'Admin Dashboard | ' + "<?= addslashes($store['name']) ?>",
+                badgeStoreAdmin: 'Client Admin Portal',
+                btnVisitStore: 'View Storefront',
+                tabDashboard: 'Dashboard',
+                tabOrders: 'Order Management',
+                tabAllOrders: 'All Orders',
+                tabProducts: 'Products & Inventory',
+                tabDesignWebsite: 'Design Website',
+                tabPayments: 'SaaS Billing & Payments',
+                tabUploadBanner: 'Upload Banner',
+                navMoreMenu: 'More Menus & Settings',
+                tabCompletedOrders: 'Completed Orders & Accounts',
+                tabCancelledOrders: 'Cancelled Orders (Trash)',
+                tabCategories: 'Categories',
+                tabStockOut: 'Stock Out',
+                tabUserInfo: 'User Info & Store Profile',
+                categoryTitle: 'Category Management',
+                categorySubtitle: 'Organize products with custom categories and cover images. "Unnamed" is default.',
+                stockOutTitle: 'Stock Out Products',
+                stockOutSubtitle: 'Products with 0 stock. Enter the quantity you want to restock and click "Add Stock".',
+                noStockOutFound: 'No stock out products! All store items are currently available in stock.',
+                statusLive: 'Storefront Active & Live',
+                lblStoreId: 'Store UUID:',
+                helloWorldBadge: 'Hello World! Welcome',
+                welcomeMsg: 'Welcome,',
+                welcomeSub: 'This is the central admin dashboard for your storefront. From here, you can easily manage products, stock inventory, and profits.',
+                btnAddProductQuick: 'Add Product',
+                btnViewLive: 'View Live Site',
+                statTotalProducts: 'Total Products',
+                statActiveInCatalog: 'Active in Catalog',
+                statTotalStock: 'Total Stock Inventory',
+                statStockUnits: 'Available Items/Units',
+                statEstimatedProfit: 'Profit Potential',
+                statProfitFormula: '(Retail - Cost) × Stock',
+                cardStatus: 'Store Status',
+                statusActive: 'Active',
+                statusSub: 'Approved by Mother Control',
+                socialOverviewTitle: 'Connected Social Media Channels',
+                socialOverviewSub: 'These links are displayed to visitors in the top navigation bar of your storefront.',
+                btnManageSocial: 'Manage Links →',
+                productsTitle: 'Products & Stock Inventory',
+                productsSubtitle: 'Upload products, store auto-compressed ~200KB images, and manage real-time inventory.',
+                btnAddProduct: 'Add New Product',
+                optAllProducts: 'All Products',
+                thProductItem: 'Product & Image',
+                thMainPrice: 'Cost Price (Main)',
+                thRetailerPrice: 'Selling Price (Retailer)',
+                thProfitUnit: 'Profit / Unit',
+                thStock: 'Stock Inventory',
+                thVariants: 'Sizes & Colors',
+                thStatus: 'Status',
+                thActions: 'Actions',
+                loading: 'Loading...',
+                noProductsFound: 'No products found. Click "Add New Product" to create your first item.',
+                modalAddProdTitle: 'Add New Product',
+                modalEditProdTitle: 'Edit Product: ',
+                modalAddProdSub: 'Images are automatically compressed to ~200KB and stored on Mother API.',
+                modalProdName: 'Product Name *',
+                modalProdSlug: 'Product Slug (URL) *',
+                titlePricingSection: 'Pricing & Profit Calculation',
+                lblMainCostPrice: 'Main / Cost Price (Wholesale) *',
+                hintMainPrice: 'Purchase cost paid by storefront',
+                lblRetailerSellingPrice: 'Retailer Selling Price *',
+                hintRetailerPrice: 'Customer price on website and cart',
+                lblProfitPerUnit: 'Profit per Unit:',
+                lblStockQty: 'Inventory Stock Quantity *',
+                hintStock: 'Each sale automatically deducts from this stock.',
+                lblStatus: 'Product Status',
+                optActive: 'Active (Visible on shop)',
+                optInactive: 'Inactive (Hidden from shop)',
+                lblSizes: 'Sizes',
+                lblColors: 'Colors',
+                lblDescription: 'Description',
+                lblProductImages: 'Product Images (Max 5 Images)',
+                lblAutoCompressBadge: '⚡ Auto ~200KB Optimization',
+                dropzonePrompt: 'Click or drag images to upload',
+                dropzoneHelp: 'PNG, JPG, WebP (Images of any size automatically compressed to ~200KB)',
+                btnCancel: 'Cancel',
+                btnSaveProduct: 'Save Product',
+                savingProduct: 'Saving & Compressing Images...',
+                userProfileTitle: 'User Info & Store Profile Settings',
+                userProfileSub: 'Update your store name, URL slug, contact details, and social media profile links.',
+                fieldStoreName: 'Store Name *',
+                fieldStoreSlug: 'Unique Store Slug *',
+                fieldOwnerName: 'Owner Name',
+                fieldOwnerEmail: 'Account Email (Login)',
+                hintManagedByMother: 'Managed by Mother platform',
+                fieldPhone: 'Phone Number',
+                fieldPassword: 'Change Password (New Password)',
+                fieldAddress: 'Store or Office Address',
+                titleSocialSection: 'Social Media Links',
+                lblFacebook: 'Facebook Page URL',
+                lblInstagram: 'Instagram URL',
+                lblWhatsapp: 'WhatsApp Number/Link',
+                lblYoutube: 'YouTube Channel URL',
+                btnSaveProfile: 'Save Changes',
+                savingText: 'Saving Changes...',
+                saveSuccessTitle: 'Successfully Saved!',
+                saveSuccessText: 'Your store profile information has been updated.',
+                confirmLogoutTitle: 'Are you sure you want to log out?',
+                confirmLogoutBtn: 'Yes, Log Out',
+                cancelLogoutBtn: 'Cancel',
+                footTenantSaas: 'Headless Multi-Tenant SaaS E-commerce',
+                connected: 'Linked',
+                notConnected: 'Not Linked',
+                inStock: 'In Stock',
+                outOfStock: 'Out of Stock',
+                confirmDeleteProd: 'Are you sure you want to delete this product?',
+                deleteBtn: 'Yes, Delete'
+            }
+        };
+
+        let currentLang = localStorage.getItem('client_lang') || 'bn';
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('client_lang', lang);
+
+            if (lang === 'bn') {
+                $('#langBn').addClass('bg-white shadow-xs font-bold text-brand-600').removeClass('text-slate-600');
+                $('#langEn').removeClass('bg-white shadow-xs font-bold text-brand-600').addClass('text-slate-600');
+            } else {
+                $('#langEn').addClass('bg-white shadow-xs font-bold text-brand-600').removeClass('text-slate-600');
+                $('#langBn').removeClass('bg-white shadow-xs font-bold text-brand-600').addClass('text-slate-600');
+            }
+
+            $('[data-i18n]').each(function() {
+                const key = $(this).attr('data-i18n');
+                if (i18n[lang][key]) {
+                    $(this).text(i18n[lang][key]);
+                }
+            });
+
+            document.title = i18n[lang].pageTitle;
+            renderSocialOverview(storeData.social_links || {});
+            renderProducts(productsData);
+            renderStockOutProducts(productsData);
+        }
+
+        // 2.3 Smooth Loader & Toast Helpers
+        function showTopLoader() {
+            const bar = $('#topLoadingBar');
+            bar.removeClass('opacity-0').css('width', '35%');
+            setTimeout(() => bar.css('width', '75%'), 120);
+        }
+
+        function hideTopLoader() {
+            const bar = $('#topLoadingBar');
+            bar.css('width', '100%');
+            setTimeout(() => {
+                bar.addClass('opacity-0');
+                setTimeout(() => bar.css('width', '0%'), 250);
+            }, 180);
+        }
+
+        function showToast(message, type = 'success') {
+            const bgGradients = {
+                success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                info: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+                error: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+            };
+            if (window.Toastify) {
+                Toastify({
+                    text: message,
+                    duration: 2500,
+                    gravity: 'bottom',
+                    position: 'right',
+                    stopOnFocus: true,
+                    style: {
+                        background: bgGradients[type] || bgGradients.success,
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)',
+                        padding: '10px 18px',
+                        letterSpacing: '0.01em'
+                    }
+                }).showToast();
+            }
+        }
+
+        // 2.4 Skeleton Loaders
+        function renderOrderSkeletons(containerId, count = 3) {
+            let html = '';
+            for (let i = 0; i < count; i++) {
+                html += `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs skeleton-shimmer space-y-3">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-slate-200"></div>
+                                <div class="space-y-1.5">
+                                    <div class="w-28 h-3.5 bg-slate-200 rounded"></div>
+                                    <div class="w-20 h-2.5 bg-slate-100 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="w-24 h-7 bg-slate-200 rounded-xl"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl">
+                            <div class="space-y-1.5">
+                                <div class="w-12 h-2 bg-slate-200 rounded"></div>
+                                <div class="w-28 h-3 bg-slate-200 rounded"></div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="w-16 h-2 bg-slate-200 rounded"></div>
+                                <div class="w-36 h-3 bg-slate-200 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                            <div class="w-32 h-3.5 bg-slate-200 rounded"></div>
+                            <div class="w-28 h-7 bg-slate-200 rounded-xl"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            $('#' + containerId).html(html);
+        }
+
+        function renderProductTableSkeletons(count = 5) {
+            let rows = '';
+            for (let i = 0; i < count; i++) {
+                rows += `
+                    <tr class="skeleton-shimmer border-b border-slate-100">
+                        <td class="p-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-slate-200 rounded-xl shrink-0"></div>
+                                <div class="space-y-2">
+                                    <div class="w-32 h-3 bg-slate-200 rounded"></div>
+                                    <div class="w-20 h-2 bg-slate-100 rounded"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-3"><div class="w-16 h-3 bg-slate-200 rounded mx-auto"></div></td>
+                        <td class="p-3"><div class="w-16 h-3 bg-slate-200 rounded mx-auto"></div></td>
+                        <td class="p-3"><div class="w-14 h-3 bg-slate-200 rounded mx-auto"></div></td>
+                        <td class="p-3"><div class="w-12 h-3 bg-slate-200 rounded mx-auto"></div></td>
+                        <td class="p-3"><div class="w-14 h-4 bg-slate-200 rounded-full mx-auto"></div></td>
+                        <td class="p-3"><div class="w-14 h-5 bg-slate-200 rounded-full mx-auto"></div></td>
+                        <td class="p-3"><div class="w-20 h-7 bg-slate-200 rounded-xl mx-auto"></div></td>
+                    </tr>
+                `;
+            }
+            $('#productsTableBody').html(rows);
+        }
+
+        function renderCategorySkeletons(count = 4) {
+            let cards = '';
+            for (let i = 0; i < count; i++) {
+                cards += `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 skeleton-shimmer space-y-3">
+                        <div class="w-full h-24 bg-slate-200 rounded-xl"></div>
+                        <div class="w-24 h-3.5 bg-slate-200 rounded"></div>
+                        <div class="w-16 h-2.5 bg-slate-100 rounded"></div>
+                    </div>
+                `;
+            }
+            $('#categoryListGrid').html(cards);
+        }
+
+        function renderDeliveryChargeSkeletons(count = 3) {
+            let rows = '';
+            for (let i = 0; i < count; i++) {
+                rows += `
+                    <tr class="skeleton-shimmer border-b border-slate-100">
+                        <td class="p-3.5"><div class="w-32 h-3.5 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-20 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-16 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-14 h-5 bg-slate-200 rounded-full"></div></td>
+                        <td class="p-3.5"><div class="w-12 h-6 bg-slate-200 rounded-lg"></div></td>
+                    </tr>
+                `;
+            }
+            $('#deliveryChargesTableBody').html(rows);
+        }
+
+        function renderDiscountSkeletons(count = 4) {
+            let rows = '';
+            for (let i = 0; i < count; i++) {
+                rows += `
+                    <tr class="skeleton-shimmer border-b border-slate-100">
+                        <td class="p-3.5"><div class="w-36 h-3.5 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-20 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-16 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-28 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3.5"><div class="w-14 h-6 bg-slate-200 rounded-lg"></div></td>
+                    </tr>
+                `;
+            }
+            $('#discountsTableBody').html(rows);
+        }
+
+        function renderPaymentHistorySkeletons(count = 3) {
+            let rows = '';
+            for (let i = 0; i < count; i++) {
+                rows += `
+                    <tr class="skeleton-shimmer border-b border-slate-100">
+                        <td class="p-3"><div class="w-24 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3"><div class="w-28 h-3.5 bg-slate-200 rounded"></div></td>
+                        <td class="p-3"><div class="w-16 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3"><div class="w-16 h-3 bg-slate-200 rounded"></div></td>
+                        <td class="p-3"><div class="w-16 h-5 bg-slate-200 rounded-full"></div></td>
+                        <td class="p-3"><div class="w-20 h-3 bg-slate-200 rounded"></div></td>
+                    </tr>
+                `;
+            }
+            $('#saasPaymentHistorySection table tbody').html(rows);
+        }
+
+        // 2.5 Collapsible Navigation Handler
+        function toggleCollapsibleNav(forceOpen = null) {
+            const container = $('#collapsibleNavLinks');
+            const chevron = $('#collapsibleNavChevron');
+            const shouldOpen = forceOpen !== null ? forceOpen : container.hasClass('hidden');
+            
+            if (shouldOpen) {
+                container.removeClass('hidden');
+                chevron.addClass('rotate-180');
+            } else {
+                container.addClass('hidden');
+                chevron.removeClass('rotate-180');
+            }
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        // 3. Tab Switching with Skeleton Loading, Smooth Fade and Top Loader
+        function switchTab(tab) {
+            showTopLoader();
+            const tabs = ['dashboard', 'orders', 'products', 'designWebsite', 'payments', 'discounts', 'completedOrders', 'cancelledOrders', 'categories', 'stockOut', 'userInfo', 'deliveryCharges', 'uploadBanner'];
+
+            // Auto-expand collapsible navigation group if needed
+            if (['discounts', 'completedOrders', 'cancelledOrders', 'categories', 'stockOut', 'userInfo', 'deliveryCharges', 'uploadBanner'].includes(tab)) {
+                toggleCollapsibleNav(true);
+            }
+
+            // Immediately update sidebar active button highlight
+            tabs.forEach(t => {
+                const navBtn = $('#navTab' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (t === tab) {
+                    navBtn.addClass('text-brand-600 bg-brand-50 border border-brand-200/50').removeClass('text-slate-600 hover:text-slate-900 hover:bg-slate-50');
+                } else {
+                    navBtn.removeClass('text-brand-600 bg-brand-50 border border-brand-200/50').addClass('text-slate-600 hover:text-slate-900 hover:bg-slate-50');
+                }
+            });
+
+            // Hide all tab contents and show shimmer skeleton
+            tabs.forEach(t => {
+                $('#tabContent' + t.charAt(0).toUpperCase() + t.slice(1)).addClass('hidden').removeClass('tab-transition');
+            });
+            const skeleton = $('#tabContentSkeleton');
+            skeleton.removeClass('hidden').addClass('tab-transition');
+
+            // Smoothly reveal content after skeleton shimmer
+            setTimeout(function() {
+                skeleton.addClass('hidden').removeClass('tab-transition');
+                const targetContent = $('#tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1));
+                targetContent.removeClass('hidden').addClass('tab-transition');
+
+                if (tab === 'discounts') {
+                    renderDiscountsTable(productsData);
+                } else if (tab === 'orders') {
+                    loadOrders();
+                } else if (tab === 'completedOrders') {
+                    loadOrders().then(() => renderCompletedOrders(ordersData));
+                } else if (tab === 'cancelledOrders') {
+                    loadOrders().then(() => renderCancelledOrders(ordersData));
+                } else if (tab === 'deliveryCharges') {
+                    loadDeliveryChargesAdmin();
+                } else if (tab === 'designWebsite') {
+                    renderDesignWebsiteTab();
+                } else if (tab === 'uploadBanner') {
+                    renderUploadBannerTab();
+                } else if (tab === 'payments') {
+                    loadSaasSubscriptionAndPayments();
+                }
+
+                hideTopLoader();
+                if (window.lucide) lucide.createIcons();
+            }, 220);
+        }
+
+        // 4. Render Social Badges in Overview
+        
+        // 2-Step SaaS bKash Payment & Billing Helper Functions (Live Integration with Mother API)
+        function goToSaasPaymentStep(step) {
+            if (step === 1) {
+                $('#saasPayStep1Panel').removeClass('hidden');
+                $('#saasPayStep2Panel').addClass('hidden');
+                $('#saasPaySuccessState').addClass('hidden');
+
+                // Segmented Tabs
+                $('#tabBtnStep1').removeClass('border-slate-200 bg-slate-50 text-slate-500 font-bold').addClass('border-pink-600 bg-pink-50/70 text-pink-700 font-black');
+                $('#tabBtnStep1 span:first-child').removeClass('bg-slate-200 text-slate-600').addClass('bg-pink-600 text-white');
+                
+                $('#tabBtnStep2').removeClass('border-pink-600 bg-pink-50/70 text-pink-700 font-black').addClass('border-slate-200 bg-slate-50 text-slate-500 font-bold');
+                $('#tabBtnStep2 span:first-child').removeClass('bg-pink-600 text-white').addClass('bg-slate-200 text-slate-600');
+            } else if (step === 2) {
+                $('#saasPayStep1Panel').addClass('hidden');
+                $('#saasPayStep2Panel').removeClass('hidden');
+                $('#saasPaySuccessState').addClass('hidden');
+
+                // Segmented Tabs
+                $('#tabBtnStep2').removeClass('border-slate-200 bg-slate-50 text-slate-500 font-bold').addClass('border-pink-600 bg-pink-50/70 text-pink-700 font-black');
+                $('#tabBtnStep2 span:first-child').removeClass('bg-slate-200 text-slate-600').addClass('bg-pink-600 text-white');
+
+                $('#tabBtnStep1').removeClass('border-pink-600 bg-pink-50/70 text-pink-700 font-black').addClass('border-slate-200 bg-slate-50 text-slate-500 font-bold');
+                $('#tabBtnStep1 span:first-child').removeClass('bg-pink-600 text-white').addClass('bg-slate-200 text-slate-600');
+                
+                // Focus sender number field
+                setTimeout(() => {
+                    $('#inputSenderBkashNumber').focus();
+                }, 100);
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function copySaasBkashNumber(num) {
+            navigator.clipboard.writeText(num).then(() => {
+                const btn = $('#btnCopyBkashNumber');
+                const text = $('#btnCopyBkashText');
+                btn.removeClass('bg-pink-600 hover:bg-pink-700').addClass('bg-emerald-600 hover:bg-emerald-700');
+                text.text('কপি হয়েছে!');
+                showPaymentToast('বিকাশ নম্বরটি কপি করা হয়েছে: ' + num);
+                setTimeout(() => {
+                    btn.removeClass('bg-emerald-600 hover:bg-emerald-700').addClass('bg-pink-600 hover:bg-pink-700');
+                    text.text('নম্বর কপি করুন');
+                }, 2500);
+            }).catch(() => {
+                showPaymentToast('নম্বর: ' + num);
+            });
+        }
+
+        let currentTenantMonthlyFee = <?= (float)($store['monthly_fee'] ?? 999.00) ?>;
+        let currentTenantBillingDay = <?= (int)($store['billing_day'] ?? 10) ?>;
+
+        function handleSaasPaymentVerification(e) {
+            e.preventDefault();
+            const senderNum = $('#inputSenderBkashNumber').val().trim();
+            const trxId = $('#inputSenderTrxId').val().trim();
+
+            if (!senderNum) {
+                alert('অনুগ্রহ করে যে বিকাশ নম্বর থেকে টাকা পাঠিয়েছেন তা লিখুন।');
+                return;
+            }
+
+            const btn = $('#btnSubmitSaasPayment');
+            btn.prop('disabled', true).html('<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>জমা হচ্ছে...</span>');
+            if (window.lucide) lucide.createIcons();
+
+            $.ajax({
+                url: `${API_URL}/tenants/${STORE_UUID}/payments`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    sender_number: senderNum,
+                    trx_id: trxId,
+                    amount: currentTenantMonthlyFee
+                }),
+                success: function(res) {
+                    btn.prop('disabled', false).html('<i data-lucide="send" class="w-3.5 h-3.5"></i><span>পেমেন্ট তথ্য সাবমিট করুন</span>');
+                    if (res.success) {
+                        $('#saasPayStep2Panel').addClass('hidden');
+                        $('#submittedSenderNumberDisplay').text(senderNum);
+                        $('#saasPaySuccessState').removeClass('hidden');
+
+                        showPaymentToast('পেমেন্ট রিকোয়েস্ট সফলভাবে জমা হয়েছে!');
+                        loadSaasSubscriptionAndPayments();
+                    } else {
+                        alert(res.message || 'পেমেন্ট জমা দেওয়া সম্ভব হয়নি।');
+                    }
+                    if (window.lucide) lucide.createIcons();
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).html('<i data-lucide="send" class="w-3.5 h-3.5"></i><span>পেমেন্ট তথ্য সাবমিট করুন</span>');
+                    const err = xhr.responseJSON ? xhr.responseJSON.message : 'সার্ভার এরর, পুনরায় চেষ্টা করুন।';
+                    alert(err);
+                    if (window.lucide) lucide.createIcons();
+                }
+            });
+        }
+
+        function loadSaasSubscriptionAndPayments() {
+            if (!STORE_UUID) return;
+            renderPaymentHistorySkeletons(3);
+            $.ajax({
+                url: `${API_URL}/tenants/${STORE_UUID}/payments`,
+                type: 'GET',
+                success: function(res) {
+                    if (res.success && res.data) {
+                        const tenant = res.data.tenant || {};
+                        const payments = res.data.payments || [];
+
+                        currentTenantMonthlyFee = parseFloat(tenant.monthly_fee) || currentTenantMonthlyFee || 999;
+                        currentTenantBillingDay = parseInt(tenant.billing_day) || currentTenantBillingDay || 10;
+
+                        const feeBn = currentTenantMonthlyFee.toLocaleString('bn-BD');
+                        $('#saasMonthlyFeeDisplay').text('৳ ' + feeBn);
+                        $('#saasStep1AmountDisplay').text('৳ ' + feeBn);
+                        $('#saasStep1RuleAmountDisplay').text(feeBn);
+                        $('#saasStep2FeeText').text('৳ ' + feeBn);
+                        $('#saasStep2FeeInput').val('৳ ' + feeBn);
+                        $('#saasStep2CycleInput').val(`প্রতি মাসের ${currentTenantBillingDay} তারিখ পর্যন্ত`);
+                        $('#saasNextPaymentDueBadge').text(`প্রতি মাসের ${currentTenantBillingDay} তারিখের মধ্যে প্রদেয়`);
+
+                        // 1. Update Validity Card & Warning Banner
+                        let isBlocked = false;
+                        let blockReason = '';
+
+                        if (tenant.subscription_ends_at) {
+                            const expDate = new Date(tenant.subscription_ends_at);
+                            const now = new Date();
+                            const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+                            const dateFormatted = expDate.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+                            
+                            $('#saasSubscriptionEndDateDisplay').text(dateFormatted);
+                            if (diffDays > 0 && tenant.status === 'active') {
+                                $('#saasSubscriptionDaysBadge').html(`<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold">${diffDays} দিন বাকি</span><span class="text-slate-400 font-normal">পরবর্তী নবায়ন আবশ্যক</span>`);
+                            } else {
+                                isBlocked = true;
+                                blockReason = diffDays <= 0 ? 'মেয়াদ শেষ (Expired)' : 'স্থগিত (Suspended)';
+                                $('#saasSubscriptionDaysBadge').html(`<span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 font-extrabold">মেয়াদ শেষ</span><span class="text-rose-500 font-bold">স্টোর রিনিউ করুন</span>`);
+                            }
+                        }
+
+                        if (tenant.status === 'suspended' || tenant.status === 'expired' || tenant.status === 'inactive') {
+                            isBlocked = true;
+                            if (tenant.status === 'suspended') blockReason = 'স্থগিত (Suspended)';
+                            else if (tenant.status === 'expired') blockReason = 'মেয়াদ শেষ (Expired)';
+                            else if (tenant.status === 'inactive') blockReason = 'নিষ্ক্রিয় (Inactive)';
+                        }
+
+                        // Global Banner visibility
+                        if (isBlocked) {
+                            $('#saasBannerAmountDisplay').text('৳ ' + feeBn);
+                            $('#saasBannerStatusBadge').text(blockReason || 'মেয়াদ শেষ');
+                            $('#saasBlockedWarningBanner').removeClass('hidden');
+                        } else {
+                            $('#saasBlockedWarningBanner').addClass('hidden');
+                        }
+
+                        // 2. Update Store Status Badge
+                        if (tenant.status === 'active' && !isBlocked) {
+                            $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: সচল (Active)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-black flex items-center space-x-1.5');
+                        } else if (tenant.status === 'suspended') {
+                            $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: স্থগিত (Suspended)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-black flex items-center space-x-1.5');
+                        } else {
+                            $('#saasStoreStatusBadge').html('<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span><span>স্টোর স্ট্যাটাস: মেয়াদোত্তীর্ণ (Expired)</span>').attr('class', 'px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-black flex items-center space-x-1.5');
+                        }
+
+                        // 3. Render Real Payment History Table
+                        const $tbody = $('#saasPaymentHistorySection table tbody');
+                        $tbody.empty();
+
+                        if (payments.length === 0) {
+                            $tbody.append('<tr><td colspan="7" class="py-6 text-center text-slate-400">এখনো কোনো পেমেন্ট রেকর্ড নেই। উপরে বিকাশ দিয়ে ফি পরিশোধ করুন।</td></tr>');
+                            return;
+                        }
+
+                        payments.forEach(p => {
+                            let badge = '';
+                            if (p.status === 'approved') {
+                                badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200"><i data-lucide="check" class="w-3 h-3"></i><span>অনুমোদিত</span></span>';
+                            } else if (p.status === 'pending') {
+                                badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>পেন্ডিং (যাচাই বাকি)</span></span>';
+                            } else {
+                                badge = '<span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200"><i data-lucide="x" class="w-3 h-3"></i><span>প্রত্যাখ্যাত</span></span>';
+                            }
+
+                            const pDate = new Date(p.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                            const tr = `
+                                <tr class="hover:bg-slate-50/80 transition">
+                                    <td class="py-2.5 px-3 font-mono font-bold text-pink-600">INV-SAAS-${p.id}</td>
+                                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${escapeHtml(p.sender_number)}</td>
+                                    <td class="py-2.5 px-3 font-mono text-[11px] text-slate-600">${escapeHtml(p.trx_id || 'নেই')}</td>
+                                    <td class="py-2.5 px-3 font-black text-slate-900">৳ ${parseFloat(p.amount).toLocaleString('bn-BD')}</td>
+                                    <td class="py-2.5 px-3 text-slate-500 text-[11px]">${pDate}</td>
+                                    <td class="py-2.5 px-3">${badge}</td>
+                                    <td class="py-2.5 px-3 text-right">
+                                        <button type="button" onclick="showPaymentToast('ইনভয়েস #INV-SAAS-${p.id} ডাউনলোড হচ্ছে...')" class="px-2 py-1 text-slate-600 hover:text-pink-600 hover:bg-pink-50 rounded-lg text-xs font-bold transition inline-flex items-center space-x-1 cursor-pointer">
+                                            <i data-lucide="download" class="w-3 h-3"></i>
+                                            <span>রিসিট</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            $tbody.append(tr);
+                        });
+
+                        if (window.lucide) lucide.createIcons();
+                    }
+                }
+            });
+        }
+
+        function resetSaasPaymentFlow() {
+            $('#inputSenderBkashNumber').val('');
+            $('#inputSenderTrxId').val('');
+            goToSaasPaymentStep(1);
+        }
+
+        function showPaymentToast(msg) {
+            const toast = $(`
+                <div class="fixed bottom-6 right-6 z-50 flex items-center space-x-2.5 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold animate-fade-in max-w-xs sm:max-w-md">
+                    <i data-lucide="info" class="w-4 h-4 text-pink-400 shrink-0"></i>
+                    <span>${msg}</span>
+                </div>
+            `);
+            $('body').append(toast);
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => {
+                toast.fadeOut(300, function() { $(this).remove(); });
+            }, 3000);
+        }
+
+        function renderSocialOverview(socials) {
+            const container = $('#socialBadgesContainer');
+            container.empty();
+
+            const platforms = [
+                { id: 'facebook', label: 'Facebook', icon: 'share-2', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+                { id: 'instagram', label: 'Instagram', icon: 'camera', color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
+                { id: 'whatsapp', label: 'WhatsApp', icon: 'message-circle', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+                { id: 'youtube', label: 'YouTube', icon: 'video', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+            ];
+
+            platforms.forEach(p => {
+                const val = socials[p.id];
+                const isLinked = val && val.trim() !== '';
+
+                const badge = `
+                    <div class="flex items-center justify-between p-3 rounded-xl border ${isLinked ? p.border + ' ' + p.bg : 'border-slate-200 bg-slate-50/50'}">
+                        <div class="flex items-center space-x-2.5">
+                            <i data-lucide="${p.icon}" class="w-4 h-4 ${isLinked ? p.color : 'text-slate-400'}"></i>
+                            <div>
+                                <div class="text-xs font-bold ${isLinked ? 'text-slate-900' : 'text-slate-500'}">${p.label}</div>
+                                <div class="text-[10px] ${isLinked ? 'text-emerald-700 font-semibold' : 'text-slate-400'}">
+                                    ${isLinked ? i18n[currentLang].connected : i18n[currentLang].notConnected}
+                                </div>
+                            </div>
+                        </div>
+                        ${isLinked ? `<a href="${val}" target="_blank" class="text-slate-400 hover:text-slate-700 p-1"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>` : ''}
+                    </div>
+                `;
+                container.append(badge);
+            });
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 4.5 CATEGORIES LOGIC & MANAGEMENT
+        // ==========================================
+
+        async function loadCategories() {
+            renderCategorySkeletons(4);
+            try {
+                const res = await StoreApi.get('categories');
+                if (res.success && Array.isArray(res.data)) {
+                    categoriesData = res.data;
+                    const def = categoriesData.find(c => c.is_default == 1 || c.slug === 'unnamed');
+                    if (def) {
+                        defaultCategoryUuid = def.uuid;
+                    }
+                    $('#badgeCategoryCount').text(categoriesData.length);
+                    $('#categoryHeaderCount').text(categoriesData.length + (currentLang === 'bn' ? ' টি' : ' items'));
+                    renderCategories(categoriesData);
+                    populateCategoryDropdown(categoriesData);
+                }
+            } catch (err) {
+                console.error('Error fetching categories:', err);
+            }
+        }
+
+        function populateCategoryDropdown(list) {
+            const $select = $('#fProdCategory');
+            $select.empty();
+            list.forEach(c => {
+                const isDef = (c.is_default == 1 || c.slug === 'unnamed');
+                const text = isDef ? `${c.name} (ডিফল্ট)` : c.name;
+                $select.append(`<option value="${c.uuid}" ${isDef ? 'selected' : ''}>${escapeHtml(text)}</option>`);
+            });
+            // Ensure default "Unnamed" is selected if nothing picked
+            if (!$select.val() && defaultCategoryUuid) {
+                $select.val(defaultCategoryUuid);
+            }
+        }
+
+        function renderCategories(list) {
+            const $grid = $('#categoryGridContainer');
+            $grid.empty();
+
+            if (!list || list.length === 0) {
+                $grid.append(`
+                    <div class="col-span-full py-16 text-center text-slate-500">
+                        কোনো ক্যাটাগরি পাওয়া যায়নি।
+                    </div>
+                `);
+                return;
+            }
+
+            list.forEach(cat => {
+                const isDefault = (cat.is_default == 1 || cat.slug === 'unnamed');
+                const prodCount = parseInt(cat.product_count) || 0;
+                const imgHtml = cat.image
+                    ? `<img src="${cat.image}" alt="${escapeHtml(cat.name)}" class="w-full h-full object-cover">`
+                    : `<div class="w-full h-full flex items-center justify-center bg-amber-50 text-amber-500"><i data-lucide="folder" class="w-8 h-8"></i></div>`;
+
+                const defaultBadge = isDefault
+                    ? `<span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">ডিফল্ট</span>`
+                    : '';
+
+                const deleteBtn = isDefault
+                    ? `<span class="p-1.5 text-slate-300 cursor-not-allowed" title="ডিফল্ট Unnamed ক্যাটাগরি মুছে ফেলা যাবে না"><i data-lucide="lock" class="w-3.5 h-3.5"></i></span>`
+                    : `<button type="button" onclick="deleteCategory('${cat.uuid}', '${escapeHtml(cat.name)}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer" title="মুছে ফেলুন"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`;
+
+                $grid.append(`
+                    <div class="bg-white border border-slate-200 hover:border-amber-400 rounded-2xl p-3 shadow-2xs hover:shadow-md transition duration-200 flex flex-col justify-between group">
+                        <div>
+                            <!-- Image Wrapper -->
+                            <div class="aspect-square w-full rounded-xl overflow-hidden bg-slate-100 relative mb-2.5 border border-slate-100 flex items-center justify-center">
+                                ${imgHtml}
+                                <div class="absolute top-1.5 right-1.5">
+                                    ${defaultBadge}
+                                </div>
+                            </div>
+
+                            <!-- Category Name -->
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-amber-600 transition truncate mb-0.5" title="${escapeHtml(cat.name)}">
+                                ${escapeHtml(cat.name)}
+                            </h4>
+
+                            <!-- Product Count -->
+                            <div class="text-[11px] text-slate-500 font-medium">
+                                ${prodCount} টি প্রোডাক্ট যুক্ত
+                            </div>
+                        </div>
+
+                        <!-- Footer with Actions -->
+                        <div class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-[10px] font-mono text-slate-400 truncate">/${escapeHtml(cat.slug)}</span>
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="openEditCategoryModal('${cat.uuid}')" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer" title="সম্পাদনা">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            lucide.createIcons();
+        }
+
+        function openCreateCategoryModal() {
+            $('#categoryForm')[0].reset();
+            $('#catEditUuid').val('');
+            $('#modalCategoryTitle').text('নতুন ক্যাটাগরি যোগ করুন');
+            selectedCatImageFile = null;
+            existingCatImageUrl = '';
+            $('#catImagePreviewWrapper').addClass('hidden');
+            $('#catImagePreview').attr('src', '');
+            $('#modalCategory').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            lucide.createIcons();
+        }
+
+        function openEditCategoryModal(uuid) {
+            const cat = categoriesData.find(c => c.uuid === uuid);
+            if (!cat) return;
+
+            $('#catEditUuid').val(cat.uuid);
+            $('#modalCategoryTitle').text('ক্যাটাগরি সম্পাদনা: ' + cat.name);
+            $('#fCatName').val(cat.name);
+            selectedCatImageFile = null;
+            existingCatImageUrl = cat.image || '';
+
+            if (existingCatImageUrl) {
+                $('#catImagePreview').attr('src', existingCatImageUrl);
+                $('#catImagePreviewWrapper').removeClass('hidden');
+            } else {
+                $('#catImagePreview').attr('src', '');
+                $('#catImagePreviewWrapper').addClass('hidden');
+            }
+
+            $('#modalCategory').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            lucide.createIcons();
+        }
+
+        function closeCategoryModal() {
+            $('#modalCategory').addClass('hidden').css('display', 'none');
+            $('body').removeClass('overflow-hidden');
+        }
+
+        function handleCatImageSelection(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({ icon: 'warning', text: 'অনুগ্রহ করে শুধুমাত্র ছবি ফাইল সিলেক্ট করুন।' });
+                return;
+            }
+
+            selectedCatImageFile = file;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                $('#catImagePreview').attr('src', evt.target.result);
+                $('#catImagePreviewWrapper').removeClass('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeCatImage() {
+            selectedCatImageFile = null;
+            existingCatImageUrl = '';
+            $('#fCatImageInput').val('');
+            $('#catImagePreview').attr('src', '');
+            $('#catImagePreviewWrapper').addClass('hidden');
+        }
+
+        $('#categoryForm').on('submit', async function(e) {
+            e.preventDefault();
+            const editUuid = $('#catEditUuid').val();
+            const isEdit = !!editUuid;
+            const catName = $('#fCatName').val().trim();
+
+            if (!catName) {
+                Swal.fire({ icon: 'warning', text: 'ক্যাটাগরির নাম দিন।' });
+                return;
+            }
+
+            $('#btnSaveCategory').prop('disabled', true);
+            $('#btnSaveCategoryText').text('সংরক্ষণ হচ্ছে...');
+
+            try {
+                let finalImageUrl = existingCatImageUrl;
+
+                // If a new image was selected, upload and compress to ~200KB
+                if (selectedCatImageFile) {
+                    const formData = new FormData();
+                    formData.append('image', selectedCatImageFile);
+                    formData.append('category_name', catName);
+
+                    const uploadRes = await StoreApi.post('categories/upload-image', formData);
+                    if (uploadRes.success && uploadRes.data && uploadRes.data.url) {
+                        finalImageUrl = uploadRes.data.url;
+                    } else {
+                        throw new Error(uploadRes.message || 'ক্যাটাগরি ইমেজ আপলোড ব্যর্থ হয়েছে।');
+                    }
+                }
+
+                const payload = {
+                    name: catName,
+                    image: finalImageUrl
+                };
+
+                let res;
+                if (isEdit) {
+                    res = await StoreApi.put(`categories/${editUuid}`, payload);
+                } else {
+                    res = await StoreApi.post('categories', payload);
+                }
+
+                if (res.success) {
+                    closeCategoryModal();
+                    await loadCategories();
+                    await loadProducts(); // Refresh products to reflect updated category name
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ক্যাটাগরি সংরক্ষিত!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', text: res.message || 'ক্যাটাগরি সংরক্ষণ ব্যর্থ।' });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', text: err.message });
+            } finally {
+                $('#btnSaveCategory').prop('disabled', false);
+                $('#btnSaveCategoryText').text('ক্যাটাগরি সংরক্ষণ করুন');
+            }
+        });
+
+        async function deleteCategory(uuid, name) {
+            const confirm = await Swal.fire({
+                title: 'ক্যাটাগরি মুছে ফেলতে চান?',
+                text: `"${name}" মুছে ফেললে এর ভেতরের সকল প্রোডাক্ট স্বয়ংক্রিয়ভাবে ডিফল্ট "Unnamed" ক্যাটাগরিতে যুক্ত হবে।`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'হ্যাঁ, ডিলিট করুন',
+                cancelButtonText: 'বাতিল'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const res = await StoreApi.delete(`categories/${uuid}`);
+                    if (res.success) {
+                        await loadCategories();
+                        await loadProducts();
+                        Swal.fire({ icon: 'success', title: 'ক্যাটাগরি মুছে ফেলা হয়েছে', timer: 1200, showConfirmButton: false });
+                    } else {
+                        Swal.fire({ icon: 'error', text: res.message || 'ক্যাটাগরি মুছে ফেলা ব্যর্থ।' });
+                    }
+                } catch (err) {
+                    Swal.fire({ icon: 'error', text: err.message });
+                }
+            }
+        }
+
+        // ==========================================
+        // 5. PRODUCTS & INVENTORY LOGIC
+        // ==========================================
+
+        async function loadProducts() {
+            renderProductTableSkeletons(5);
+            try {
+                const res = await StoreApi.get('products');
+                if (res.success && Array.isArray(res.data)) {
+                    productsData = res.data;
+                    updateProductStats(productsData);
+                    renderProducts(productsData);
+                    renderStockOutProducts(productsData);
+                } else if (res.status === 401) {
+                    window.location.href = 'login';
+                }
+            } catch (err) {
+                console.error('Error fetching products:', err);
+            }
+        }
+
+        function updateProductStats(list) {
+            const count = list.length;
+            $('#badgeProductCount').text(count);
+            $('#dashTotalProducts').text(count);
+
+            let totalStock = 0;
+            let totalProfitPotential = 0;
+            let stockOutCount = 0;
+
+            list.forEach(p => {
+                const stock = parseInt(p.stock) || 0;
+                const profit = parseFloat(p.profit) || 0;
+                totalStock += stock;
+                totalProfitPotential += (profit * stock);
+                if (stock <= 0) {
+                    stockOutCount++;
+                }
+            });
+
+            $('#dashTotalStock').text(totalStock);
+            $('#dashTotalProfit').text('৳' + totalProfitPotential.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            $('#badgeStockOutCount').text(stockOutCount);
+            $('#stockOutHeaderCount').text(stockOutCount + (currentLang === 'bn' ? ' টি' : ' items'));
+            $('#dashStockOutIndicator').text(stockOutCount + (currentLang === 'bn' ? ' টি স্টক আউট' : ' stock out'));
+        }
+
+        function renderProducts(list) {
+            const $grid = $('#productGridContainer');
+            $grid.empty();
+
+            const search = $('#prodSearchInput').val().trim().toLowerCase();
+
+            const filtered = list.filter(p => {
+                return !search || p.name.toLowerCase().includes(search) || (p.slug && p.slug.toLowerCase().includes(search));
+            });
+
+            if (filtered.length === 0) {
+                const emptyHtml = `
+                    <div class="col-span-full py-12 text-center flex flex-col items-center justify-center space-y-3">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                            <i data-lucide="package-search" class="w-7 h-7"></i>
+                        </div>
+                        <p class="text-xs text-slate-500 max-w-sm">${i18n[currentLang] ? i18n[currentLang].noProductsFound : 'কোনো প্রোডাক্ট পাওয়া যায়নি।'}</p>
+                        <button type="button" onclick="openCreateProductModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-xs cursor-pointer">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>${i18n[currentLang] ? i18n[currentLang].btnAddProduct : 'নতুন প্রোডাক্ট যোগ করুন'}</span>
+                        </button>
+                    </div>
+                `;
+                $grid.append(emptyHtml);
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.forEach(p => {
+                const stockCount = parseInt(p.stock) || 0;
+                const mainPrice = parseFloat(p.main_price) || 0;
+                const retailerPrice = parseFloat(p.retailer_price) || 0;
+                const profit = parseFloat(p.profit) || (retailerPrice - mainPrice);
+                const profitMargin = retailerPrice > 0 ? ((profit / retailerPrice) * 100).toFixed(0) : 0;
+                const imgThumbUrl = (p.images && p.images[0]) ? p.images[0] : null;
+
+                // Prominent Stock Badge (Mobile-First) - NO Active status indicator overload
+                const stockBadgeGrid = stockCount > 0
+                    ? `<span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-xs bg-emerald-600 text-white flex items-center space-x-1"><i data-lucide="boxes" class="w-3 h-3"></i><span>${stockCount} ${currentLang === 'bn' ? 'টি স্টক' : 'in stock'}</span></span>`
+                    : `<span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-xs bg-red-600 text-white flex items-center space-x-1"><i data-lucide="alert-circle" class="w-3 h-3"></i><span>${currentLang === 'bn' ? 'স্টক শেষ' : 'Out of stock'}</span></span>`;
+
+                const imgHtmlGrid = imgThumbUrl
+                    ? `<img src="${imgThumbUrl}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">`
+                    : `<div class="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50"><i data-lucide="package" class="w-8 h-8"></i></div>`;
+
+                $grid.append(`
+                    <div class="bg-white border border-slate-200/90 hover:border-brand-400 rounded-2xl p-2.5 sm:p-3.5 shadow-2xs hover:shadow-md transition duration-200 flex flex-col justify-between group cursor-pointer relative" onclick="openProductDetailsModal('${p.uuid}')">
+                        <div>
+                            <!-- Image with Prominent Stock Badge (No Active Status Overload) -->
+                            <div class="aspect-square w-full bg-slate-100 rounded-xl overflow-hidden relative mb-2.5 border border-slate-100">
+                                ${imgHtmlGrid}
+                                
+                                <!-- Stock Units Badge -->
+                                <div class="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+                                    ${stockBadgeGrid}
+                                </div>
+                            </div>
+
+                            <!-- Category Badge -->
+                            <div class="mb-1">
+                                <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 truncate max-w-full">
+                                    <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
+                                    <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
+                                </span>
+                            </div>
+
+                            <!-- Product Name -->
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-brand-600 transition truncate mb-1" title="${escapeHtml(p.name)}">
+                                ${escapeHtml(p.name)}
+                            </h4>
+
+                            <!-- Pricing Breakdown -->
+                            <div class="flex items-baseline justify-between mb-2">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase block">বিক্রয়</span>
+                                    <span class="text-xs sm:text-sm font-black text-slate-900">৳${retailerPrice.toFixed(2)}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-emerald-700 font-bold block">+৳${profit.toFixed(0)}</span>
+                                    <span class="text-[9px] text-slate-400 font-medium">মার্জিন ${profitMargin}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Quick Stepper & Detail Trigger -->
+                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1" onclick="event.stopPropagation()">
+                            <!-- Quick Stock Stepper (- / +) -->
+                            <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-0.5 shadow-2xs">
+                                <button type="button" onclick="adjustQuickStock('${p.uuid}', -1)" class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white hover:bg-slate-200 text-slate-700 text-xs font-black flex items-center justify-center transition cursor-pointer" title="১টি কমান">-</button>
+                                <span class="text-[11px] sm:text-xs font-bold text-slate-800 px-1 min-w-[18px] text-center">${stockCount}</span>
+                                <button type="button" onclick="adjustQuickStock('${p.uuid}', 1)" class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white hover:bg-slate-200 text-slate-700 text-xs font-black flex items-center justify-center transition cursor-pointer" title="১টি বাড়ান">+</button>
+                            </div>
+
+                            <div class="flex items-center space-x-0.5">
+                                <button type="button" onclick="openEditProductModal('${p.uuid}')" class="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition cursor-pointer" title="সম্পাদনা">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="openProductDetailsModal('${p.uuid}')" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition cursor-pointer" title="বিস্তারিত">
+                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // 5.2 STOCK OUT PRODUCTS GRID
+        // ==========================================
+
+        function renderStockOutProducts(list) {
+            const $grid = $('#stockOutGridContainer');
+            $grid.empty();
+
+            const search = $('#stockOutSearchInput').val() ? $('#stockOutSearchInput').val().trim().toLowerCase() : '';
+
+            const stockOutList = list.filter(p => {
+                const isOut = (parseInt(p.stock) || 0) <= 0 || !!recentlyRestocked[p.uuid];
+                const matchSearch = !search || p.name.toLowerCase().includes(search) || (p.slug && p.slug.toLowerCase().includes(search));
+                return isOut && matchSearch;
+            });
+
+            if (stockOutList.length === 0) {
+                const emptyHtml = `
+                    <div class="col-span-full py-16 text-center flex flex-col items-center justify-center space-y-3">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-xs">
+                            <i data-lucide="check-check" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800" data-i18n="noStockOutFound">কোনো স্টক আউট প্রোডাক্ট নেই!</h4>
+                        <p class="text-xs text-slate-500 max-w-sm">আপনার স্টোরের সকল পণ্য বর্তমানে স্টকে উপলব্ধ রয়েছে।</p>
+                    </div>
+                `;
+                $grid.append(emptyHtml);
+                lucide.createIcons();
+                return;
+            }
+
+            stockOutList.forEach(p => {
+                const stockCount = parseInt(p.stock) || 0;
+                const mainPrice = parseFloat(p.main_price) || 0;
+                const retailerPrice = parseFloat(p.retailer_price) || 0;
+                const profit = parseFloat(p.profit) || (retailerPrice - mainPrice);
+                const profitMargin = retailerPrice > 0 ? ((profit / retailerPrice) * 100).toFixed(0) : 0;
+                const imgThumbUrl = (p.images && p.images[0]) ? p.images[0] : null;
+
+                const isRecent = !!recentlyRestocked[p.uuid];
+                const cardBorder = isRecent
+                    ? 'border-2 border-emerald-400 bg-emerald-50/20 shadow-xs'
+                    : 'border-2 border-rose-200/80 hover:border-rose-400 bg-white';
+
+                const stockBadgeGrid = isRecent
+                    ? `<span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-xs bg-emerald-600 text-white flex items-center space-x-1"><i data-lucide="check-circle" class="w-3 h-3"></i><span>+${recentlyRestocked[p.uuid].added} টি যোগ সম্পন্ন (বর্তমান: ${stockCount})</span></span>`
+                    : `<span class="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-xs bg-rose-600 text-white flex items-center space-x-1"><i data-lucide="alert-octagon" class="w-3 h-3"></i><span>${currentLang === 'bn' ? 'স্টক শেষ (০)' : 'Stock Out (0)'}</span></span>`;
+
+                const imgHtmlGrid = imgThumbUrl
+                    ? `<img src="${imgThumbUrl}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">`
+                    : `<div class="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50"><i data-lucide="package" class="w-8 h-8"></i></div>`;
+
+                $grid.append(`
+                    <div class="${cardBorder} rounded-2xl p-2.5 sm:p-3.5 shadow-2xs hover:shadow-md transition duration-200 flex flex-col justify-between group cursor-pointer relative" onclick="openProductDetailsModal('${p.uuid}')">
+                        <div>
+                            <!-- Image with Stock Out Badge (No Active Status Overload) -->
+                            <div class="aspect-square w-full bg-slate-100 rounded-xl overflow-hidden relative mb-2.5 border border-slate-100">
+                                ${imgHtmlGrid}
+                                
+                                <div class="absolute top-1.5 left-1.5 sm:top-2 sm:left-2">
+                                    ${stockBadgeGrid}
+                                </div>
+                            </div>
+
+                            <!-- Category Badge -->
+                            <div class="mb-1">
+                                <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 truncate max-w-full">
+                                    <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
+                                    <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
+                                </span>
+                            </div>
+
+                            <!-- Product Name -->
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-brand-600 transition truncate mb-1" title="${escapeHtml(p.name)}">
+                                ${escapeHtml(p.name)}
+                            </h4>
+
+                            <!-- Pricing Breakdown -->
+                            <div class="flex items-baseline justify-between mb-2">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 font-semibold uppercase block">বিক্রয়</span>
+                                    <span class="text-xs sm:text-sm font-black text-slate-900">৳${retailerPrice.toFixed(2)}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-emerald-700 font-bold block">+৳${profit.toFixed(0)}</span>
+                                    <span class="text-[9px] text-slate-400 font-medium">মার্জিন ${profitMargin}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer: Wide Quantity Input & Submit Button -->
+                        <div class="pt-2.5 border-t border-slate-100 space-y-2" onclick="event.stopPropagation()">
+                            <!-- Row 1: Comfortable Wide Restock Input -->
+                            <div class="flex items-center space-x-2">
+                                <label for="restockInput_${p.uuid}" class="text-[11px] font-bold text-slate-600 shrink-0">নতুন স্টক:</label>
+                                <div class="relative flex-1">
+                                    <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-emerald-600 text-xs font-bold">+</span>
+                                    <input type="number" id="restockInput_${p.uuid}" min="1" step="1" placeholder="যেমন: 10" value="10"
+                                        class="w-full h-8 pl-6 pr-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                                        onkeydown="if(event.key==='Enter'){ event.stopPropagation(); submitRestockStockOut('${p.uuid}'); }">
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Full-width Submit Action & Detail Trigger -->
+                            <div class="flex items-center space-x-1.5">
+                                <button type="button" onclick="submitRestockStockOut('${p.uuid}')" id="btnRestock_${p.uuid}"
+                                    class="flex-1 h-8 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                                    title="স্টক যোগ করুন">
+                                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                    <span>স্টক যোগ করুন</span>
+                                </button>
+                                <button type="button" onclick="openProductDetailsModal('${p.uuid}')" class="h-8 w-8 text-slate-400 hover:text-brand-600 hover:bg-brand-50 border border-slate-200 rounded-lg transition flex items-center justify-center cursor-pointer shrink-0" title="বিস্তারিত">
+                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Dedicated Quantity Restock Handler for Stock Out Products
+        async function submitRestockStockOut(uuid) {
+            const $btn = $(`#btnRestock_${uuid}`);
+            const $input = $(`#restockInput_${uuid}`);
+            const qtyVal = $input.val() ? $input.val().trim() : '';
+            const qty = parseInt(qtyVal);
+
+            if (qtyVal === '' || isNaN(qty) || qty <= 0) {
+                $input.focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'পরিমাণ দিন',
+                    text: 'অনুগ্রহ করে কতটি স্টক যোগ করতে চান তার সঠিক সংখ্যা দিন (কমপক্ষে ১)।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            $input.removeClass('border-rose-500 ring-2 ring-rose-100');
+            $btn.prop('disabled', true).addClass('opacity-60 cursor-not-allowed');
+
+            try {
+                const res = await StoreApi.post(`products/${uuid}/adjust-stock`, { change: qty });
+                if (res.success && res.data) {
+                    const prod = productsData.find(p => p.uuid === uuid);
+                    if (prod) {
+                        prod.stock = res.data.stock;
+                        recentlyRestocked[uuid] = {
+                            added: (recentlyRestocked[uuid] ? recentlyRestocked[uuid].added : 0) + qty,
+                            total: prod.stock
+                        };
+                        updateProductStats(productsData);
+                        renderProducts(productsData);
+                        renderStockOutProducts(productsData);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'স্টক সফলভাবে যোগ হয়েছে!',
+                            text: `"${prod.name}"-এ ${qty}টি স্টক যোগ করা হয়েছে। (বর্তমান স্টক: ${prod.stock}টি)`,
+                            timer: 1600,
+                            showConfirmButton: false
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        text: res.message || 'স্টক আপডেট ব্যর্থ হয়েছে।'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', text: err.message });
+            } finally {
+                $btn.prop('disabled', false).removeClass('opacity-60 cursor-not-allowed');
+            }
+        }
+
+        // Search listeners
+        $('#prodSearchInput').on('input', () => renderProducts(productsData));
+        $('#stockOutSearchInput').on('input', () => renderStockOutProducts(productsData));
+
+        // Quick Stock Adjuster (+1 or -1)
+        async function adjustQuickStock(uuid, change) {
+            try {
+                const res = await StoreApi.post(`products/${uuid}/adjust-stock`, { change: change });
+                if (res.success && res.data) {
+                    const prod = productsData.find(p => p.uuid === uuid);
+                    if (prod) {
+                        prod.stock = res.data.stock;
+                        updateProductStats(productsData);
+                        renderProducts(productsData);
+                        renderStockOutProducts(productsData);
+
+                        if (currentDetailProduct && currentDetailProduct.uuid === uuid) {
+                            $('#detailStockCount').text(prod.stock);
+                            const profit = parseFloat(prod.retailer_price) - parseFloat(prod.main_price);
+                            $('#detailTotalPotentialProfit').text('৳' + (profit * parseInt(prod.stock)).toFixed(2));
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to adjust stock:', err);
+            }
+        }
+
+        // ==========================================
+        // 5.5 PRODUCT DETAILS MODAL (CLICK CARD)
+        // ==========================================
+        let currentDetailProduct = null;
+
+        function openProductDetailsModal(uuid) {
+            const p = productsData.find(item => item.uuid === uuid);
+            if (!p) return;
+            currentDetailProduct = p;
+
+            $('#detailProdTitle').text(p.name);
+
+            // Images Gallery
+            const images = Array.isArray(p.images) ? p.images : [];
+            const $mainImg = $('#detailMainImage');
+            const $placeholder = $('#detailNoImagePlaceholder');
+            const $thumbs = $('#detailThumbnailsRow');
+            $thumbs.empty();
+
+            if (images.length > 0) {
+                $mainImg.attr('src', images[0]).show();
+                $placeholder.hide();
+
+                images.forEach((url, idx) => {
+                    $thumbs.append(`
+                        <button type="button" onclick="selectDetailThumbnail('${url}')" class="w-12 h-12 rounded-lg border-2 hover:border-brand-500 transition shrink-0 aspect-square overflow-hidden bg-slate-100 cursor-pointer ${idx === 0 ? 'border-brand-500' : 'border-slate-200'}">
+                            <img src="${url}" class="w-full h-full object-cover">
+                        </button>
+                    `);
+                });
+                $thumbs.show();
+            } else {
+                $mainImg.hide();
+                $placeholder.show();
+                $thumbs.hide();
+            }
+
+            // Stock Count
+            const stock = parseInt(p.stock) || 0;
+            $('#detailStockCount').text(stock);
+
+            // Pricing & Profit
+            const mainPrice = parseFloat(p.main_price) || 0;
+            const retailerPrice = parseFloat(p.retailer_price) || 0;
+            const profit = parseFloat(p.profit) || (retailerPrice - mainPrice);
+            const margin = retailerPrice > 0 ? ((profit / retailerPrice) * 100).toFixed(1) : 0;
+            const totalProfit = profit * stock;
+
+            $('#detailMainPrice').text('৳' + mainPrice.toFixed(2));
+            $('#detailRetailerPrice').text('৳' + retailerPrice.toFixed(2));
+            $('#detailProfitVal').text((profit >= 0 ? '+' : '') + '৳' + profit.toFixed(2));
+            $('#detailProfitMargin').text(margin + '% মার্জিন');
+            $('#detailTotalPotentialProfit').text('৳' + totalProfit.toFixed(2));
+
+            // Sizes & Colors
+            const $sizes = $('#detailSizesContainer');
+            $sizes.empty();
+            if (p.sizes && p.sizes.length > 0) {
+                p.sizes.forEach(s => $sizes.append(`<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-semibold">${escapeHtml(s)}</span>`));
+            } else {
+                $sizes.append('<span class="text-slate-400 text-[11px]">-</span>');
+            }
+
+            const $colors = $('#detailColorsContainer');
+            $colors.empty();
+            if (p.colors && p.colors.length > 0) {
+                p.colors.forEach(c => $colors.append(`<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-semibold">${escapeHtml(c)}</span>`));
+            } else {
+                $colors.append('<span class="text-slate-400 text-[11px]">-</span>');
+            }
+
+            // Description & Category
+            $('#detailDescription').text(p.description || (currentLang === 'bn' ? 'কোনো বিবরণ যোগ করা হয়নি।' : 'No description provided.'));
+            $('#detailCategory').text(p.category_name || 'Unnamed');
+
+            // Action Buttons
+            $('#btnDetailEdit').off('click').on('click', () => {
+                closeProductDetailsModal();
+                openEditProductModal(uuid);
+            });
+
+            $('#btnDetailDelete').off('click').on('click', () => {
+                closeProductDetailsModal();
+                deleteProduct(uuid, p.name);
+            });
+
+            $('#btnDetailStockDec').off('click').on('click', () => adjustQuickStock(uuid, -1));
+            $('#btnDetailStockInc').off('click').on('click', () => adjustQuickStock(uuid, 1));
+            $('#btnDetailStockInc5').off('click').on('click', () => adjustQuickStock(uuid, 5));
+
+            $('#modalProductDetails').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            lucide.createIcons();
+        }
+
+        function selectDetailThumbnail(url) {
+            $('#detailMainImage').attr('src', url);
+            $('#detailThumbnailsRow button').each(function() {
+                const img = $(this).find('img').attr('src');
+                if (img === url) {
+                    $(this).addClass('border-brand-500').removeClass('border-slate-200');
+                } else {
+                    $(this).removeClass('border-brand-500').addClass('border-slate-200');
+                }
+            });
+        }
+
+        function closeProductDetailsModal() {
+            $('#modalProductDetails').addClass('hidden').css('display', 'none');
+            $('body').removeClass('overflow-hidden');
+            currentDetailProduct = null;
+        }
+
+        // ==========================================
+        // 6. PRODUCT MODAL (CREATE / EDIT & COMPRESS)
+        // ==========================================
+
+        function calculateProfitPreview() {
+            const main = parseFloat($('#fMainPrice').val()) || 0;
+            const retailer = parseFloat($('#fRetailerPrice').val()) || 0;
+            const profit = retailer - main;
+            const margin = retailer > 0 ? ((profit / retailer) * 100).toFixed(1) : 0;
+
+            $('#previewProfitVal').text('৳' + profit.toFixed(2));
+            $('#previewProfitMargin').text(margin + '% মার্জিন');
+
+            if (profit >= 0) {
+                $('#previewProfitVal').removeClass('text-red-600').addClass('text-emerald-700');
+            } else {
+                $('#previewProfitVal').removeClass('text-emerald-700').addClass('text-red-600');
+            }
+        }
+
+        function appendTag(inputId, val) {
+            const el = document.getElementById(inputId);
+            let current = el.value.trim();
+            const items = current ? current.split(',').map(s => s.trim()) : [];
+            if (!items.includes(val)) {
+                items.push(val);
+                el.value = items.join(', ');
+            }
+        }
+
+        function openCreateProductModal() {
+            try {
+                $('#productForm')[0].reset();
+                $('#prodEditUuid').val('');
+                $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
+                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').addClass('hidden');
+                if (defaultCategoryUuid) {
+                    $('#fProdCategory').val(defaultCategoryUuid);
+                }
+                const title = (i18n[currentLang] && i18n[currentLang].modalAddProdTitle) 
+                    ? i18n[currentLang].modalAddProdTitle 
+                    : 'নতুন প্রোডাক্ট যোগ করুন';
+                $('#modalProductTitle').text(title);
+                existingImages = [];
+                selectedNewFiles = [];
+                renderImagePreviews();
+                calculateProfitPreview();
+            } catch (err) {
+                console.error('Error preparing product modal:', err);
+            }
+            $('#modalProduct').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            lucide.createIcons();
+        }
+
+        function openEditProductModal(uuid) {
+            try {
+                const p = productsData.find(item => item.uuid === uuid);
+                if (!p) return;
+
+                $('#prodEditUuid').val(p.uuid);
+                $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
+                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').addClass('hidden');
+                const titlePrefix = (i18n[currentLang] && i18n[currentLang].modalEditProdTitle)
+                    ? i18n[currentLang].modalEditProdTitle
+                    : 'প্রোডাক্ট সম্পাদনা: ';
+                $('#modalProductTitle').text(titlePrefix + p.name);
+                $('#fProdName').val(p.name);
+                $('#fProdCategory').val(p.category_uuid || defaultCategoryUuid);
+                $('#fMainPrice').val(p.main_price);
+                $('#fRetailerPrice').val(p.retailer_price);
+                $('#fStock').val(p.stock);
+                $('#fDescription').val(p.description || '');
+
+                $('#fSizes').val((p.sizes || []).join(', '));
+                $('#fColors').val((p.colors || []).join(', '));
+
+                existingImages = [...(p.images || [])];
+                selectedNewFiles = [];
+                renderImagePreviews();
+                calculateProfitPreview();
+            } catch (err) {
+                console.error('Error in openEditProductModal:', err);
+            }
+            $('#modalProduct').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            lucide.createIcons();
+        }
+
+        function closeProductModal() {
+            $('#modalProduct').addClass('hidden').css('display', 'none');
+            $('body').removeClass('overflow-hidden');
+        }
+
+        // Close modals on backdrop click
+        $('#modalProduct').on('click', function(e) {
+            if (e.target === this) {
+                closeProductModal();
+            }
+        });
+
+        $('#modalCategory').on('click', function(e) {
+            if (e.target === this) {
+                closeCategoryModal();
+            }
+        });
+
+        $('#modalProductDetails').on('click', function(e) {
+            if (e.target === this) {
+                closeProductDetailsModal();
+            }
+        });
+
+        // Close modals on Escape key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if ($('#modalProductDetails').is(':visible')) {
+                    closeProductDetailsModal();
+                } else if ($('#modalProduct').is(':visible')) {
+                    closeProductModal();
+                } else if ($('#modalCategory').is(':visible')) {
+                    closeCategoryModal();
+                }
+            }
+        });
+
+        function processSelectedFiles(fileList) {
+            if (!fileList || fileList.length === 0) return;
+            const files = Array.from(fileList);
+            const totalCount = existingImages.length + selectedNewFiles.length;
+
+            files.forEach(f => {
+                if (f.type && !f.type.startsWith('image/')) {
+                    return; // Ignore non-images
+                }
+                if (existingImages.length + selectedNewFiles.length < 5) {
+                    selectedNewFiles.push(f);
+                }
+            });
+
+            if (files.length + totalCount > 5) {
+                Swal.fire({
+                    icon: 'info',
+                    text: 'একটি প্রোডাক্টে সর্বোচ্চ ৫টি ছবি যুক্ত করা যাবে।',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+
+            renderImagePreviews();
+        }
+
+        // Image Selection Handler (Client-side limit max 5)
+        function handleImageSelection(event) {
+            if (event.target && event.target.files) {
+                processSelectedFiles(event.target.files);
+                event.target.value = '';
+            }
+        }
+
+        function setupImageDropzone() {
+            const dropzone = document.getElementById('imageDropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('border-brand-500', 'bg-brand-50/50');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('border-brand-500', 'bg-brand-50/50');
+                });
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    processSelectedFiles(e.dataTransfer.files);
+                }
+            });
+        }
+
+        function removeExistingImage(index) {
+            existingImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        function removeNewFile(index) {
+            selectedNewFiles.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        function renderImagePreviews() {
+            const container = $('#imagePreviewGrid');
+            container.empty();
+
+            // 1. Existing uploaded images
+            existingImages.forEach((url, i) => {
+                container.append(`
+                    <div class="relative group rounded-xl overflow-hidden border border-slate-200 aspect-square bg-slate-50">
+                        <img src="${url}" class="w-full h-full object-cover">
+                        <button type="button" onclick="removeExistingImage(${i})" 
+                            class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-90 hover:opacity-100 shadow transition" title="মুছুন">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                        <span class="absolute bottom-1 left-1 bg-slate-900/70 text-white text-[9px] px-1 rounded font-mono">#${i+1}</span>
+                    </div>
+                `);
+            });
+
+            // 2. Newly selected files (local object URL preview)
+            selectedNewFiles.forEach((f, i) => {
+                const objectUrl = URL.createObjectURL(f);
+                container.append(`
+                    <div class="relative group rounded-xl overflow-hidden border-2 border-brand-400 aspect-square bg-slate-50">
+                        <img src="${objectUrl}" class="w-full h-full object-cover">
+                        <button type="button" onclick="removeNewFile(${i})" 
+                            class="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-90 hover:opacity-100 shadow transition" title="মুছুন">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                        <span class="absolute bottom-1 left-1 bg-brand-600 text-white text-[9px] px-1 rounded font-bold">নতুন</span>
+                    </div>
+                `);
+            });
+
+            lucide.createIcons();
+
+            if (existingImages.length + selectedNewFiles.length > 0) {
+                $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').addClass('hidden');
+            }
+        }
+
+        // Form Submit: Multi-image compress & product create/update
+        $('#productForm').on('submit', async function(e) {
+            e.preventDefault();
+
+            const editUuid = $('#prodEditUuid').val();
+            const isEdit = !!editUuid;
+            const productName = $('#fProdName').val().trim();
+
+            // Clear previous validation styling
+            $('#fProdName, #fProdCategory, #fMainPrice, #fRetailerPrice, #fStock').removeClass('border-rose-500 ring-2 ring-rose-100');
+            $('#imageDropzone').removeClass('border-rose-500 bg-rose-50/20');
+            $('#imageValidationError').addClass('hidden');
+
+            // 1. Validation: Product Name
+            if (!productName || productName.length < 2) {
+                $('#fProdName').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'প্রোডাক্টের নাম আবশ্যক',
+                    text: 'অনুগ্রহ করে প্রোডাক্টের নাম লিখুন (কমপক্ষে ২ অক্ষর)।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // 2. Validation: Category
+            const categoryUuid = $('#fProdCategory').val() || defaultCategoryUuid;
+            if (!categoryUuid) {
+                $('#fProdCategory').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ক্যাটাগরি আবশ্যক',
+                    text: 'অনুগ্রহ করে একটি ক্যাটাগরি নির্বাচন করুন।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // 3. Validation: Main / Cost Price
+            const mainPriceRaw = $('#fMainPrice').val().trim();
+            const mainPrice = parseFloat(mainPriceRaw);
+            if (mainPriceRaw === '' || isNaN(mainPrice) || mainPrice <= 0) {
+                $('#fMainPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'কেনা দাম আবশ্যক',
+                    text: 'মেইন বা কেনা দাম (Cost Price) শূন্যের বেশি একটি সঠিক সংখ্যা হতে হবে।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // 4. Validation: Retailer Selling Price
+            const retailerPriceRaw = $('#fRetailerPrice').val().trim();
+            const retailerPrice = parseFloat(retailerPriceRaw);
+            if (retailerPriceRaw === '' || isNaN(retailerPrice) || retailerPrice <= 0) {
+                $('#fRetailerPrice').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'বিক্রয় মূল্য আবশ্যক',
+                    text: 'বিক্রয় মূল্য (Retailer Selling Price) শূন্যের বেশি একটি সঠিক সংখ্যা হতে হবে।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // 5. Validation: Stock Quantity
+            const stockRaw = $('#fStock').val().trim();
+            const stockVal = parseInt(stockRaw);
+            if (stockRaw === '' || isNaN(stockVal) || stockVal < 0) {
+                $('#fStock').focus().addClass('border-rose-500 ring-2 ring-rose-100');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'স্টক সংখ্যা আবশ্যক',
+                    text: 'ইনভেন্টরি স্টক সংখ্যা ০ বা তার বেশি হতে হবে।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            // 6. Mandatory Image Upload Validation (Must have at least 1 image)
+            const totalImages = existingImages.length + selectedNewFiles.length;
+            if (totalImages === 0) {
+                $('#imageDropzone').addClass('border-rose-500 bg-rose-50/20');
+                $('#imageValidationError').removeClass('hidden');
+                document.getElementById('imageDropzone').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ছবি আপলোড আবশ্যক',
+                    text: 'পণ্য যোগ করতে কমপক্ষে একটি ছবি আপলোড করতে হবে। ছবি ছাড়া প্রোডাক্ট সংরক্ষণ করা সম্ভব নয়।',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            $('#btnSaveProduct').prop('disabled', true);
+            $('#btnSaveProductText').text(i18n[currentLang].savingProduct);
+
+            try {
+                let finalImages = [...existingImages];
+
+                // 1. If new files selected, upload to Mother API to compress to ~200KB
+                if (selectedNewFiles.length > 0) {
+                    const formData = new FormData();
+                    formData.append('product_name', productName);
+                    selectedNewFiles.forEach((file, index) => {
+                        formData.append(`images[${index}]`, file);
+                    });
+
+                    const uploadRes = await StoreApi.post('products/upload-images', formData);
+                    if (uploadRes.success && uploadRes.data && Array.isArray(uploadRes.data.urls)) {
+                        finalImages = finalImages.concat(uploadRes.data.urls).slice(0, 5);
+                    } else {
+                        throw new Error(uploadRes.message || 'ইমেজ আপলোড ও কম্প্রেশন ব্যর্থ হয়েছে।');
+                    }
+                }
+
+                // Parse Sizes and Colors
+                const sizes = $('#fSizes').val().split(',').map(s => s.trim()).filter(Boolean);
+                const colors = $('#fColors').val().split(',').map(c => c.trim()).filter(Boolean);
+
+                const payload = {
+                    name: productName,
+                    slug: $('#fProdSlug').val().trim(),
+                    main_price: parseFloat($('#fMainPrice').val()) || 0,
+                    retailer_price: parseFloat($('#fRetailerPrice').val()) || 0,
+                    stock: parseInt($('#fStock').val()) || 0,
+                    status: $('#fStatus').val(),
+                    description: $('#fDescription').val().trim(),
+                    sizes: sizes,
+                    colors: colors,
+                    images: finalImages
+                };
+
+                let res;
+                if (isEdit) {
+                    res = await StoreApi.put(`products/${editUuid}`, payload);
+                } else {
+                    res = await StoreApi.post('products', payload);
+                }
+
+                if (res.success && res.data) {
+                    closeProductModal();
+                    await loadProducts();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: i18n[currentLang].saveSuccessTitle,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ত্রুটি',
+                        text: res.message || 'প্রোডাক্ট সংরক্ষণ ব্যর্থ হয়েছে।',
+                        confirmButtonColor: '#ea580c'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ত্রুটি',
+                    text: err.message,
+                    confirmButtonColor: '#ea580c'
+                });
+            } finally {
+                $('#btnSaveProduct').prop('disabled', false);
+                $('#btnSaveProductText').text(i18n[currentLang].btnSaveProduct);
+            }
+        });
+
+        // Delete Product
+        async function deleteProduct(uuid, name) {
+            Swal.fire({
+                title: i18n[currentLang].confirmDeleteProd,
+                text: name,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: i18n[currentLang].deleteBtn,
+                cancelButtonText: i18n[currentLang].btnCancel
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await StoreApi.delete(`products/${uuid}`);
+                        if (res.success) {
+                            await loadProducts();
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'মুছে ফেলা হয়েছে',
+                                timer: 1200,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({ icon: 'error', text: res.message || 'Delete failed' });
+                        }
+                    } catch (err) {
+                        Swal.fire({ icon: 'error', text: err.message });
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // 7. STORE PROFILE EDIT LOGIC
+        // ==========================================
+
+        function populateProfileForm(data) {
+            $('#pName').val(data.name || '');
+            $('#pSlug').val(data.slug || '');
+            $('#pOwnerName').val(data.owner_name || '');
+            $('#pOwnerEmail').val(data.owner_email || '');
+            $('#pPhone').val(data.owner_phone || '');
+            $('#pAddress').val(data.address || '');
+            $('#pPassword').val('');
+
+            const socials = data.social_links || {};
+            $('#pFacebook').val(socials.facebook || '');
+            $('#pInstagram').val(socials.instagram || '');
+            $('#pWhatsapp').val(socials.whatsapp || '');
+            $('#pYoutube').val(socials.youtube || '');
+        }
+
+        function updateUI(data) {
+            storeData = data;
+            $('#navStoreName').text(data.name);
+            $('#welcomeOwnerName').text(data.owner_name || '');
+            $('#topOwnerName').text(data.owner_name || '');
+            $('#topOwnerEmail').text(data.owner_email || '');
+            $('#footStoreName').text(data.name);
+
+            renderSocialOverview(data.social_links || {});
+            populateProfileForm(data);
+        }
+
+        async function loadProfile() {
+            try {
+                const res = await StoreApi.get(`tenants/${STORE_UUID}/profile`);
+                if (res.success && res.data) {
+                    updateUI(res.data);
+                } else if (res.status === 401) {
+                    StoreApi.setToken('');
+                    window.location.href = 'login';
+                }
+            } catch (err) {
+                console.error('Error fetching fresh profile:', err);
+            }
+        }
+
+        $('#profileForm').on('submit', async function(e) {
+            e.preventDefault();
+
+            const socialLinks = {
+                facebook: $('#pFacebook').val().trim(),
+                instagram: $('#pInstagram').val().trim(),
+                whatsapp: $('#pWhatsapp').val().trim(),
+                youtube: $('#pYoutube').val().trim()
+            };
+
+            const payload = {
+                name: $('#pName').val().trim(),
+                slug: $('#pSlug').val().trim(),
+                owner_phone: $('#pPhone').val().trim(),
+                address: $('#pAddress').val().trim(),
+                social_links: socialLinks
+            };
+
+            const newPwd = $('#pPassword').val();
+            if (newPwd && newPwd.trim() !== '') {
+                payload.password = newPwd.trim();
+            }
+
+            $('#btnSaveProfile').prop('disabled', true);
+            $('#btnSaveProfileText').text(i18n[currentLang].savingText);
+
+            try {
+                const res = await StoreApi.put(`tenants/${STORE_UUID}/profile`, payload);
+
+                if (res.success && res.data) {
+                    updateUI(res.data);
+                    Swal.fire({
+                        icon: 'success',
+                        title: i18n[currentLang].saveSuccessTitle,
+                        text: i18n[currentLang].saveSuccessText,
+                        timer: 1600,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        text: res.message || 'Update failed',
+                        confirmButtonColor: '#ea580c'
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    text: err.message,
+                    confirmButtonColor: '#ea580c'
+                });
+            } finally {
+                $('#btnSaveProfile').prop('disabled', false);
+                $('#btnSaveProfileText').text(i18n[currentLang].btnSaveProfile);
+            }
+        });
+
+        // 8. Logout Confirmation
+        function confirmLogout() {
+            if (confirm(currentLang === 'bn' ? 'আপনি কি নিশ্চিত যে লগআউট করতে চান?' : 'Are you sure you want to log out?')) {
+                window.location.href = 'logout.php';
+            }
+        }
+
+        // ==========================================
+        // ORDER MANAGEMENT MODULE (4 Statuses: Pending, Processing, Delivered, Cancel)
+        // ==========================================
+        let ordersData = [];
+        let orderStats = {};
+        let currentOrderStatusFilter = 'active';
+
+        function formatPrice(val) {
+            const num = parseFloat(val) || 0;
+            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        async function loadOrders() {
+            if ($('#ordersListContainer').children().length === 0 || $('#ordersListContainer').find('.skeleton-shimmer').length === 0) {
+                renderOrderSkeletons('ordersListContainer', 3);
+            }
+            if ($('#completedOrdersListContainer').children().length === 0) {
+                renderOrderSkeletons('completedOrdersListContainer', 2);
+            }
+            if ($('#cancelledOrdersListContainer').children().length === 0) {
+                renderOrderSkeletons('cancelledOrdersListContainer', 2);
+            }
+            try {
+                const [ordersRes, statsRes] = await Promise.all([
+                    StoreApi.get('orders'),
+                    StoreApi.get('orders/stats')
+                ]);
+
+                if (ordersRes && ordersRes.success && Array.isArray(ordersRes.data)) {
+                    ordersData = ordersRes.data;
+                } else {
+                    ordersData = [];
+                }
+
+                if (statsRes && statsRes.success && statsRes.data) {
+                    orderStats = statsRes.data;
+                    updateOrderBadgesAndStats(orderStats);
+                }
+
+                renderOrders(ordersData);
+                renderCompletedOrders(ordersData);
+                renderCancelledOrders(ordersData);
+            } catch (err) {
+                console.error('Error loading orders:', err);
+            }
+        }
+
+        function updateOrderBadgesAndStats(stats) {
+            const pending = parseInt(stats.pending || 0);
+            const processing = parseInt(stats.processing || 0);
+            const activeOrders = pending + processing;
+            const delivered = parseInt(stats.delivered || 0);
+            const cancel = parseInt(stats.cancel || 0);
+            const total = parseInt(stats.total || 0);
+            const deliveredRevenue = parseFloat(stats.delivered_revenue || 0);
+
+            // Nav badges
+            $('#badgeActiveOrderCount').text(activeOrders);
+            if (activeOrders > 0) {
+                $('#badgeActiveOrderCount').removeClass('bg-slate-100 text-slate-700').addClass('bg-amber-100 text-amber-800');
+            } else {
+                $('#badgeActiveOrderCount').removeClass('bg-amber-100 text-amber-800').addClass('bg-slate-100 text-slate-700');
+            }
+            $('#badgeCompletedOrderCount').text(delivered);
+            $('#badgeCancelledOrderCount').text(cancel);
+            $('#ordersHeaderCountBadge').text(activeOrders + 'টি চলমান');
+            $('#completedOrdersHeaderCountBadge').text(delivered + 'টি সম্পন্ন');
+            $('#cancelledOrdersHeaderCountBadge').text(cancel + 'টি বাতিল');
+
+            // Dashboard banner stats
+            $('#dashTotalOrders').text(total);
+            $('#dashPendingOrders').text(pending);
+            $('#dashProcessingOrders').text(processing);
+            $('#dashDeliveredRevenue').text('৳' + formatPrice(deliveredRevenue));
+
+            // Status filter button counters (Active, Pending, Processing)
+            $('#filterCountActive').text(activeOrders);
+            $('#filterCountPending').text(pending);
+            $('#filterCountProcessing').text(processing);
+        }
+
+        function filterOrdersByStatus(status) {
+            currentOrderStatusFilter = status;
+
+            // Reset all filter buttons
+            $('.order-filter-btn').removeClass('bg-slate-900 text-white shadow-xs')
+                .addClass('bg-slate-50 text-slate-600 border border-slate-200');
+
+            // Activate chosen button
+            const btnMap = {
+                active: '#btnFilterStatusActive',
+                pending: '#btnFilterStatusPending',
+                processing: '#btnFilterStatusProcessing'
+            };
+
+            const activeBtn = $(btnMap[status] || '#btnFilterStatusActive');
+            activeBtn.removeClass('bg-slate-50 text-slate-600 border border-slate-200')
+                .addClass('bg-slate-900 text-white shadow-xs');
+
+            renderOrders(ordersData);
+        }
+
+        function handleOrderSearch() {
+            renderOrders(ordersData);
+        }
+
+        function renderOrders(orders) {
+            const container = $('#ordersListContainer');
+            container.empty();
+
+            const query = ($('#orderSearchInput').val() || '').trim().toLowerCase();
+
+            // Order Management strictly displays Pending & Processing orders
+            let filtered = orders.filter(ord => {
+                if (!['pending', 'processing'].includes(ord.status)) {
+                    return false;
+                }
+                if (currentOrderStatusFilter === 'pending' && ord.status !== 'pending') {
+                    return false;
+                }
+                if (currentOrderStatusFilter === 'processing' && ord.status !== 'processing') {
+                    return false;
+                }
+                // Search query
+                if (query) {
+                    const matchNum = (ord.order_number || '').toLowerCase().includes(query);
+                    const matchName = (ord.customer_name || '').toLowerCase().includes(query);
+                    const matchPhone = (ord.customer_phone || '').toLowerCase().includes(query);
+                    if (!matchNum && !matchName && !matchPhone) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.html(`
+                    <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+                        <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="package-search" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">কোনো চলমান অর্ডার পাওয়া যায়নি</h4>
+                        <p class="text-xs text-slate-500 mt-1">বর্তমানে কোনো পেন্ডিং বা প্রসেসিং অর্ডার নেই।</p>
+                    </div>
+                `);
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.forEach(ord => {
+                const statusBadge = getStatusBadgeHtml(ord.status);
+                const cleanPhone = (ord.customer_phone || '').replace(/[^0-9]/g, '');
+                const waPhone = cleanPhone.startsWith('88') ? cleanPhone : ('88' + cleanPhone);
+
+                const items = Array.isArray(ord.items) ? ord.items : [];
+                let itemsHtml = '';
+                items.forEach(it => {
+                    const variantText = [it.size ? `সাইজ: ${escapeHtml(it.size)}` : '', it.color ? `কালার: ${escapeHtml(it.color)}` : ''].filter(Boolean).join(' | ');
+                    itemsHtml += `
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-b-0">
+                            <div class="flex items-center space-x-2.5 min-w-0">
+                                <div class="w-9 h-9 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center">
+                                    ${it.product_image ? `<img src="${escapeHtml(it.product_image)}" class="w-full h-full object-cover">` : `<i data-lucide="package" class="w-4 h-4 text-slate-400"></i>`}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-800 truncate">${escapeHtml(it.product_name)}</div>
+                                    ${variantText ? `<div class="text-[10px] text-orange-600 font-semibold">${variantText}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="font-bold text-slate-900 font-mono">৳${formatPrice(it.total_price)}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">৳${formatPrice(it.unit_price)} × ${it.quantity}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const cardHtml = `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-5 shadow-2xs transition hover:border-slate-300">
+                        <!-- MOBILE VIEW (COMPACT, TIGHT & SCAN-FRIENDLY: SM:HIDDEN) -->
+                        <div class="block sm:hidden space-y-2.5">
+                            <!-- Mobile Row 1: Eye Icon, Order #, Status Badge, Total Amount -->
+                            <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                                <div class="flex items-center space-x-1.5 min-w-0">
+                                    <button type="button" onclick="openOrderCopyModal('${ord.uuid}')"
+                                        class="w-7 h-7 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
+                                        title="অর্ডারের তথ্য দেখুন ও কপি করুন">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                    <span class="text-xs font-black text-slate-900 font-mono truncate">${escapeHtml(ord.order_number)}</span>
+                                    ${statusBadge}
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="text-xs font-black text-orange-600 font-mono">৳${formatPrice(ord.total_amount)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Row 2: Customer Name, Phone, Zone & Item Count -->
+                            <div class="flex items-center justify-between text-xs gap-2">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-900 truncate">
+                                        ${escapeHtml(ord.customer_name)} <span class="font-mono text-slate-500 font-normal">&bull; ${escapeHtml(ord.customer_phone)}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+                                        ${items.length}টি আইটেম &bull; ${escapeHtml(ord.district || 'ঢাকা')} &bull; ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে' : 'ঢাকার ভেতরে'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Row 3: Action Buttons (Call, WhatsApp, Eye Info Modal, Status Select) -->
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <div class="flex items-center space-x-1.5">
+                                    <a href="tel:${escapeHtml(ord.customer_phone)}"
+                                        class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center transition shadow-2xs" title="কল করুন">
+                                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                    <a href="https://wa.me/${waPhone}?text=${encodeURIComponent('আসসালামু আলাইকুম ' + ord.customer_name + ', আপনার অর্ডার ' + ord.order_number + ' সম্পর্কে যোগাযোগ করছি।')}" target="_blank"
+                                        class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center transition shadow-2xs" title="WhatsApp">
+                                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                    <button type="button" onclick="openOrderCopyModal('${ord.uuid}')"
+                                        class="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer shadow-2xs" title="অর্ডারের তথ্য দেখুন ও আলাদাভাবে কপি করুন">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                        <span>তথ্য দেখুন</span>
+                                    </button>
+                                </div>
+                                <select onchange="changeOrderStatus('${ord.uuid}', this.value)"
+                                    class="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-bold text-slate-800 focus:outline-none focus:border-orange-500 cursor-pointer">
+                                    <option value="pending" ${ord.status === 'pending' ? 'selected' : ''}>🟡 পেন্ডিং</option>
+                                    <option value="processing" ${ord.status === 'processing' ? 'selected' : ''}>🔵 প্রসেসিং</option>
+                                    <option value="delivered" ${ord.status === 'delivered' ? 'selected' : ''}>🟢 ডেলিভারি</option>
+                                    <option value="cancel" ${ord.status === 'cancel' ? 'selected' : ''}>🔴 বাতিল</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- DESKTOP DETAILED VIEW (HIDDEN SM:BLOCK - PRESERVED AS IS) -->
+                        <div class="hidden sm:block">
+                            <!-- Top Bar: Order ID, Date, Status -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold shrink-0">
+                                        <i data-lucide="receipt" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs font-black text-slate-900 font-mono">${escapeHtml(ord.order_number)}</span>
+                                            ${statusBadge}
+                                        </div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(ord.created_at || '')}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Status Changer Dropdown -->
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="copyOrderInfo('${ord.uuid}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer" title="কুরিয়ারের জন্য সম্পূর্ণ তথ্য কপি করুন">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                        <span>কপি</span>
+                                    </button>
+                                    <label class="text-[11px] text-slate-500 font-medium">স্ট্যাটাস:</label>
+                                    <select onchange="changeOrderStatus('${ord.uuid}', this.value)"
+                                        class="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-orange-500 cursor-pointer">
+                                        <option value="pending" ${ord.status === 'pending' ? 'selected' : ''}>🟡 পেন্ডিং</option>
+                                        <option value="processing" ${ord.status === 'processing' ? 'selected' : ''}>🔵 প্রসেসিং</option>
+                                        <option value="delivered" ${ord.status === 'delivered' ? 'selected' : ''}>🟢 ডেলিভারি সম্পন্ন</option>
+                                        <option value="cancel" ${ord.status === 'cancel' ? 'selected' : ''}>🔴 বাতিল (Trash)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Customer Details & Delivery Info -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-100 mb-3">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">গ্রাহক</div>
+                                    <div class="text-xs font-bold text-slate-900">${escapeHtml(ord.customer_name)}</div>
+                                    <div class="text-xs text-slate-600 font-mono mt-0.5">${escapeHtml(ord.customer_phone)}</div>
+                                    <div class="mt-2 flex items-center space-x-2">
+                                        <a href="tel:${escapeHtml(ord.customer_phone)}" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition">
+                                            <i data-lucide="phone" class="w-3 h-3"></i>
+                                            <span>কল করুন</span>
+                                        </a>
+                                        <a href="https://wa.me/${waPhone}?text=${encodeURIComponent('আসসালামু আলাইকুম ' + ord.customer_name + ', আপনার অর্ডার ' + ord.order_number + ' সম্পর্কে যোগাযোগ করছি।')}" target="_blank"
+                                           class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition">
+                                            <i data-lucide="message-circle" class="w-3 h-3"></i>
+                                            <span>WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ডেলিভারি ঠিকানা</div>
+                                    <div class="text-xs font-semibold text-slate-700 mt-0.5">${escapeHtml(ord.delivery_address)}</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">
+                                        ${escapeHtml(ord.upazilla || '')}, ${escapeHtml(ord.district || '')}, ${escapeHtml(ord.division || '')}
+                                    </div>
+                                    <div class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800">
+                                        ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Items Breakdown -->
+                            <div class="mb-3 px-1">
+                                ${itemsHtml}
+                            </div>
+
+                            <!-- Footer: Total & Actions -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                                <div class="flex items-center space-x-2 text-xs">
+                                    <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-600 font-semibold text-[11px]">ক্যাশ অন ডেলিভারি</span>
+                                    <span class="text-slate-400">&bull;</span>
+                                    <span class="text-slate-600">মোট প্রদেয়: <strong class="text-sm font-black text-orange-600 font-mono">৳${formatPrice(ord.total_amount)}</strong></span>
+                                </div>
+                                <div class="flex items-center space-x-2 self-end sm:self-auto">
+                                    <button type="button" onclick="openOrderDetailsModal('${ord.uuid}')"
+                                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+                                        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                                        <span>চালান ও বিস্তারিত</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.append(cardHtml);
+            });
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // COMPLETED ORDERS & ACCOUNTS LOGIC
+        // ==========================================
+        function handleCompletedOrderSearch() {
+            renderCompletedOrders(ordersData);
+        }
+
+        function renderCompletedOrders(orders) {
+            const container = $('#completedOrdersListContainer');
+            container.empty();
+
+            const query = ($('#completedOrderSearchInput').val() || '').trim().toLowerCase();
+            const completed = orders.filter(ord => ord.status === 'delivered');
+
+            // Financial & Account calculations
+            let totalSubtotal = 0;
+            let totalDelivery = 0;
+            let grandTotal = 0;
+
+            completed.forEach(ord => {
+                totalSubtotal += parseFloat(ord.subtotal || 0);
+                totalDelivery += parseFloat(ord.delivery_charge || 0);
+                grandTotal += parseFloat(ord.total_amount || 0);
+            });
+
+            // Update Account Cards
+            $('#compStatTotalOrders').text(completed.length);
+            $('#compStatItemRevenue').text('৳' + formatPrice(totalSubtotal));
+            $('#compStatDeliveryFee').text('৳' + formatPrice(totalDelivery));
+            $('#compStatTotalRevenue').text('৳' + formatPrice(grandTotal));
+            $('#completedOrdersHeaderCountBadge').text(completed.length + 'টি সম্পন্ন');
+
+            // Apply search filter
+            let filtered = completed.filter(ord => {
+                if (query) {
+                    const matchNum = (ord.order_number || '').toLowerCase().includes(query);
+                    const matchName = (ord.customer_name || '').toLowerCase().includes(query);
+                    const matchPhone = (ord.customer_phone || '').toLowerCase().includes(query);
+                    if (!matchNum && !matchName && !matchPhone) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.html(`
+                    <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="package-check" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">কোনো সম্পন্ন অর্ডার পাওয়া যায়নি</h4>
+                        <p class="text-xs text-slate-500 mt-1">এখনো কোনো ডেলিভারি সম্পন্ন হয়নি অথবা সার্চের সাথে মেলেনি।</p>
+                    </div>
+                `);
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.forEach(ord => {
+                const statusBadge = getStatusBadgeHtml(ord.status);
+                const cleanPhone = (ord.customer_phone || '').replace(/[^0-9]/g, '');
+                const waPhone = cleanPhone.startsWith('88') ? cleanPhone : ('88' + cleanPhone);
+
+                const items = Array.isArray(ord.items) ? ord.items : [];
+                let itemsHtml = '';
+                items.forEach(it => {
+                    const variantText = [it.size ? `সাইজ: ${escapeHtml(it.size)}` : '', it.color ? `কালার: ${escapeHtml(it.color)}` : ''].filter(Boolean).join(' | ');
+                    itemsHtml += `
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-b-0">
+                            <div class="flex items-center space-x-2.5 min-w-0">
+                                <div class="w-9 h-9 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center">
+                                    ${it.product_image ? `<img src="${escapeHtml(it.product_image)}" class="w-full h-full object-cover">` : `<i data-lucide="package" class="w-4 h-4 text-slate-400"></i>`}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-800 truncate">${escapeHtml(it.product_name)}</div>
+                                    ${variantText ? `<div class="text-[10px] text-emerald-600 font-semibold">${variantText}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="font-bold text-slate-900 font-mono">৳${formatPrice(it.total_price)}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">৳${formatPrice(it.unit_price)} × ${it.quantity}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const cardHtml = `
+                    <div class="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-5 shadow-2xs transition hover:border-emerald-300">
+                        <!-- MOBILE COMPACT VIEW (SM:HIDDEN) -->
+                        <div class="block sm:hidden space-y-2.5">
+                            <!-- Mobile Row 1: Info Icon, Order #, Status Badge, Total Amount -->
+                            <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                                <div class="flex items-center space-x-1.5 min-w-0">
+                                    <button type="button" onclick="openOrderDetailsModal('${ord.uuid}')"
+                                        class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
+                                        title="বিস্তারিত ও ইনভয়েস দেখুন">
+                                        <i data-lucide="info" class="w-4 h-4"></i>
+                                    </button>
+                                    <span class="text-xs font-black text-slate-900 font-mono truncate">${escapeHtml(ord.order_number)}</span>
+                                    ${statusBadge}
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="text-xs font-black text-emerald-600 font-mono">৳${formatPrice(ord.total_amount)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Row 2: Customer Name, Phone, Zone & Item Count -->
+                            <div class="flex items-center justify-between text-xs gap-2">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-900 truncate">
+                                        ${escapeHtml(ord.customer_name)} <span class="font-mono text-slate-500 font-normal">&bull; ${escapeHtml(ord.customer_phone)}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+                                        ${items.length}টি আইটেম &bull; ${escapeHtml(ord.district || 'ঢাকা')} &bull; হিসাব সম্পন্ন
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Row 3: Action Buttons (Call, WhatsApp, Copy, Undo Revert) -->
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <div class="flex items-center space-x-1.5">
+                                    <a href="tel:${escapeHtml(ord.customer_phone)}"
+                                        class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center transition shadow-2xs" title="কল করুন">
+                                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                    <a href="https://wa.me/${waPhone}" target="_blank"
+                                        class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center transition shadow-2xs" title="WhatsApp">
+                                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                    </a>
+                                    <button type="button" onclick="openOrderCopyModal('${ord.uuid}')"
+                                        class="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer shadow-2xs" title="অর্ডার ও কুরিয়ার তথ্য দেখুন">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                        <span>তথ্য দেখুন</span>
+                                    </button>
+                                </div>
+                                <button type="button" onclick="revertCompletedOrder('${ord.uuid}')"
+                                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer shadow-2xs" title="ভুলবশত সম্পন্ন হলে পুনরায় অর্ডার ম্যানেজমেন্টে ফেরত পাঠান">
+                                    <i data-lucide="undo-2" class="w-3 h-3 text-amber-600"></i>
+                                    <span>Undo (রিভার্ট)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- DESKTOP DETAILED VIEW (HIDDEN SM:BLOCK - PRESERVED AS IS + UNDO BUTTON) -->
+                        <div class="hidden sm:block">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                                        <i data-lucide="check-check" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs font-black text-slate-900 font-mono">${escapeHtml(ord.order_number)}</span>
+                                            ${statusBadge}
+                                        </div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">অর্ডার তারিখ: ${escapeHtml(ord.created_at || '')}</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="copyOrderInfo('${ord.uuid}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer" title="কুরিয়ারের জন্য সম্পূর্ণ তথ্য কপি">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                        <span>কপি</span>
+                                    </button>
+                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold flex items-center space-x-1">
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                                        <span>হিসাব সম্পন্ন</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-emerald-50/30 p-3 rounded-xl border border-emerald-100 mb-3">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">গ্রাহকের বিবরণ</div>
+                                    <div class="text-xs font-bold text-slate-900">${escapeHtml(ord.customer_name)}</div>
+                                    <div class="text-xs text-slate-600 font-mono mt-0.5">${escapeHtml(ord.customer_phone)}</div>
+                                    <div class="mt-2 flex items-center space-x-2">
+                                        <a href="tel:${escapeHtml(ord.customer_phone)}" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition">
+                                            <i data-lucide="phone" class="w-3 h-3"></i><span>কল করুন</span>
+                                        </a>
+                                        <a href="https://wa.me/${waPhone}" target="_blank" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition">
+                                            <i data-lucide="message-circle" class="w-3 h-3"></i><span>WhatsApp</span>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ডেলিভারি ঠিকানা</div>
+                                    <div class="text-xs font-semibold text-slate-700 mt-0.5">${escapeHtml(ord.delivery_address)}</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">
+                                        ${escapeHtml(ord.upazilla || '')}, ${escapeHtml(ord.district || '')}, ${escapeHtml(ord.division || '')}
+                                    </div>
+                                    <div class="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                                        ${ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 px-1">
+                                ${itemsHtml}
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                                <div class="flex items-center space-x-3 text-xs">
+                                    <span class="text-slate-500">সাবটোটাল: <strong class="text-slate-800 font-mono">৳${formatPrice(ord.subtotal)}</strong></span>
+                                    <span class="text-slate-300">+</span>
+                                    <span class="text-slate-500">ডেলিভারি ফি: <strong class="text-slate-800 font-mono">৳${formatPrice(ord.delivery_charge)}</strong></span>
+                                    <span class="text-slate-400">&bull;</span>
+                                    <span class="text-emerald-700 font-bold">আদায়কৃত মোট: <strong class="text-sm font-black text-emerald-700 font-mono">৳${formatPrice(ord.total_amount)}</strong></span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="revertCompletedOrder('${ord.uuid}')"
+                                        class="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer" title="ভুলবশত সম্পন্ন হলে পুনরায় পেন্ডিং তালিকায় ফিরিয়ে নিন">
+                                        <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
+                                        <span>Undo (রিভার্ট)</span>
+                                    </button>
+                                    <button type="button" onclick="openOrderDetailsModal('${ord.uuid}')"
+                                        class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+                                        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                                        <span>চালান ও রশিদ</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.append(cardHtml);
+            });
+
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // CANCELLED ORDERS (TRASH & UNDO) LOGIC
+        // ==========================================
+        function handleCancelledOrderSearch() {
+            renderCancelledOrders(ordersData);
+        }
+
+        function renderCancelledOrders(orders) {
+            const container = $('#cancelledOrdersListContainer');
+            container.empty();
+
+            const query = ($('#cancelledOrderSearchInput').val() || '').trim().toLowerCase();
+            const cancelled = orders.filter(ord => ord.status === 'cancel');
+            $('#cancelledOrdersHeaderCountBadge').text(cancelled.length + 'টি বাতিল');
+
+            let filtered = cancelled.filter(ord => {
+                if (query) {
+                    const matchNum = (ord.order_number || '').toLowerCase().includes(query);
+                    const matchName = (ord.customer_name || '').toLowerCase().includes(query);
+                    const matchPhone = (ord.customer_phone || '').toLowerCase().includes(query);
+                    if (!matchNum && !matchName && !matchPhone) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.html(`
+                    <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+                        <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="trash-2" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">কোনো বাতিল অর্ডার নেই</h4>
+                        <p class="text-xs text-slate-500 mt-1">ট্র্যাশ সম্পূর্ণ পরিষ্কার! কোনো অর্ডার বাতিল করা হয়নি।</p>
+                    </div>
+                `);
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.forEach(ord => {
+                const statusBadge = getStatusBadgeHtml(ord.status);
+
+                // Calculate days remaining in 30-day trash
+                const cancelDate = new Date(ord.updated_at || ord.created_at);
+                const daysPassed = Math.floor((new Date() - cancelDate) / (1000 * 60 * 60 * 24));
+                const daysRemaining = Math.max(1, 30 - daysPassed);
+
+                const items = Array.isArray(ord.items) ? ord.items : [];
+                let itemsHtml = '';
+                items.forEach(it => {
+                    const variantText = [it.size ? `সাইজ: ${escapeHtml(it.size)}` : '', it.color ? `কালার: ${escapeHtml(it.color)}` : ''].filter(Boolean).join(' | ');
+                    itemsHtml += `
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-b-0 opacity-80">
+                            <div class="flex items-center space-x-2.5 min-w-0">
+                                <div class="w-9 h-9 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center">
+                                    ${it.product_image ? `<img src="${escapeHtml(it.product_image)}" class="w-full h-full object-cover">` : `<i data-lucide="package" class="w-4 h-4 text-slate-400"></i>`}
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-800 truncate">${escapeHtml(it.product_name)}</div>
+                                    ${variantText ? `<div class="text-[10px] text-slate-500 font-semibold">${variantText}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0 pl-2">
+                                <div class="font-bold text-slate-700 font-mono">৳${formatPrice(it.total_price)}</div>
+                                <div class="text-[10px] text-slate-400 font-mono">৳${formatPrice(it.unit_price)} × ${it.quantity}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const cardHtml = `
+                    <div class="bg-white border border-rose-200/80 rounded-2xl p-3.5 sm:p-5 shadow-2xs transition hover:border-rose-400">
+                        <!-- MOBILE COMPACT VIEW (SM:HIDDEN) -->
+                        <div class="block sm:hidden space-y-2.5">
+                            <!-- Mobile Row 1: Info Icon, Order #, Status Badge, Days Remaining -->
+                            <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                                <div class="flex items-center space-x-1.5 min-w-0">
+                                    <button type="button" onclick="openOrderDetailsModal('${ord.uuid}')"
+                                        class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 cursor-pointer shadow-2xs"
+                                        title="বিস্তারিত ও ইনভয়েস দেখুন">
+                                        <i data-lucide="info" class="w-4 h-4"></i>
+                                    </button>
+                                    <span class="text-xs font-black text-slate-900 font-mono truncate">${escapeHtml(ord.order_number)}</span>
+                                    ${statusBadge}
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">${daysRemaining} দিন বাকি</span>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Row 2: Customer Name, Phone, Total Amount -->
+                            <div class="flex items-center justify-between text-xs gap-2">
+                                <div class="min-w-0">
+                                    <div class="font-bold text-slate-900 truncate">
+                                        ${escapeHtml(ord.customer_name)} <span class="font-mono text-slate-500 font-normal">&bull; ${escapeHtml(ord.customer_phone)}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 truncate">
+                                        ${items.length}টি আইটেম &bull; বাতিলকৃত
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="text-xs font-black text-rose-600 font-mono">৳${formatPrice(ord.total_amount)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Mobile Row 3: Action Buttons (Copy, Undo Restore) -->
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <button type="button" onclick="openOrderCopyModal('${ord.uuid}')"
+                                    class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 transition cursor-pointer shadow-2xs" title="তথ্য দেখুন ও কপি করুন">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                    <span>তথ্য দেখুন</span>
+                                </button>
+                                <button type="button" onclick="undoCancelOrder('${ord.uuid}')"
+                                    class="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition cursor-pointer">
+                                    <i data-lucide="undo-2" class="w-3 h-3"></i>
+                                    <span>Undo (পুনরুদ্ধার)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- DESKTOP DETAILED VIEW (HIDDEN SM:BLOCK - PRESERVED AS IS) -->
+                        <div class="hidden sm:block">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold shrink-0">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs font-black text-slate-900 font-mono">${escapeHtml(ord.order_number)}</span>
+                                            ${statusBadge}
+                                        </div>
+                                        <div class="text-[11px] text-slate-400 mt-0.5">বাতিল সময়: ${escapeHtml(ord.updated_at || ord.created_at || '')}</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="copyOrderInfo('${ord.uuid}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer" title="কুরিয়ারের জন্য সম্পূর্ণ তথ্য কপি">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                        <span>কপি</span>
+                                    </button>
+                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold flex items-center space-x-1.5">
+                                        <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i>
+                                        <span>ট্র্যাশে বাকি: ${daysRemaining} দিন</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-rose-50/30 p-3 rounded-xl border border-rose-100 mb-3">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">গ্রাহকের তথ্য</div>
+                                    <div class="text-xs font-bold text-slate-900">${escapeHtml(ord.customer_name)}</div>
+                                    <div class="text-xs text-slate-600 font-mono mt-0.5">${escapeHtml(ord.customer_phone)}</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ডেলিভারি ঠিকানা</div>
+                                    <div class="text-xs font-semibold text-slate-700 mt-0.5">${escapeHtml(ord.delivery_address)}</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">
+                                        ${escapeHtml(ord.upazilla || '')}, ${escapeHtml(ord.district || '')}, ${escapeHtml(ord.division || '')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 px-1">
+                                ${itemsHtml}
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                                <div class="flex items-center space-x-2 text-xs">
+                                    <span class="text-slate-500">বাতিলকৃত অর্ডারের মোট: <strong class="text-sm font-black text-rose-600 font-mono">৳${formatPrice(ord.total_amount)}</strong></span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" onclick="openOrderDetailsModal('${ord.uuid}')"
+                                        class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                                        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                                        <span>চালান</span>
+                                    </button>
+                                    <button type="button" onclick="undoCancelOrder('${ord.uuid}')"
+                                        class="px-4 py-1.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+                                        <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
+                                        <span>Undo (পুনরুদ্ধার করুন)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.append(cardHtml);
+            });
+
+            lucide.createIcons();
+        }
+
+        async function undoCancelOrder(orderUuid) {
+            showTopLoader();
+            try {
+                const res = await StoreApi.put('orders/' + orderUuid + '/status', { status: 'pending' });
+                if (res && res.success) {
+                    showToast('অর্ডার সফলভাবে পুনরুদ্ধার করা হয়েছে! (পেন্ডিং তালিকায় স্থানান্তরিত)', 'success');
+                    await loadOrders();
+                    renderCancelledOrders(ordersData);
+                    renderCompletedOrders(ordersData);
+                    renderOrders(ordersData);
+                    loadProducts();
+                } else {
+                    showToast((res && res.message) ? res.message : 'অর্ডার আপডেট সম্ভব হয়নি।', 'error');
+                }
+            } catch (err) {
+                showToast(err.message || 'ত্রুটি', 'error');
+            } finally {
+                hideTopLoader();
+            }
+        }
+
+        async function revertCompletedOrder(orderUuid) {
+            showTopLoader();
+            try {
+                const res = await StoreApi.put('orders/' + orderUuid + '/status', { status: 'pending' });
+                if (res && res.success) {
+                    showToast('অর্ডারটি পুনরায় অর্ডার ম্যানেজমেন্টে (পেন্ডিং তালিকায়) ফিরিয়ে আনা হয়েছে!', 'success');
+                    await loadOrders();
+                    renderCompletedOrders(ordersData);
+                    renderOrders(ordersData);
+                    loadProducts();
+                    if ($('#modalOrderDetails').is(':visible') && activeModalOrder && activeModalOrder.uuid === orderUuid) {
+                        openOrderDetailsModal(orderUuid);
+                    }
+                } else {
+                    showToast((res && res.message) ? res.message : 'অর্ডার রিভার্ট করা সম্ভব হয়নি।', 'error');
+                }
+            } catch (err) {
+                showToast(err.message || 'সার্ভার যোগাযোগে ত্রুটি', 'error');
+            } finally {
+                hideTopLoader();
+            }
+        }
+
+        function copyOrderInfo(uuid) {
+            const ord = ordersData.find(o => o.uuid === uuid) || (activeModalOrder && activeModalOrder.uuid === uuid ? activeModalOrder : null);
+            if (!ord) {
+                showToast('অর্ডারের তথ্য পাওয়া যায়নি।', 'error');
+                return;
+            }
+
+            const items = Array.isArray(ord.items) ? ord.items : [];
+            let itemsText = items.map((it, idx) => {
+                const variants = [it.size ? `সাইজ: ${it.size}` : '', it.color ? `কালার: ${it.color}` : ''].filter(Boolean).join(', ');
+                const varStr = variants ? ` (${variants})` : '';
+                return `  ${idx + 1}. ${it.product_name}${varStr} x ${it.quantity} = ৳${formatPrice(it.total_price)}`;
+            }).join('\n');
+
+            const zoneText = ord.delivery_zone === 'outside_dhaka' ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)';
+            const addressFull = [ord.delivery_address, ord.upazilla, ord.district, ord.division].filter(Boolean).join(', ');
+            const paymentText = ord.payment_method === 'cod' ? 'ক্যাশ অন ডেলিভারি (COD)' : (ord.payment_method || 'ক্যাশ অন ডেলিভারি');
+
+            const copyText = `অর্ডার নম্বর: ${ord.order_number}
+তারিখ: ${ord.created_at || ''}
+গ্রাহক: ${ord.customer_name}
+মোবাইল: ${ord.customer_phone}
+ঠিকানা: ${addressFull}
+ডেলিভারি জোন: ${zoneText}
+পণ্যসমূহ:
+${itemsText}
+সাবটোটাল: ৳${formatPrice(ord.subtotal)}
+ডেলিভারি ফি: ৳${formatPrice(ord.delivery_charge)}
+মোট বিল: ৳${formatPrice(ord.total_amount)}
+পেমেন্ট মেথড: ${paymentText}`;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(copyText).then(() => {
+                    showToast('অর্ডারের সম্পূর্ণ তথ্য সফলভাবে কপি করা হয়েছে!', 'success');
+                }).catch(() => {
+                    fallbackCopy(copyText);
+                });
+            } else {
+                fallbackCopy(copyText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast('অর্ডারের সম্পূর্ণ তথ্য সফলভাবে কপি করা হয়েছে!', 'success');
+            } catch (e) {
+                showToast('কপি করতে ব্যর্থ হয়েছে, অনুগ্রহ করে ম্যানুয়ালি কপি করুন।', 'error');
+            }
+            document.body.removeChild(ta);
+        }
+
+        let activeCopyOrder = null;
+
+        function openOrderCopyModal(uuid) {
+            const ord = ordersData.find(o => o.uuid === uuid);
+            if (!ord) {
+                showToast('অর্ডারের তথ্য পাওয়া যায়নি।', 'error');
+                return;
+            }
+
+            activeCopyOrder = ord;
+
+            $('#qcopyOrderNumber').text(ord.order_number);
+            $('#qcopyCustomerName').text(ord.customer_name);
+            $('#qcopyCustomerPhone').text(ord.customer_phone);
+
+            const cleanPhone = (ord.customer_phone || '').replace(/[^0-9]/g, '');
+            const waPhone = cleanPhone.startsWith('88') ? cleanPhone : ('88' + cleanPhone);
+            $('#qcopyCallBtn').attr('href', 'tel:' + cleanPhone);
+            $('#qcopyWaBtn').attr('href', 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent('আসসালামু আলাইকুম ' + ord.customer_name + ', আপনার অর্ডার ' + ord.order_number + ' সম্পর্কে যোগাযোগ করছি।'));
+
+            const fullAddr = [ord.delivery_address, ord.upazilla, ord.district, ord.division].filter(Boolean).join(', ');
+            $('#qcopyAddress').text(fullAddr || ord.delivery_address);
+            $('#qcopyUpazilla').text(ord.upazilla || '-');
+            $('#qcopyDistrict').text(ord.district || 'ঢাকা');
+
+            const totalAmt = parseFloat(ord.total_amount || 0);
+            $('#qcopyCodDisplay').text('৳' + formatPrice(totalAmt));
+            $('#qcopyCodRaw').text(Math.round(totalAmt));
+
+            const items = Array.isArray(ord.items) ? ord.items : [];
+            let itemsLines = items.map((it, idx) => {
+                const variants = [it.size ? `সাইজ: ${it.size}` : '', it.color ? `কালার: ${it.color}` : ''].filter(Boolean).join(', ');
+                const varStr = variants ? ` (${variants})` : '';
+                return `${idx + 1}. ${it.product_name}${varStr} x ${it.quantity} = ৳${formatPrice(it.total_price)}`;
+            }).join('\n');
+            $('#qcopyItemsSummary').text(itemsLines || 'কোনো আইটেম নেই');
+
+            $('#modalOrderQuickCopy').fadeIn(150);
+            lucide.createIcons();
+        }
+
+        function closeOrderCopyModal() {
+            $('#modalOrderQuickCopy').fadeOut(100);
+            activeCopyOrder = null;
+        }
+
+        function copyFieldText(selector, label) {
+            const text = $(selector).text().trim();
+            if (!text || text === '-') {
+                showToast('কপি করার মতো তথ্য নেই।', 'warning');
+                return;
+            }
+            copyTextToClipboard(text, label);
+        }
+
+        function copyPureCodAmount() {
+            const rawVal = $('#qcopyCodRaw').text().trim();
+            if (!rawVal) {
+                showToast('টাকার পরিমাণ পাওয়া যায়নি।', 'warning');
+                return;
+            }
+            copyTextToClipboard(rawVal, 'কালেকশন এমাউন্ট (টাকা)');
+        }
+
+        function copyTextToClipboard(text, label = 'তথ্য') {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast(`${label} সফলভাবে কপি হয়েছে!`, 'success');
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function openInvoiceFromCopyModal() {
+            if (!activeCopyOrder) return;
+            const uuid = activeCopyOrder.uuid;
+            closeOrderCopyModal();
+            openOrderDetailsModal(uuid);
+        }
+
+        function getStatusBadgeHtml(status) {
+            switch (status) {
+                case 'pending':
+                    return '<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>পেন্ডিং</span></span>';
+                case 'processing':
+                    return '<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span><span>প্রসেসিং</span></span>';
+                case 'delivered':
+                    return '<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>ডেলিভারি সম্পন্ন</span></span>';
+                case 'cancel':
+                    return '<span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span>বাতিল</span></span>';
+                default:
+                    return `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">${escapeHtml(status)}</span>`;
+            }
+        }
+
+        async function changeOrderStatus(uuid, newStatus) {
+            const statusLabels = {
+                pending: 'পেন্ডিং (Pending)',
+                processing: 'প্রসেসিং (Processing)',
+                delivered: 'ডেলিভারি সম্পন্ন (Delivered)',
+                cancel: 'বাতিল (Trash)'
+            };
+            showTopLoader();
+            try {
+                const res = await StoreApi.put(`orders/${uuid}/status`, { status: newStatus });
+                if (res && res.success) {
+                    showToast(`অর্ডার স্ট্যাটাস পরিবর্তিত: ${statusLabels[newStatus] || newStatus}`, 'success');
+                    await loadOrders();
+                    if (newStatus === 'cancel' || newStatus === 'pending') {
+                        loadProducts();
+                    }
+                    if ($('#modalOrderDetails').is(':visible') && activeModalOrder && activeModalOrder.uuid === uuid) {
+                        openOrderDetailsModal(uuid);
+                    }
+                } else {
+                    showToast((res && res.message) ? res.message : 'স্ট্যাটাস আপডেট ব্যর্থ হয়েছে', 'error');
+                }
+            } catch (err) {
+                showToast(err.message || 'সার্ভার যোগাযোগে ত্রুটি', 'error');
+            } finally {
+                hideTopLoader();
+            }
+        }
+
+        let activeModalOrder = null;
+
+        function openOrderDetailsModal(uuid) {
+            const ord = ordersData.find(o => o.uuid === uuid);
+            if (!ord) return;
+
+            activeModalOrder = ord;
+
+            $('#modalOrderInvoiceNo').text(ord.order_number);
+            $('#modalCurrentStatusBadge').html(getStatusBadgeHtml(ord.status));
+            $('#modalStatusSelect').val(ord.status);
+
+            $('#invOrderNumber').text(ord.order_number);
+            $('#invOrderDate').text(ord.created_at || '');
+
+            $('#invCustomerName').text(ord.customer_name);
+            $('#invCustomerPhone').text(ord.customer_phone);
+
+            const cleanPhone = (ord.customer_phone || '').replace(/[^0-9]/g, '');
+            const waPhone = cleanPhone.startsWith('88') ? cleanPhone : ('88' + cleanPhone);
+            $('#invCustomerActions').html(`
+                <a href="tel:${escapeHtml(ord.customer_phone)}" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition">
+                    <i data-lucide="phone" class="w-3 h-3"></i><span>কল</span>
+                </a>
+                <a href="https://wa.me/${waPhone}" target="_blank" class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center space-x-1 shadow-2xs transition">
+                    <i data-lucide="message-circle" class="w-3 h-3"></i><span>WhatsApp</span>
+                </a>
+            `);
+
+            const zoneName = (ord.delivery_zone === 'outside_dhaka') ? 'ঢাকার বাইরে (৳১২০)' : 'ঢাকার ভেতরে (৳৬০)';
+            $('#invDeliveryZone').text(zoneName);
+            $('#invFullAddress').text(`${ord.delivery_address}, ${ord.upazilla || ''}, ${ord.district || ''}, ${ord.division || ''}`);
+            $('#invPaymentMethod').text(`পেমেন্ট: ${ord.payment_method === 'cod' ? 'ক্যাশ অন ডেলিভারি (COD)' : ord.payment_method}`);
+
+            // Items table
+            const tbody = $('#invItemsTableBody');
+            tbody.empty();
+            const items = Array.isArray(ord.items) ? ord.items : [];
+            items.forEach(it => {
+                const variantText = [it.size ? `সাইজ: ${it.size}` : '', it.color ? `কালার: ${it.color}` : ''].filter(Boolean).join(' | ') || 'স্ট্যান্ডার্ড';
+                tbody.append(`
+                    <tr>
+                        <td class="py-2.5 px-3 font-semibold text-slate-800">${escapeHtml(it.product_name)}</td>
+                        <td class="py-2.5 px-2 text-center text-orange-600 font-bold">${escapeHtml(variantText)}</td>
+                        <td class="py-2.5 px-2 text-right font-mono">৳${formatPrice(it.unit_price)}</td>
+                        <td class="py-2.5 px-2 text-center font-bold">${it.quantity}</td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">৳${formatPrice(it.total_price)}</td>
+                    </tr>
+                `);
+            });
+
+            $('#invSubtotal').text('৳' + formatPrice(ord.subtotal));
+            $('#invDeliveryCharge').text('৳' + formatPrice(ord.delivery_charge));
+            $('#invTotalAmount').text('৳' + formatPrice(ord.total_amount));
+
+            $('#modalOrderDetails').fadeIn(150);
+            lucide.createIcons();
+        }
+
+        function closeOrderDetailsModal() {
+            $('#modalOrderDetails').fadeOut(100);
+            activeModalOrder = null;
+        }
+
+        function changeOrderStatusFromModal() {
+            if (!activeModalOrder) return;
+            const newStatus = $('#modalStatusSelect').val();
+            changeOrderStatus(activeModalOrder.uuid, newStatus);
+        }
+
+        function printOrderInvoice() {
+            window.print();
+        }
+
+        // Helper escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.toString().replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // On Page Load
+        $(document).ready(function() {
+            showTopLoader();
+            lucide.createIcons();
+            switchLanguage(currentLang);
+            updateUI(storeData);
+            loadProfile();
+            loadCategories();
+            loadProducts();
+            loadOrders();
+            loadDeliveryChargesAdmin();
+            setupImageDropzone();
+            loadSaasSubscriptionAndPayments();
+
+            // Initial load skeleton transition
+            setTimeout(function() {
+                $('#sidebarSkeleton').addClass('hidden');
+                $('#sidebarNavContent').removeClass('hidden').addClass('tab-transition');
+                $('#tabContentSkeleton').addClass('hidden');
+                $('#tabContentDashboard').removeClass('hidden').addClass('tab-transition');
+                hideTopLoader();
+                if (window.lucide) lucide.createIcons();
+            }, 300);
+        });
+    
+
+        // ==========================================
+        // DISCOUNT MANAGEMENT SYSTEM
+        // ==========================================
+        function renderDiscountsTable(list = productsData) {
+            const discounted = (list || []).filter(p => p.has_discount || (parseInt(p.discount_percent) > 0 && (!p.discount_ends_at || new Date(p.discount_ends_at.replace(/-/g, '/')) > new Date())));
+            
+            $('#badgeDiscountCount').text(discounted.length);
+            $('#statActiveDiscounts').text(discounted.length + ' টি');
+            
+            let maxDisc = 0;
+            discounted.forEach(p => {
+                const pct = parseInt(p.discount_percent) || 0;
+                if (pct > maxDisc) maxDisc = pct;
+            });
+            $('#statMaxDiscount').text(maxDisc > 0 ? maxDisc + '%' : '0%');
+
+            const $container = $('#discountsListContainer');
+            if ($container.length === 0) return;
+            $container.empty();
+
+            if (discounted.length === 0) {
+                $container.html(`
+                    <div class="py-12 text-center space-y-3">
+                        <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center mx-auto">
+                            <i data-lucide="tag" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">কোনো সক্রিয় ডিসকাউন্ট নেই</h4>
+                        <p class="text-xs text-slate-400 max-w-sm mx-auto">আপনার যেকোনো পণ্যে স্পেশাল ডিসকাউন্ট পারসেন্ট ও মেয়াদ যুক্ত করতে উপরের বাটনে ক্লিক করুন।</p>
+                        <button type="button" onclick="openSetDiscountModal()" class="inline-flex items-center space-x-1.5 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                            <span>+ নতুন ডিসকাউন্ট চালু করুন</span>
+                        </button>
+                    </div>
+                `);
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            let cardsHtml = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
+            discounted.forEach(prod => {
+                const img = (prod.images && prod.images[0]) ? prod.images[0] : null;
+                const regPrice = parseFloat(prod.retailer_price || 0);
+                const discPercent = parseInt(prod.discount_percent || 0);
+                const discPrice = parseFloat(prod.effective_price || (regPrice * (1 - discPercent / 100)));
+                const savings = regPrice - discPrice;
+                const endsAt = prod.discount_ends_at ? new Date(prod.discount_ends_at.replace(/-/g, '/')).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }) : 'মেয়াদহীন';
+
+                cardsHtml += `
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-md transition space-y-3 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center space-x-3 min-w-0">
+                                    <div class="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                        ${img ? `<img src="${img}" class="w-full h-full object-cover">` : `<i data-lucide="package" class="w-6 h-6 text-slate-400"></i>`}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="px-2 py-0.5 bg-red-100 text-red-700 font-black rounded-lg text-[10px] inline-flex items-center space-x-1">
+                                            <i data-lucide="flame" class="w-3 h-3 text-red-600"></i>
+                                            <span>${discPercent}% ছাড়</span>
+                                        </span>
+                                        <h4 class="font-bold text-slate-900 text-xs truncate mt-1" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</h4>
+                                        <span class="text-[10px] text-slate-400">${escapeHtml(prod.category_name || 'ক্যাটাগরি নেই')}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Price Info -->
+                            <div class="mt-3 p-2.5 bg-slate-50 border border-slate-200/70 rounded-xl space-y-1 text-xs">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-400 text-[10px]">আসল মূল্য:</span>
+                                    <span class="line-through text-slate-400 font-mono">৳${regPrice.toFixed(2)}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-600 font-bold text-[11px]">ডিসকাউন্ট মূল্য:</span>
+                                    <span class="font-black text-orange-600 font-mono text-sm">৳${discPrice.toFixed(2)}</span>
+                                </div>
+                                <div class="flex items-center justify-between border-t border-slate-200/60 pt-1 text-[10px]">
+                                    <span class="text-emerald-700 font-semibold">গ্রাহকের সাশ্রয়:</span>
+                                    <span class="font-bold text-emerald-600 font-mono">৳${savings.toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            <!-- Expiry Info -->
+                            <div class="mt-2 text-[10px] text-slate-500 flex items-center space-x-1">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i>
+                                <span>মেয়াদ শেষ: <strong>${endsAt}</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
+                            <button type="button" onclick="openSetDiscountModal('${prod.uuid}')" class="flex-1 py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 cursor-pointer">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                <span>এডিট</span>
+                            </button>
+                            <button type="button" onclick="removeProductDiscount('${prod.uuid}')" class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 cursor-pointer" title="ডিসকাউন্ট বাতিল করুন">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>বাতিল</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            cardsHtml += '</div>';
+
+            $container.html(cardsHtml);
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function openSetDiscountModal(productUuid = null) {
+            const $select = $('#discProductUuid');
+            $select.empty().append('<option value="">-- পণ্য বেছে নিন --</option>');
+
+            (productsData || []).forEach(p => {
+                const isSelected = productUuid && p.uuid === productUuid;
+                const discBadge = p.has_discount ? ` [বর্তমানে ${p.discount_percent}% ছাড় চলছে]` : '';
+                $select.append(`<option value="${p.uuid}" ${isSelected ? 'selected' : ''}>${escapeHtml(p.name)} - ৳${parseFloat(p.retailer_price || 0).toFixed(2)}${discBadge}</option>`);
+            });
+
+            if (productUuid) {
+                const prod = (productsData || []).find(p => p.uuid === productUuid);
+                if (prod) {
+                    $('#discPercent').val(prod.discount_percent || 20);
+                    if (prod.discount_ends_at) {
+                        const dt = new Date(prod.discount_ends_at.replace(/-/g, '/'));
+                        const localIso = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                        $('#discEndsAt').val(localIso);
+                    } else {
+                        setDefaultDiscountExpiry();
+                    }
+                }
+            } else {
+                $('#discPercent').val(20);
+                setDefaultDiscountExpiry();
+            }
+
+            calcDiscountPreview();
+            $('#modalSetDiscount').removeClass('hidden').css('display', 'flex');
+            $('body').addClass('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function setDefaultDiscountExpiry() {
+            const d = new Date();
+            d.setDate(d.getDate() + 7);
+            const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            $('#discEndsAt').val(localIso);
+        }
+
+        function closeSetDiscountModal() {
+            $('#modalSetDiscount').addClass('hidden').css('display', 'none');
+            $('body').removeClass('overflow-hidden');
+        }
+
+        function setQuickDiscPercent(val) {
+            $('#discPercent').val(val);
+            calcDiscountPreview();
+        }
+
+        function onDiscountProductSelect() {
+            calcDiscountPreview();
+        }
+
+        function calcDiscountPreview() {
+            const uuid = $('#discProductUuid').val();
+            const percent = parseInt($('#discPercent').val()) || 0;
+            $('#discPercentDisplay').text(percent + '%');
+
+            const prod = (productsData || []).find(p => p.uuid === uuid);
+            if (!prod) {
+                $('#discPrevRegular').text('৳ 0.00');
+                $('#discPrevSavings').text('৳ 0.00');
+                $('#discPrevFinal').text('৳ 0.00');
+                return;
+            }
+
+            const regPrice = parseFloat(prod.retailer_price || 0);
+            const savings = (regPrice * percent) / 100;
+            const finalPrice = Math.max(0, regPrice - savings);
+
+            $('#discPrevRegular').text('৳ ' + regPrice.toFixed(2));
+            $('#discPrevSavings').text('৳ ' + savings.toFixed(2));
+            $('#discPrevFinal').text('৳ ' + finalPrice.toFixed(2));
+        }
+
+        async function submitSetDiscount(e) {
+            e.preventDefault();
+            const uuid = $('#discProductUuid').val();
+            const percent = parseInt($('#discPercent').val()) || 0;
+            const endsAtRaw = $('#discEndsAt').val();
+
+            if (!uuid) {
+                Swal.fire({ icon: 'warning', text: 'অনুগ্রহ করে একটি পণ্য নির্বাচন করুন।' });
+                return;
+            }
+            if (percent < 1 || percent > 99) {
+                Swal.fire({ icon: 'warning', text: 'ডিসকাউন্ট শতকরা ১% থেকে ৯৯% এর মধ্যে হতে হবে।' });
+                return;
+            }
+            if (!endsAtRaw) {
+                Swal.fire({ icon: 'warning', text: 'অফারের মেয়াদ শেষ হওয়ার তারিখ ও সময় দিন।' });
+                return;
+            }
+
+            const endsDate = new Date(endsAtRaw);
+            const formattedEndsAt = endsDate.getFullYear() + '-' +
+                String(endsDate.getMonth() + 1).padStart(2, '0') + '-' +
+                String(endsDate.getDate()).padStart(2, '0') + ' ' +
+                String(endsDate.getHours()).padStart(2, '0') + ':' +
+                String(endsDate.getMinutes()).padStart(2, '0') + ':00';
+
+            $('#btnSaveDiscount').prop('disabled', true).text('সংরক্ষণ হচ্ছে...');
+
+            try {
+                const res = await StoreApi.put('products/' + encodeURIComponent(uuid) + '/discount', {
+                    discount_percent: percent,
+                    discount_ends_at: formattedEndsAt
+                });
+
+                if (res.success) {
+                    showToast('ডিসকাউন্ট সফলভাবে চালু করা হয়েছে!', 'success');
+                    closeSetDiscountModal();
+                    await loadProducts();
+                    renderDiscountsTable(productsData);
+                } else {
+                    Swal.fire({ icon: 'error', text: res.message || 'ডিসকাউন্ট সেট করতে সমস্যা হয়েছে।' });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', text: err.message });
+            } finally {
+                $('#btnSaveDiscount').prop('disabled', false).html('<i data-lucide="check" class="w-4 h-4"></i><span>ডিসকাউন্ট সক্রিয় করুন</span>');
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+
+        async function removeProductDiscount(uuid) {
+            const result = await Swal.fire({
+                title: 'ডিসকাউন্ট বাতিল করবেন?',
+                text: 'এই পণ্যের উপর থেকে স্পেশাল অফার সরিয়ে দেওয়া হবে এবং নিয়মিত মূল্য কার্যকর হবে।',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'হ্যাঁ, বাতিল করুন',
+                cancelButtonText: 'না, রাখুন',
+                confirmButtonColor: '#e11d48'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const res = await StoreApi.delete('products/' + encodeURIComponent(uuid) + '/discount');
+                if (res.success) {
+                    showToast('ডিসকাউন্ট বাতিল করা হয়েছে।', 'info');
+                    await loadProducts();
+                    renderDiscountsTable(productsData);
+                } else {
+                    Swal.fire({ icon: 'error', text: res.message || 'ডিসকাউন্ট বাতিল করা সম্ভব হয়নি।' });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', text: err.message });
+            }
+        }
+
+
+        // ==========================================
+        // DELIVERY CHARGES MANAGEMENT (CRUD)
+        // ==========================================
+        let deliveryChargesData = [];
+
+        async function loadDeliveryChargesAdmin() {
+            renderDeliveryChargeSkeletons(3);
+            try {
+                const res = await StoreApi.get('delivery-charges');
+                if (res && res.success && Array.isArray(res.data)) {
+                    deliveryChargesData = res.data;
+                } else {
+                    deliveryChargesData = [];
+                }
+                renderDeliveryChargesTable(deliveryChargesData);
+            } catch (e) {
+                console.error('Failed to load delivery charges:', e);
+                deliveryChargesData = [];
+                renderDeliveryChargesTable([]);
+            }
+        }
+
+        function renderDeliveryChargesTable(charges) {
+            const tbody = document.getElementById('deliveryChargesTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const badgeCount = document.getElementById('badgeDeliveryCount');
+            if (badgeCount) badgeCount.textContent = charges.length;
+
+            const statTotal = document.getElementById('statDeliveryTotal');
+            if (statTotal) statTotal.textContent = charges.length;
+
+            const activeCount = charges.filter(c => c.status === 'active').length;
+            const statActive = document.getElementById('statDeliveryActive');
+            if (statActive) statActive.textContent = activeCount;
+
+            const defaultCharge = charges.find(c => c.is_default == 1) || charges[0];
+            const statDefault = document.getElementById('statDeliveryDefault');
+            if (statDefault) {
+                statDefault.textContent = defaultCharge ? defaultCharge.title + ' (৳' + parseFloat(defaultCharge.amount).toFixed(2) + ')' : 'কোনো ডিফল্ট নেই';
+            }
+
+            if (charges.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400">
+                            <i data-lucide="truck" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            <div>কোনো ডেলিভারি চার্জ পাওয়া যায়নি</div>
+                            <button type="button" onclick="openDeliveryModal()" class="mt-3 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg transition hover:bg-emerald-700 cursor-pointer">+ প্রথম ডেলিভারি চার্জ যুক্ত করুন</button>
+                        </td>
+                    </tr>
+                `;
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            let rowsHtml = '';
+            charges.forEach(c => {
+                const isDefault = (c.is_default == 1);
+                const isActive = (c.status === 'active');
+                const defaultBadge = isDefault 
+                    ? '<span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">ডিফল্ট</span>' 
+                    : '';
+                const statusBadge = isActive
+                    ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">সক্রিয়</span>'
+                    : '<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">নিষ্ক্রিয়</span>';
+
+                rowsHtml += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-900">
+                            <div class="flex items-center">
+                                <span>${escapeHtml(c.title)}</span>
+                                ${defaultBadge}
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-3 font-mono text-[11px] text-slate-500">${escapeHtml(c.code)}</td>
+                        <td class="py-3.5 px-3 font-mono font-black text-slate-900 text-sm">৳${parseFloat(c.amount).toFixed(2)}</td>
+                        <td class="py-3.5 px-3 text-slate-500 text-xs">${escapeHtml(c.description || '-')}</td>
+                        <td class="py-3.5 px-3 text-center">${statusBadge}</td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="flex items-center justify-end space-x-1">
+                                <button type="button" onclick="editDeliveryCharge('${c.uuid}')" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-lg hover:bg-emerald-50 transition cursor-pointer" title="সম্পাদনা করুন">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                                <button type="button" onclick="deleteDeliveryCharge('${c.uuid}', '${escapeHtml(c.title)}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer" title="মুছে ফেলুন">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowsHtml;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function openDeliveryModal(uuid = null) {
+            $('#formDeliveryCharge')[0].reset();
+            $('#delInputUuid').val('');
+            $('#delInputStatus').val('active');
+            $('#delInputSort').val(deliveryChargesData.length + 1);
+            $('#delInputDefault').prop('checked', false);
+
+            if (uuid) {
+                const item = deliveryChargesData.find(c => c.uuid === uuid);
+                if (item) {
+                    $('#delInputUuid').val(item.uuid);
+                    $('#modalDeliveryTitle').text('ডেলিভারি চার্জ সম্পাদনা করুন');
+                    $('#delInputTitle').val(item.title);
+                    $('#delInputCode').val(item.code);
+                    $('#delInputAmount').val(parseFloat(item.amount));
+                    $('#delInputDesc').val(item.description || '');
+                    $('#delInputStatus').val(item.status);
+                    $('#delInputSort').val(item.sort_order || 1);
+                    $('#delInputDefault').prop('checked', item.is_default == 1);
+                }
+            } else {
+                $('#modalDeliveryTitle').text('নতুন ডেলিভারি চার্জ যুক্ত করুন');
+                if (deliveryChargesData.length === 0) {
+                    $('#delInputDefault').prop('checked', true);
+                }
+            }
+
+            $('#modalDeliveryCharge').removeClass('hidden');
+            $('body').addClass('overflow-hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function closeDeliveryModal() {
+            $('#modalDeliveryCharge').addClass('hidden');
+            $('body').removeClass('overflow-hidden');
+        }
+
+        async function handleDeliverySubmit(e) {
+            e.preventDefault();
+            const uuid = $('#delInputUuid').val();
+            const title = $('#delInputTitle').val().trim();
+            const code = $('#delInputCode').val().trim();
+            const amount = parseFloat($('#delInputAmount').val());
+            const description = $('#delInputDesc').val().trim();
+            const status = $('#delInputStatus').val();
+            const sort_order = parseInt($('#delInputSort').val()) || 0;
+            const is_default = $('#delInputDefault').is(':checked') ? 1 : 0;
+
+            if (!title || isNaN(amount) || amount < 0) {
+                showToast('অনুগ্রহ করে সঠিক তথ্য প্রদান করুন।', 'error');
+                return;
+            }
+
+            const payload = { title, code, amount, description, status, sort_order, is_default };
+
+            try {
+                let res;
+                if (uuid) {
+                    res = await StoreApi.put(`delivery-charges/${uuid}`, payload);
+                } else {
+                    res = await StoreApi.post('delivery-charges', payload);
+                }
+
+                if (res && res.success) {
+                    showToast(uuid ? 'ডেলিভারি চার্জ সফলভাবে আপডেট হয়েছে।' : 'নতুন ডেলিভারি চার্জ যুক্ত হয়েছে।', 'success');
+                    closeDeliveryModal();
+                    await loadDeliveryChargesAdmin();
+                } else {
+                    showToast((res && res.message) || 'ডেলিভারি চার্জ সংরক্ষণ ব্যর্থ হয়েছে।', 'error');
+                }
+            } catch (err) {
+                console.error('Save delivery charge error:', err);
+                showToast('সার্ভার যোগাযোগে সমস্যা হয়েছে।', 'error');
+            }
+        }
+
+        function editDeliveryCharge(uuid) {
+            openDeliveryModal(uuid);
+        }
+
+        async function deleteDeliveryCharge(uuid, title) {
+            const confirmed = await Swal.fire({
+                title: 'আপনি কি নিশ্চিত?',
+                text: `"${title}" ডেলিভারি চার্জটি মুছে ফেলা হবে।`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'হ্যাঁ, মুছুন',
+                cancelButtonText: 'বাতিল'
+            });
+
+            if (confirmed.isConfirmed) {
+                try {
+                    const res = await StoreApi.delete(`delivery-charges/${uuid}`);
+                    if (res && res.success) {
+                        showToast('ডেলিভারি চার্জ মুছে ফেলা হয়েছে।', 'success');
+                        await loadDeliveryChargesAdmin();
+                    } else {
+                        showToast((res && res.message) || 'ডেলিভারি চার্জ মোছা সম্ভব হয়নি।', 'error');
+                    }
+                } catch (e) {
+                    showToast('সার্ভার যোগাযোগে সমস্যা হয়েছে।', 'error');
+                }
+            }
+        }
+
+
+                // ==========================================
+        // WEBSITE DESIGN (20 UNIQUE FLUID TEMPLATES, PALETTES & PREVIEW)
+        // ==========================================
+        const STORE_TEMPLATES_REGISTRY = <?= json_encode(array_values($themeData['all_templates'] ?? []), JSON_UNESCAPED_UNICODE) ?>;
+        const STORE_PALETTES_REGISTRY  = <?= json_encode($themeData['all_palettes'] ?? [], JSON_UNESCAPED_UNICODE) ?>;
+
+        let selectedTemplateId = '<?= htmlspecialchars($templateId ?? 'template_1') ?>';
+        let selectedPaletteId  = '<?= htmlspecialchars($paletteId ?? 'orange') ?>';
+        const templatePaletteState = {};
+        STORE_TEMPLATES_REGISTRY.forEach(tpl => {
+            if (tpl.id === selectedTemplateId) {
+                templatePaletteState[tpl.id] = selectedPaletteId;
+            } else {
+                templatePaletteState[tpl.id] = (tpl.palettes && tpl.palettes[0]) ? tpl.palettes[0] : 'orange';
+            }
+        });
+
+        function renderDesignWebsiteTab() {
+            const $grid = $('#designTemplatesGrid');
+            if (!$grid.length) return;
+            $grid.empty();
+
+            STORE_TEMPLATES_REGISTRY.forEach(tpl => {
+                const isSelectedTpl = (tpl.id === selectedTemplateId);
+                const activePalKey = templatePaletteState[tpl.id] || (tpl.palettes ? tpl.palettes[0] : 'orange');
+                const palObj = STORE_PALETTES_REGISTRY[activePalKey] || STORE_PALETTES_REGISTRY['orange'];
+                const primaryHex = palObj ? palObj.primary : '#ea580c';
+                const secondaryHex = palObj ? palObj.secondary : '#d97706';
+                const cleanActivePalName = (palObj && palObj.name_bn) ? palObj.name_bn.split('(')[0].trim() : 'ডিফল্ট';
+
+                // Sleek, prominent Color Palette Chips on a compact flex row
+                let paletteChipsHtml = '';
+                (tpl.palettes || []).forEach(pKey => {
+                    const p = STORE_PALETTES_REGISTRY[pKey];
+                    if (!p) return;
+                    const isPalActive = (activePalKey === pKey);
+                    const cleanName = (p.name_bn || '').split('(')[0].trim();
+                    paletteChipsHtml += `
+                        <button type="button" onclick="selectTemplatePalette('${tpl.id}', '${pKey}', event)"
+                            title="${p.name_bn} (${p.name_en})"
+                            class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                                isPalActive 
+                                    ? 'border-slate-900 bg-slate-900 text-white shadow-xs font-bold scale-[1.02]' 
+                                    : 'border-slate-200 bg-white hover:border-slate-400 text-slate-700'
+                            }">
+                            <span class="w-3.5 h-3.5 rounded-full shrink-0 border border-white/60 shadow-2xs" style="background: linear-gradient(135deg, ${p.primary}, ${p.secondary});"></span>
+                            <span class="text-[11px] truncate max-w-[85px]">${cleanName}</span>
+                        </button>
+                    `;
+                });
+
+                const fontName = tpl.font_name || 'Hind Siliguri';
+                const catBn = tpl.category_bn || 'জেনারেল স্টোর';
+
+                const cardHtml = `
+                    <div onclick="selectDesignTemplate('${tpl.id}')"
+                         class="bg-white rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col justify-between cursor-pointer ${
+                             isSelectedTpl 
+                                 ? 'border-brand-600 ring-4 ring-brand-100 shadow-md' 
+                                 : 'border-slate-200 hover:border-brand-300 shadow-xs hover:shadow-md'
+                         }">
+                        
+                        <div class="p-4 space-y-2.5">
+                            <!-- Top Header: Number + Category Badge + Active/Font -->
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-0.5 rounded-md text-xs font-black text-white shadow-2xs" style="background-color: ${primaryHex};">
+                                        #${tpl.number}
+                                    </span>
+                                    <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                        ${catBn}
+                                    </span>
+                                </div>
+                                ${isSelectedTpl ? `
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center space-x-1 shadow-2xs">
+                                        <i data-lucide="check" class="w-3 h-3 text-emerald-600 stroke-[3]"></i>
+                                        <span>সক্রিয় থিম</span>
+                                    </span>
+                                ` : `
+                                    <span class="text-[11px] text-slate-400 font-medium">ফন্ট: <strong class="text-slate-600">${fontName}</strong></span>
+                                `}
+                            </div>
+
+                            <!-- Title & 1-line Description -->
+                            <div>
+                                <h3 class="text-sm sm:text-base font-extrabold text-slate-900 group-hover:text-brand-600 transition leading-snug">${tpl.name_bn}</h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1">${tpl.desc_bn}</p>
+                            </div>
+
+                            <!-- COMPACT PROMINENT COLOR PALETTE ROW -->
+                            <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-slate-800 flex items-center space-x-1 text-[11px]">
+                                        <i data-lucide="palette" class="w-3.5 h-3.5 text-brand-600"></i>
+                                        <span>কালার থিম:</span>
+                                    </span>
+                                    <span class="text-[11px] font-bold text-brand-600">${cleanActivePalName}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 items-center">
+                                    ${paletteChipsHtml}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Footer (Compact) -->
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <button type="button" onclick="previewTemplateTheme('${tpl.id}', event)"
+                                class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 transition shadow-2xs cursor-pointer flex items-center space-x-1">
+                                <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500"></i>
+                                <span>প্রিভিউ</span>
+                            </button>
+
+                            <button type="button" onclick="selectAndSaveTemplate('${tpl.id}', event)"
+                                class="px-3.5 py-1.5 rounded-xl text-xs font-black transition shadow-2xs cursor-pointer flex items-center space-x-1.5 ${isSelectedTpl ? 'bg-emerald-600 text-white' : 'text-white'}"
+                                style="${!isSelectedTpl ? 'background-color:' + primaryHex : ''}">
+                                <i data-lucide="${isSelectedTpl ? 'check' : 'mouse-pointer-click'}" class="w-3.5 h-3.5"></i>
+                                <span>${isSelectedTpl ? 'সক্রিয় রয়েছে' : 'বেছে নিন'}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                $grid.append(cardHtml);
+            });
+
+            updateActiveDesignHeaderLabels();
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function previewTemplateTheme(templateId, event) {
+            if (event) event.stopPropagation();
+            const tplId = templateId || selectedTemplateId || 'template_1';
+            const palKey = templatePaletteState[tplId] || selectedPaletteId || 'orange';
+            const previewUrl = `../?preview_template=${encodeURIComponent(tplId)}&preview_palette=${encodeURIComponent(palKey)}`;
+            window.open(previewUrl, '_blank');
+        }
+
+        function updateActiveDesignHeaderLabels() {
+            const tpl = STORE_TEMPLATES_REGISTRY.find(t => t.id === selectedTemplateId);
+            const pal = STORE_PALETTES_REGISTRY[selectedPaletteId];
+            if (tpl) $('#lblActiveTemplateName').text(tpl.name_bn);
+            if (pal) $('#lblActivePaletteName').text(pal.name_bn);
+        }
+
+        function selectDesignTemplate(templateId) {
+            selectedTemplateId = templateId;
+            selectedPaletteId = templatePaletteState[templateId] || 'orange';
+            applyLiveAdminPalette(selectedPaletteId);
+            renderDesignWebsiteTab();
+        }
+
+        function selectTemplatePalette(templateId, paletteKey, event) {
+            if (event) event.stopPropagation();
+            templatePaletteState[templateId] = paletteKey;
+            selectedTemplateId = templateId;
+            selectedPaletteId = paletteKey;
+            applyLiveAdminPalette(paletteKey);
+            renderDesignWebsiteTab();
+        }
+
+        async function selectAndSaveTemplate(templateId, event) {
+            if (event) event.stopPropagation();
+            selectedTemplateId = templateId;
+            selectedPaletteId = templatePaletteState[templateId] || 'orange';
+            applyLiveAdminPalette(selectedPaletteId);
+            renderDesignWebsiteTab();
+            await saveWebsiteDesign();
+        }
+
+        function applyLiveAdminPalette(paletteKey) {
+            const pal = STORE_PALETTES_REGISTRY[paletteKey];
+            if (!pal || !pal.shades) return;
+            const s = pal.shades;
+            const root = document.documentElement;
+            Object.keys(s).forEach(k => {
+                root.style.setProperty(`--brand-${k}`, s[k]);
+            });
+        }
+
+        async function saveWebsiteDesign() {
+            const btn = $('#btnSaveWebsiteDesign');
+            btn.prop('disabled', true).addClass('opacity-70');
+            showTopLoader();
+
+            try {
+                const res = await StoreApi.put(`tenants/${STORE_UUID}/profile`, {
+                    template_id: selectedTemplateId,
+                    color_palette: selectedPaletteId
+                });
+
+                if (res && res.success) {
+                    applyLiveAdminPalette(selectedPaletteId);
+                    showToast('ওয়েবসাইট টেমপ্লেট ও কালার প্যালেট সফলভাবে আপডেট হয়েছে!', 'success');
+                } else {
+                    showToast((res && res.message) || 'ডিজাইন সংরক্ষণ ব্যর্থ হয়েছে।', 'error');
+                }
+            } catch (err) {
+                console.error('Save design error:', err);
+                showToast('সার্ভার যোগাযোগে সমস্যা হয়েছে।', 'error');
+            } finally {
+                hideTopLoader();
+                btn.prop('disabled', false).removeClass('opacity-70');
+            }
+        }
+
+        // ==========================================
+        // HERO CAROUSEL BANNER UPLOAD (MAX 5, HIGH QUALITY, NO 200KB LIMIT)
+        // ==========================================
+        function getStoreBannersList() {
+            return Array.isArray(storeData.banners) ? storeData.banners : [];
+        }
+
+        function resolveBannerFullUrl(relPath) {
+            if (!relPath) return '';
+            if (relPath.startsWith('http://') || relPath.startsWith('https://')) return relPath;
+            const baseMother = API_URL.replace(/\/api\/?$/, '');
+            return `${baseMother}/${relPath.replace(/^\/+/, '')}`;
+        }
+
+        function renderUploadBannerTab() {
+            const banners = getStoreBannersList();
+            const count = banners.length;
+
+            $('#badgeBannerCount').text(`${count}/5`);
+            $('#lblBannerSlotStatus').text(`${count} / 5 ব্যানার আপলোডকৃত`);
+
+            const $grid = $('#uploadedBannersGrid');
+            if (!$grid.length) return;
+            $grid.empty();
+
+            if (count >= 5) {
+                $('#bannerUploadDropzone').addClass('opacity-50 pointer-events-none');
+                $('#bannerUploadPromptText').text('সর্বোচ্চ ৫টি ব্যানার পূর্ণ হয়েছে। নতুন ব্যানার যোগ করতে নিচের যেকোনো একটি মুছুন।');
+            } else {
+                $('#bannerUploadDropzone').removeClass('opacity-50 pointer-events-none');
+                $('#bannerUploadPromptText').text(`ব্যানার ছবি আপলোড করতে এখানে ক্লিক করুন (আরও ${5 - count} টি যোগ করা যাবে)`);
+            }
+
+            if (count === 0) {
+                $grid.html(`
+                    <div class="col-span-full py-10 text-center text-slate-400 space-y-2 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <i data-lucide="image" class="w-8 h-8 mx-auto text-slate-300"></i>
+                        <div class="text-xs font-bold text-slate-600">কোনো কাস্টম ব্যানার এখনও আপলোড করা হয়নি</div>
+                        <div class="text-[11px] text-slate-400">উপরের বক্সে ক্লিক করে সর্বোচ্চ ৫টি হাই-কোয়ালিটি ব্যানার ছবি আপলোড করুন।</div>
+                    </div>
+                `);
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+
+            banners.forEach((relPath, idx) => {
+                const fullUrl = resolveBannerFullUrl(relPath);
+                $grid.append(`
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-2xs group flex flex-col justify-between">
+                        <div class="relative aspect-[21/9] bg-slate-900 overflow-hidden">
+                            <img src="${fullUrl}" alt="Banner Slide #${idx + 1}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 left-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-xs text-white text-[11px] font-black">
+                                    Slide #${idx + 1}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-white flex items-center justify-between">
+                            <span class="text-[11px] font-mono text-slate-500 truncate max-w-[220px]">${relPath}</span>
+                            <button type="button" onclick="deleteStoreBanner(${idx}, '${relPath.replace(/'/g, "\'")}')"
+                                class="px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                <span>মুছুন</span>
+                            </button>
+                        </div>
+                    </div>
+                `);
+            });
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        async function handleBannerUploadSelection(event) {
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
+
+            const currentBanners = getStoreBannersList();
+            if (currentBanners.length >= 5) {
+                showToast('সর্বোচ্চ ৫টি ব্যানার আপলোড করা যাবে।', 'warning');
+                event.target.value = '';
+                return;
+            }
+
+            const remaining = 5 - currentBanners.length;
+            const selectedFiles = files.slice(0, remaining);
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                // Upload raw uncompressed file directly (NO 200KB compression!)
+                formData.append('banners[]', file);
+            });
+
+            showTopLoader();
+            $('#bannerUploadPromptText').text('হাই-কোয়ালিটি ব্যানার আপলোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন...');
+
+            try {
+                const res = await StoreApi.post(`tenants/${STORE_UUID}/banners`, formData);
+                if (res && res.success && res.data) {
+                    storeData = res.data;
+                    renderUploadBannerTab();
+                    showToast('হাই-কোয়ালিটি ব্যানার সফলভাবে আপলোড হয়েছে!', 'success');
+                } else {
+                    showToast((res && res.message) || 'ব্যানার আপলোড ব্যর্থ হয়েছে।', 'error');
+                    renderUploadBannerTab();
+                }
+            } catch (err) {
+                console.error('Banner upload error:', err);
+                showToast('ব্যানার আপলোডে সমস্যা হয়েছে।', 'error');
+                renderUploadBannerTab();
+            } finally {
+                hideTopLoader();
+                event.target.value = '';
+            }
+        }
+
+        async function deleteStoreBanner(index, bannerPath) {
+            const confirmed = await Swal.fire({
+                title: 'ব্যানার মুছে ফেলবেন?',
+                text: `Slide #${index + 1} ব্যানারটি হোমপেজ ক্যারোসেল থেকে মুছে যাবে।`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'হ্যাঁ, মুছুন',
+                cancelButtonText: 'বাতিল'
+            });
+
+            if (!confirmed.isConfirmed) return;
+
+            showTopLoader();
+            try {
+                const res = await StoreApi.post(`tenants/${STORE_UUID}/banners/delete`, {
+                    index: index,
+                    banner_path: bannerPath
+                });
+                if (res && res.success && res.data) {
+                    storeData = res.data;
+                    renderUploadBannerTab();
+                    showToast('ব্যানার মুছে ফেলা হয়েছে।', 'success');
+                } else {
+                    showToast((res && res.message) || 'ব্যানার মোছা সম্ভব হয়নি।', 'error');
+                }
+            } catch (err) {
+                showToast('সার্ভার যোগাযোগে সমস্যা হয়েছে।', 'error');
+            } finally {
+                hideTopLoader();
+            }
+        }
+</script>
+
+    <!-- MODAL: ADD / EDIT DELIVERY CHARGE -->
+    <div id="modalDeliveryCharge" class="fixed inset-0 z-[999999] hidden flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div onclick="closeDeliveryModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity cursor-pointer"></div>
+        
+        <!-- Modal Card -->
+        <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg z-10 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <i data-lucide="truck" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900" id="modalDeliveryTitle">নতুন ডেলিভারি চার্জ যুক্ত করুন</h3>
+                        <div class="text-[10px] text-slate-400">এলাকা ও ডেলিভারি ফি কনফিগার করুন</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDeliveryModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200/60 transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="formDeliveryCharge" onsubmit="handleDeliverySubmit(event)" class="p-5 space-y-4">
+                <input type="hidden" id="delInputUuid" value="">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">জোনের নাম (Zone Title) *</label>
+                    <input type="text" id="delInputTitle" required placeholder="যেমন: ঢাকার ভেতরে (Inside Dhaka)"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ইউনিক কোড (Code)</label>
+                        <input type="text" id="delInputCode" placeholder="inside_dhaka"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                        <span class="text-[10px] text-slate-400">খালি রাখলে স্বয়ংক্রিয় তৈরি হবে</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ডেলিভারি ফি (টাকা ৳) *</label>
+                        <input type="number" id="delInputAmount" step="0.01" min="0" required placeholder="60.00"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">আনুমানিক সময় ও বিবরণ (Description)</label>
+                    <input type="text" id="delInputDesc" placeholder="যেমন: হোম ডেলিভারি (২৪-৪৮ ঘণ্টা)"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">স্ট্যাটাস</label>
+                        <select id="delInputStatus" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                            <option value="active">সক্রিয় (Active)</option>
+                            <option value="inactive">নিষ্ক্রিয় (Inactive)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">ক্রম নম্বর (Sort Order)</label>
+                        <input type="number" id="delInputSort" value="1" min="0"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:ring-2 focus:ring-emerald-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center space-x-2.5">
+                    <input type="checkbox" id="delInputDefault" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+                    <label for="delInputDefault" class="text-xs font-bold text-slate-700 cursor-pointer">
+                        চেকআউট পেজে এটি ডিফল্ট হিসেবে সিলেক্ট থাকবে
+                    </label>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeDeliveryModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer">
+                        বাতিল
+                    </button>
+                    <button type="submit" id="btnSaveDelivery" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-extrabold rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                        <span>সংরক্ষণ করুন</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

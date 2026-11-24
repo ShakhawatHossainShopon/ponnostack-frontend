@@ -1,0 +1,44 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    Options -Indexes
+
+    # SEO Sitemap & Robots
+    RewriteRule ^sitemap\.xml$ sitemap.php [QSA,L]
+    RewriteRule ^robots\.txt$ robots.php [QSA,L]
+
+    # Product Clean URLs: /product/slug-name
+    RewriteRule ^product/([a-zA-Z0-9_-]+)/?$ product.php?slug=$1 [QSA,L]
+
+    # Checkout Clean URL: /checkout
+    RewriteRule ^checkout/?$ checkout.php [QSA,L]
+
+    # Discount Clean URL: /discount
+    RewriteRule ^discount/?$ discount.php [QSA,L]
+
+    # Category Clean URL: /category
+    RewriteRule ^category/?$ category.php [QSA,L]
+
+    # About Clean URL: /about
+    RewriteRule ^about/?$ about.php [QSA,L]
+
+    # Contact Clean URL: /contact
+    RewriteRule ^contact/?$ contact.php [QSA,L]
+
+    # 1. If requested path is index.php or /index, redirect to directory trailing slash
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s(.*)/index(?:\.php)?[\s?] [NC]
+    RewriteRule ^ %1/ [R=301,L]
+
+    # 2. Strip .php extension for any other PHP file (301 redirect)
+    RewriteCond %{REQUEST_METHOD} !POST
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s([^.]+)\.php[\s?] [NC]
+    RewriteRule ^ %1 [R=301,L]
+
+    # 3. If existing file or directory, serve directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 4. Check if appending .php matches an existing PHP file
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.+?)/?$ $1.php [L]
+</IfModule>
