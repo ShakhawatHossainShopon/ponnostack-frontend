@@ -55,9 +55,15 @@ class ApiClient
      */
     public static function getMotherRootUrl(): string
     {
+        self::init();
+        if (!empty(self::$config['asset_url'])) {
+            return rtrim(self::$config['asset_url'], '/');
+        }
+
         $apiUrl = self::getApiUrl();
-        // Remove trailing '/api'
-        return preg_replace('/\/api$/', '', $apiUrl);
+        // Cleanly strip trailing /backend, /api, /public, etc. to get the root platform asset URL
+        $rootUrl = preg_replace('#/(backend|api|public)(/.*)?$#i', '', $apiUrl);
+        return rtrim($rootUrl, '/');
     }
 
     /**

@@ -17,14 +17,13 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
-require_once __DIR__ . '/sample_data.php';
 require_once __DIR__ . '/views/template_cards.php';
 
-// Fetch active products from API; fallback to mock data if store owner hasn't uploaded products yet
+// Fetch active products from API (strictly live tenant data)
 $productsRes = ApiClient::get('products', ['status' => 'active']);
-$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']) && count($productsRes['data']) > 0)
+$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']))
     ? $productsRes['data']
-    : getSampleProducts();
+    : [];
 
 // Filter flash deals products
 $discountedProducts = array_values(array_filter($allProducts, fn($p) => !empty($p['has_discount'])));
@@ -143,6 +142,15 @@ require_once __DIR__ . '/views/header.php';
             </div>
         </div>
 
+        <?php if (empty($allProducts)): ?>
+        <div class="py-16 text-center space-y-3 bg-white rounded-3xl border border-dashed border-slate-200 p-8 shadow-2xs">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                <i data-lucide="package-open" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-800">বর্তমানে কোনো পণ্য যুক্ত নেই</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">স্টোর ওনার এখনও কোনো পণ্য যোগ করেননি। নতুন পণ্য যুক্ত করা হলে এখানে প্রদর্শিত হবে।</p>
+        </div>
+        <?php else: ?>
         <!-- Dynamic 20-Template Product Grid (Paginated with Infinite Scroll) -->
         <div id="catalogProductsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
             <?php 
@@ -166,6 +174,7 @@ require_once __DIR__ . '/views/header.php';
                 <span>সকল পণ্য প্রদর্শিত হয়েছে</span>
             </span>
         </div>
+        <?php endif; ?>
     </section>
 
 </main>

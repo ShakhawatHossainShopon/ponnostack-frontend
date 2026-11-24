@@ -59,7 +59,9 @@ $logoUrl       = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::as
 
 // Build full URLs for store hero carousel banners (up to 5 high-quality banners)
 $rawBanners   = is_array($store['banners'] ?? null) ? $store['banners'] : [];
-$storeBanners = array_values(array_filter(array_map(fn($b) => ApiClient::assetUrl($b), array_slice($rawBanners, 0, 5))));
+$storeBanners = !empty($store['banner_urls']) && is_array($store['banner_urls'])
+    ? array_values(array_filter(array_slice($store['banner_urls'], 0, 5)))
+    : array_values(array_filter(array_map(fn($b) => ApiClient::assetUrl($b), array_slice($rawBanners, 0, 5))));
 if (empty($storeBanners)) {
     $storeBanners = [
         'assets/banners/black-friday-super-sale-facebook-cover-banner-template_120329-5177.avif',

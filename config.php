@@ -20,6 +20,9 @@ return [
     // Mother Platform API URL
     'api_url'    => Env::get('API_URL', 'http://localhost/Ponnostack/backend/api'),
 
+    // Mother Platform Asset / Uploads Root URL (leave blank to auto-resolve from api_url)
+    'asset_url'  => Env::get('ASSET_URL', ''),
+
     // Unique Store UUID assigned to this client tenant in Mother Control Panel
     'store_uuid' => Env::get('STORE_UUID', 'e86c2f55-4eae-429c-8220-f55d817f742a'),
 

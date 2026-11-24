@@ -757,6 +757,7 @@
     <script>
         const STORE_UUID = "<?= htmlspecialchars(ApiClient::getStoreUuid()) ?>";
         const API_URL    = "<?= htmlspecialchars(ApiClient::getApiUrl()) ?>";
+        const ASSET_URL  = "<?= htmlspecialchars(ApiClient::getMotherRootUrl()) ?>";
 
         StoreApi.init({
             apiUrl: API_URL,
@@ -4605,14 +4606,21 @@ ${itemsText}
         // HERO CAROUSEL BANNER UPLOAD (MAX 5, HIGH QUALITY, NO 200KB LIMIT)
         // ==========================================
         function getStoreBannersList() {
-            return Array.isArray(storeData.banners) ? storeData.banners : [];
+            if (!storeData) return [];
+            if (Array.isArray(storeData.banners)) return storeData.banners;
+            if (typeof storeData.banners === 'string') {
+                try {
+                    const parsed = JSON.parse(storeData.banners);
+                    if (Array.isArray(parsed)) return parsed;
+                } catch(e) {}
+            }
+            return [];
         }
 
         function resolveBannerFullUrl(relPath) {
             if (!relPath) return '';
             if (relPath.startsWith('http://') || relPath.startsWith('https://')) return relPath;
-            const baseMother = API_URL.replace(/\/api\/?$/, '');
-            return `${baseMother}/${relPath.replace(/^\/+/, '')}`;
+            return `${ASSET_URL}/${relPath.replace(/^\/+/, '')}`;
         }
 
         function renderUploadBannerTab() {
@@ -4687,9 +4695,18 @@ ${itemsText}
             const remaining = 5 - currentBanners.length;
             const selectedFiles = files.slice(0, remaining);
 
+            // Strict 5MB limit validation per file
+            const maxBytes = 5 * 1024 * 1024;
+            for (const f of selectedFiles) {
+                if (f.size > maxBytes) {
+                    showToast(`'${f.name}' ফাইলটির সাইজ ৫MB এর চেয়ে বড়। ৫MB এর চেয়ে ছোট ফাইল নির্বাচন করুন।`, 'error');
+                    event.target.value = '';
+                    return;
+                }
+            }
+
             const formData = new FormData();
             selectedFiles.forEach(file => {
-                // Upload raw uncompressed file directly (NO 200KB compression!)
                 formData.append('banners[]', file);
             });
 
@@ -4717,18 +4734,9 @@ ${itemsText}
         }
 
         async function deleteStoreBanner(index, bannerPath) {
-            const confirmed = await Swal.fire({
-                title: 'ব্যানার মুছে ফেলবেন?',
-                text: `Slide #${index + 1} ব্যানারটি হোমপেজ ক্যারোসেল থেকে মুছে যাবে।`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'হ্যাঁ, মুছুন',
-                cancelButtonText: 'বাতিল'
-            });
-
-            if (!confirmed.isConfirmed) return;
+            if (!confirm(`Slide #${index + 1} ব্যানারটি হোমপেজ ক্যারোসেল থেকে মুছে ফেলবেন?`)) {
+                return;
+            }
 
             showTopLoader();
             try {

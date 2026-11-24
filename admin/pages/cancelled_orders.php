@@ -45,3 +45,4 @@
                     <div id="cancelledOrdersListContainer" class="space-y-4">
                         <!-- Populated dynamically via renderCancelledOrders() -->
                     </div>
+                </section>

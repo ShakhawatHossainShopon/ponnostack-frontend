@@ -1,4 +1,3 @@
-                </section>
                 <section id="tabContentUserInfo" class="space-y-6 hidden">
                     
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
