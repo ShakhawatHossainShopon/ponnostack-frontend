@@ -30,7 +30,7 @@ require_once __DIR__ . '/includes/topbar.php';
         <?php require_once __DIR__ . '/includes/sidebar.php'; ?>
 
         <!-- Main Content Area -->
-        <main class="md:col-span-9 lg:col-span-9">
+        <main class="md:col-span-9 lg:col-span-9 pb-24 md:pb-0">
             <?php
             // Shimmer Skeleton Loader for Page Transitions
             require_once __DIR__ . '/includes/skeleton.php';
@@ -63,6 +63,9 @@ require_once __DIR__ . '/includes/topbar.php';
 </div>
 
 <?php
+// Mobile Bottom App-style Navigation & Slide-over Drawer (md:hidden)
+require_once __DIR__ . '/includes/mobile_nav.php';
+
 // 3. Footer (All modals, scripts, SweetAlert, StoreApi handlers, and closing body/html)
 require_once __DIR__ . '/includes/footer.php';
 ?>

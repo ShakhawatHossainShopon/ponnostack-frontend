@@ -1,5 +1,5 @@
-            <!-- Left Navigation Sidebar -->
-            <aside class="md:col-span-3 lg:col-span-3">
+            <!-- Left Navigation Sidebar (Desktop Only: hidden md:block) -->
+            <aside class="hidden md:block md:col-span-3 lg:col-span-3">
 
                 <!-- 1. Sidebar Skeleton Loader (Visible on Initial Page Load) -->
                 <div id="sidebarSkeleton" class="bg-white border border-slate-200 rounded-2xl p-2 shadow-xs space-y-1">

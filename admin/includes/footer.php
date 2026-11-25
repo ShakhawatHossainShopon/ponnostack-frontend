@@ -1111,6 +1111,11 @@
                 }
             });
 
+            // Update mobile bottom nav & slide-over drawer active states (mobile only)
+            if (typeof window.updateMobileNavActive === 'function') {
+                window.updateMobileNavActive(tab);
+            }
+
             // Hide all tab contents and show shimmer skeleton
             tabs.forEach(t => {
                 $('#tabContent' + t.charAt(0).toUpperCase() + t.slice(1)).addClass('hidden').removeClass('tab-transition');
@@ -1620,7 +1625,7 @@
                     if (def) {
                         defaultCategoryUuid = def.uuid;
                     }
-                    $('#badgeCategoryCount').text(categoriesData.length);
+                    $('#badgeCategoryCount, #mobDrawerBadgeCategory').text(categoriesData.length);
                     $('#categoryHeaderCount').text(categoriesData.length + (currentLang === 'bn' ? ' টি' : ' items'));
                     renderCategories(categoriesData);
                     populateCategoryDropdown(categoriesData);
@@ -1961,7 +1966,8 @@
 
         function updateProductStats(list) {
             const count = list.length;
-            $('#badgeProductCount').text(count);
+            $('#badgeProductCount, #mobBadgeProductCount').text(count);
+            if (count > 0) $('#mobBadgeProductCount').removeClass('hidden');
             $('#dashTotalProducts').text(count);
 
             let totalStock = 0;
@@ -1998,7 +2004,7 @@
             $('#soFilterCountPartial').text(partialCount);
 
             // Filter Pills Count Badges in Stock Management Tab
-            $('#badgeStockManagementCount').text(count);
+            $('#badgeStockManagementCount, #mobDrawerBadgeStockManagement').text(count);
             $('#stockManagementHeaderCount').text(toBnDigit(count) + (currentLang === 'bn' ? ' টি পণ্য' : ' items'));
             $('#smFilterCountAll').text(count);
             $('#smFilterCountInStock').text(inStockCount);
@@ -2006,7 +2012,7 @@
             $('#smFilterCountHasVariants').text(hasVariantsCount);
 
             // Global badges
-            $('#badgeStockOutCount').text(totalAttentionCount);
+            $('#badgeStockOutCount, #mobDrawerBadgeStockOut').text(totalAttentionCount);
             $('#stockOutHeaderCount').text(toBnDigit(totalAttentionCount) + (currentLang === 'bn' ? ' টি' : ' items'));
             $('#dashStockOutIndicator').text(toBnDigit(totalAttentionCount) + (currentLang === 'bn' ? ' টি স্টক অ্যালার্ট' : ' stock alert'));
 
@@ -4708,6 +4714,19 @@
             $('#completedOrdersHeaderCountBadge').text(delivered + 'টি সম্পন্ন');
             $('#cancelledOrdersHeaderCountBadge').text(cancel + 'টি বাতিল');
 
+            // Mobile Nav Badges Sync
+            if (activeOrders > 0) {
+                $('#mobBadgeActiveOrderCount').text(activeOrders).removeClass('hidden');
+            } else {
+                $('#mobBadgeActiveOrderCount').addClass('hidden');
+            }
+            if (delivered > 0) {
+                $('#mobBadgeCompletedOrderCount').text(delivered).removeClass('hidden');
+            } else {
+                $('#mobBadgeCompletedOrderCount').addClass('hidden');
+            }
+            $('#mobDrawerBadgeCancelledOrder').text(cancel);
+
             // Dashboard banner stats
             $('#dashTotalOrders').text(total);
             $('#dashPendingOrders').text(pending);
@@ -5739,6 +5758,11 @@ ${itemsText}
                 $('#sidebarNavContent').removeClass('hidden').addClass('tab-transition');
                 $('#tabContentSkeleton').addClass('hidden');
                 $('#tabContentDashboard').removeClass('hidden').addClass('tab-transition');
+                $('#mobileBottomNavSkeleton').addClass('hidden');
+                $('#mobileBottomNav').css('display', '').removeClass('hidden').addClass('tab-transition');
+                $('#mobileDrawerSkeleton').addClass('hidden');
+                $('#mobileDrawerNavContent').removeClass('hidden').addClass('tab-transition');
+                if (typeof window.updateMobileNavActive === 'function') { window.updateMobileNavActive('dashboard'); }
                 hideTopLoader();
                 if (window.lucide) lucide.createIcons();
             }, 300);
