@@ -31,11 +31,7 @@
                     <span class="hidden sm:inline" data-i18n="btnVisitStore">স্টোরফ্রন্ট দেখুন</span>
                 </a>
 
-                <!-- Language Switcher Pill -->
-                <div class="inline-flex items-center bg-slate-100 border border-slate-200/60 rounded-xl p-0.5 text-xs font-semibold">
-                    <button type="button" id="langBn" onclick="switchLanguage('bn')" class="px-2.5 py-1 rounded-lg transition bg-white shadow-xs font-bold text-brand-600">বাংলা</button>
-                    <button type="button" id="langEn" onclick="switchLanguage('en')" class="px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900">EN</button>
-                </div>
+
 
                 <!-- User Profile Pill -->
                 <div class="hidden md:flex items-center space-x-2 pl-2 border-l border-slate-200">

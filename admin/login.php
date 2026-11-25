@@ -122,11 +122,7 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
             <span data-i18n="backToStore">স্টোরফ্রন্টে ফিরে যান</span>
         </a>
 
-        <!-- Language Switcher Pill -->
-        <div class="inline-flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-xs text-xs font-semibold">
-            <button type="button" id="langBn" onclick="switchLanguage('bn')" class="px-2.5 py-1 rounded-lg transition bg-brand-600 text-white font-bold">বাংলা</button>
-            <button type="button" id="langEn" onclick="switchLanguage('en')" class="px-2.5 py-1 rounded-lg transition text-slate-600 hover:text-slate-900">EN</button>
-        </div>
+
     </header>
 
     <!-- Main Container -->
