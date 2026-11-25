@@ -1966,8 +1966,7 @@
 
         function updateProductStats(list) {
             const count = list.length;
-            $('#badgeProductCount, #mobBadgeProductCount').text(count);
-            if (count > 0) $('#mobBadgeProductCount').removeClass('hidden');
+            $('#badgeProductCount').text(count);
             $('#dashTotalProducts').text(count);
 
             let totalStock = 0;
@@ -4714,17 +4713,7 @@
             $('#completedOrdersHeaderCountBadge').text(delivered + 'টি সম্পন্ন');
             $('#cancelledOrdersHeaderCountBadge').text(cancel + 'টি বাতিল');
 
-            // Mobile Nav Badges Sync
-            if (activeOrders > 0) {
-                $('#mobBadgeActiveOrderCount').text(activeOrders).removeClass('hidden');
-            } else {
-                $('#mobBadgeActiveOrderCount').addClass('hidden');
-            }
-            if (delivered > 0) {
-                $('#mobBadgeCompletedOrderCount').text(delivered).removeClass('hidden');
-            } else {
-                $('#mobBadgeCompletedOrderCount').addClass('hidden');
-            }
+            // Mobile Drawer Badges Sync
             $('#mobDrawerBadgeCancelledOrder').text(cancel);
 
             // Dashboard banner stats
@@ -5775,7 +5764,7 @@ ${itemsText}
         function renderDiscountsTable(list = productsData) {
             const discounted = (list || []).filter(p => p.has_discount || (parseInt(p.discount_percent) > 0 && (!p.discount_ends_at || new Date(p.discount_ends_at.replace(/-/g, '/')) > new Date())));
             
-            $('#badgeDiscountCount').text(discounted.length);
+            $('#badgeDiscountCount, #mobDrawerBadgeDiscount').text(discounted.length);
             $('#statActiveDiscounts').text(discounted.length + ' টি');
             
             let maxDisc = 0;
@@ -6117,6 +6106,8 @@ ${itemsText}
 
             const badgeCount = document.getElementById('badgeDeliveryCount');
             if (badgeCount) badgeCount.textContent = charges.length;
+            const mobBadgeCount = document.getElementById('mobDrawerBadgeDelivery');
+            if (mobBadgeCount) mobBadgeCount.textContent = charges.length;
 
             const statTotal = document.getElementById('statDeliveryTotal');
             if (statTotal) statTotal.textContent = charges.length;
