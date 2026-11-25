@@ -261,65 +261,42 @@ require_once __DIR__ . '/views/header.php';
                             </span>
                         </div>
 
-                        <!-- Title -->
-                        <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1 group-hover:text-brand-600 transition mb-1">
-                            <?= htmlspecialchars($prod['name']) ?>
-                        </h4>
-
-                        <!-- Description Snippet -->
-                        <?php if (!empty($prod['description'])): ?>
-                            <p class="text-[11px] text-slate-500 line-clamp-1 mb-2">
-                                <?= htmlspecialchars($prod['description']) ?>
-                            </p>
-                        <?php endif; ?>
-
-                        <!-- Sizes & Colors Tags -->
-                        <?php if (!empty($sizes) || !empty($colors)): ?>
-                            <div class="flex flex-wrap gap-1 mb-2">
-                                <?php foreach (array_slice($sizes, 0, 3) as $s): ?>
-                                    <span class="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-semibold">
-                                        <?= htmlspecialchars((string)$s) ?>
+                        <!-- Title & Price in Same Row (Flex Design) -->
+                        <div class="flex items-center justify-between gap-2 mt-1 mb-1.5">
+                            <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1 group-hover:text-brand-600 transition flex-1 min-w-0" title="<?= htmlspecialchars($prod['name']) ?>">
+                                <?= htmlspecialchars($prod['name']) ?>
+                            </h4>
+                            <div class="text-right shrink-0">
+                                <?php if ($hasDiscount): ?>
+                                    <div class="flex items-baseline space-x-1">
+                                        <span class="text-xs sm:text-sm font-black text-brand-600 tracking-tight">
+                                            ৳<?= number_format($effectivePrice, 0) ?>
+                                        </span>
+                                        <span class="text-[10px] text-slate-400 line-through">
+                                            ৳<?= number_format($retailerPrice, 0) ?>
+                                        </span>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-xs sm:text-sm font-black text-brand-600 tracking-tight">
+                                        ৳<?= number_format($retailerPrice, 0) ?>
                                     </span>
-                                <?php endforeach; ?>
-                                <?php if (count($sizes) > 3): ?>
-                                    <span class="text-[9px] text-slate-400 font-bold">+<?= count($sizes) - 3 ?></span>
                                 <?php endif; ?>
                             </div>
-                        <?php endif; ?>
+                        </div>
                     </div>
 
-                    <!-- Price & Order Action -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 mt-1 border-t border-slate-100">
-                        <div>
-                            <div class="text-[9px] text-slate-400 font-semibold uppercase">মূল্য</div>
-                            <?php if ($hasDiscount): ?>
-                                <div class="flex items-baseline space-x-1.5">
-                                    <span class="text-xs sm:text-sm font-black text-red-600">
-                                        ৳<?= number_format($effectivePrice, 2) ?>
-                                    </span>
-                                    <span class="text-[10px] sm:text-xs font-semibold text-slate-400 line-through">
-                                        ৳<?= number_format($retailerPrice, 2) ?>
-                                    </span>
-                                </div>
-                            <?php else: ?>
-                                <div class="text-xs sm:text-sm font-black text-slate-900">
-                                    ৳<?= number_format($retailerPrice, 2) ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="w-full sm:w-auto">
-                            <?php if ($stock > 0): ?>
-                                <a href="<?= $prodUrl ?>" onclick="event.stopPropagation();" class="w-full sm:w-auto px-3 py-1.5 bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white border border-brand-200 hover:border-brand-600 text-[11px] sm:text-xs font-extrabold rounded-xl transition-all duration-200 flex items-center justify-center space-x-1 shadow-2xs cursor-pointer whitespace-nowrap">
-                                    <span>বিস্তারিত ও অর্ডার</span>
-                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                                </a>
-                            <?php else: ?>
-                                <span class="w-full sm:w-auto px-2.5 py-1.5 bg-slate-100 text-slate-400 text-[11px] sm:text-xs font-bold rounded-xl cursor-not-allowed flex items-center justify-center">
-                                    স্টক শেষ
-                                </span>
-                            <?php endif; ?>
-                        </div>
+                    <!-- Order Action Button -->
+                    <div class="pt-2 border-t border-slate-100">
+                        <?php if ($stock > 0): ?>
+                            <a href="<?= $prodUrl ?>" onclick="event.stopPropagation();" class="w-full py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer">
+                                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                                <span>অর্ডার করুন</span>
+                            </a>
+                        <?php else: ?>
+                            <span class="w-full py-1.5 bg-slate-100 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed flex items-center justify-center">
+                                স্টক শেষ
+                            </span>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
