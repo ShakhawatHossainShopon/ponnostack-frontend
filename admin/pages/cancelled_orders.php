@@ -45,4 +45,10 @@
                     <div id="cancelledOrdersListContainer" class="space-y-4">
                         <!-- Populated dynamically via renderCancelledOrders() -->
                     </div>
+
+                    <!-- Cancelled Orders Pagination -->
+                    <div id="cancelledOrdersPagination" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div id="cancelledOrdersPaginationSummary" class="text-xs font-medium text-slate-500 text-center sm:text-left"></div>
+                        <div id="cancelledOrdersPaginationButtons" class="flex items-center gap-1.5 flex-wrap justify-center"></div>
+                    </div>
                 </section>

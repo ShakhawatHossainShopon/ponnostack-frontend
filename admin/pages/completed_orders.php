@@ -82,4 +82,10 @@
                         <!-- Populated dynamically via renderCompletedOrders() -->
                     </div>
 
+                    <!-- Completed Orders Pagination -->
+                    <div id="completedOrdersPagination" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div id="completedOrdersPaginationSummary" class="text-xs font-medium text-slate-500 text-center sm:text-left"></div>
+                        <div id="completedOrdersPaginationButtons" class="flex items-center gap-1.5 flex-wrap justify-center"></div>
+                    </div>
+
                 </section>

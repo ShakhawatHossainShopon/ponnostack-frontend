@@ -651,6 +651,160 @@
         let existingImages = []; // List of image URLs
         let selectedNewFiles = []; // Array of File objects selected for upload
 
+        // ==========================================
+        // REUSABLE BENGALI & PAGINATION UTILITIES
+        // ==========================================
+        function toBnDigit(num) {
+            const bnDigits = {'0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'};
+            return (num !== null && num !== undefined) ? num.toString().replace(/\d/g, d => bnDigits[d]) : '০';
+        }
+
+        // Pagination State Variables
+        let ordersCurrentPage = 1;
+        const ordersPerPage = 8;
+        let productsCurrentPage = 1;
+        const productsPerPage = 12;
+        let cancelledOrdersCurrentPage = 1;
+        const cancelledOrdersPerPage = 8;
+        let completedOrdersCurrentPage = 1;
+        const completedOrdersPerPage = 8;
+        let discountsCurrentPage = 1;
+        const discountsPerPage = 6;
+
+        function scrollToSectionTop(selector) {
+            const $target = $(selector);
+            if ($target.length) {
+                const top = $target.offset().top - 80;
+                $('html, body').animate({ scrollTop: Math.max(0, top) }, 250);
+            }
+        }
+
+        function renderGenericPagination({
+            containerId,
+            summaryId,
+            buttonsId,
+            currentPage,
+            totalItems,
+            perPage,
+            itemLabel,
+            onPageChangeFn,
+            activeColorClass = 'bg-slate-900 text-white'
+        }) {
+            const $container = $(`#${containerId}`);
+            const $summary = $(`#${summaryId}`);
+            const $buttons = $(`#${buttonsId}`);
+
+            if (!totalItems || totalItems <= 0) {
+                $container.addClass('hidden');
+                $buttons.empty();
+                return;
+            }
+
+            $container.removeClass('hidden');
+
+            const totalPages = Math.ceil(totalItems / perPage);
+            const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+            const startIndex = (validCurrentPage - 1) * perPage;
+            const endIndex = Math.min(startIndex + perPage, totalItems);
+
+            $summary.html(`<span class="font-bold text-slate-700">${toBnDigit(startIndex + 1)}</span> থেকে <span class="font-bold text-slate-700">${toBnDigit(endIndex)}</span> (মোট <span class="font-bold text-slate-900">${toBnDigit(totalItems)}</span>টি ${itemLabel})`);
+
+            $buttons.empty();
+            if (totalPages <= 1) {
+                return;
+            }
+
+            // Previous Button
+            const prevDisabled = validCurrentPage <= 1;
+            $buttons.append(`
+                <button type="button" onclick="${onPageChangeFn}(${validCurrentPage - 1})" ${prevDisabled ? 'disabled' : ''}
+                    class="px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">
+                    ‹ পূর্ববর্তী
+                </button>
+            `);
+
+            // Smart Sliding Window (up to 5 page numbers)
+            let startPage = Math.max(1, validCurrentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+
+            if (startPage > 1) {
+                $buttons.append(`
+                    <button type="button" onclick="${onPageChangeFn}(1)"
+                        class="w-7 h-7 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ${toBnDigit(1)}
+                    </button>
+                `);
+                if (startPage > 2) {
+                    $buttons.append(`<span class="px-1 text-xs text-slate-400">...</span>`);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = (i === validCurrentPage);
+                $buttons.append(`
+                    <button type="button" onclick="${onPageChangeFn}(${i})"
+                        class="w-7 h-7 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center ${isActive ? `${activeColorClass} shadow-2xs` : 'border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs'}">
+                        ${toBnDigit(i)}
+                    </button>
+                `);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    $buttons.append(`<span class="px-1 text-xs text-slate-400">...</span>`);
+                }
+                $buttons.append(`
+                    <button type="button" onclick="${onPageChangeFn}(${totalPages})"
+                        class="w-7 h-7 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-2xs">
+                        ${toBnDigit(totalPages)}
+                    </button>
+                `);
+            }
+
+            // Next Button
+            const nextDisabled = validCurrentPage >= totalPages;
+            $buttons.append(`
+                <button type="button" onclick="${onPageChangeFn}(${validCurrentPage + 1})" ${nextDisabled ? 'disabled' : ''}
+                    class="px-2.5 py-1 text-xs font-bold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs">
+                    পরবর্তী ›
+                </button>
+            `);
+        }
+
+        // Section Specific Page Change Handlers
+        function changeOrdersPage(page) {
+            ordersCurrentPage = page;
+            renderOrders(ordersData);
+            scrollToSectionTop('#tabContentOrders');
+        }
+
+        function changeProductsPage(page) {
+            productsCurrentPage = page;
+            renderProducts(productsData);
+            scrollToSectionTop('#tabContentProducts');
+        }
+
+        function changeCancelledOrdersPage(page) {
+            cancelledOrdersCurrentPage = page;
+            renderCancelledOrders(ordersData);
+            scrollToSectionTop('#tabContentCancelledOrders');
+        }
+
+        function changeCompletedOrdersPage(page) {
+            completedOrdersCurrentPage = page;
+            renderCompletedOrders(ordersData);
+            scrollToSectionTop('#tabContentCompletedOrders');
+        }
+
+        function changeDiscountsPage(page) {
+            discountsCurrentPage = page;
+            renderDiscountsTable(productsData);
+            scrollToSectionTop('#tabContentDiscounts');
+        }
+
         // 2. Bilingual Dictionary
         const i18n = {
             bn: {
@@ -1380,15 +1534,13 @@
             $tbody.empty();
 
             const total = saasPaymentsData.length;
-            $('#saasPaymentCountBadge').text(`মোট ${total}টি রেকর্ড`);
+            $('#saasPaymentCountBadge').text(`মোট ${toBnDigit(total)}টি রেকর্ড`);
 
             if (total === 0) {
                 $tbody.append('<tr><td colspan="8" class="py-8 text-center text-slate-400">এখনো কোনো পেমেন্ট রেকর্ড নেই। উপরে বিকাশ দিয়ে ফি পরিশোধ করুন।</td></tr>');
                 $('#saasPaymentPagination').addClass('hidden');
                 return;
             }
-
-            $('#saasPaymentPagination').removeClass('hidden');
 
             const totalPages = Math.ceil(total / saasPerPage);
             if (saasCurrentPage > totalPages) saasCurrentPage = totalPages;
@@ -1397,9 +1549,6 @@
             const startIndex = (saasCurrentPage - 1) * saasPerPage;
             const endIndex = Math.min(startIndex + saasPerPage, total);
             const pageRecords = saasPaymentsData.slice(startIndex, endIndex);
-
-            // Update Pagination Summary in Bengali
-            $('#saasPaginationSummary').text(`${(startIndex + 1).toLocaleString('bn-BD')} থেকে ${endIndex.toLocaleString('bn-BD')} (মোট ${total.toLocaleString('bn-BD')}টি ইনভয়েস)`);
 
             pageRecords.forEach(p => {
                 let badge = '';
@@ -1441,51 +1590,26 @@
                 $tbody.append(tr);
             });
 
-            // Render Pagination Buttons
-            renderPaginationButtons(totalPages);
+            renderGenericPagination({
+                containerId: 'saasPaymentPagination',
+                summaryId: 'saasPaginationSummary',
+                buttonsId: 'saasPaginationButtons',
+                currentPage: saasCurrentPage,
+                totalItems: total,
+                perPage: saasPerPage,
+                itemLabel: 'ইনভয়েস',
+                onPageChangeFn: 'changeSaasPaymentPage',
+                activeColorClass: 'bg-pink-600 text-white'
+            });
+
             if (window.lucide) lucide.createIcons();
-        }
-
-        function renderPaginationButtons(totalPages) {
-            const $btnContainer = $('#saasPaginationButtons');
-            $btnContainer.empty();
-
-            if (totalPages <= 1) return;
-
-            // Previous Button
-            const prevDisabled = saasCurrentPage === 1;
-            $btnContainer.append(`
-                <button type="button" onclick="changeSaasPaymentPage(${saasCurrentPage - 1})" ${prevDisabled ? 'disabled' : ''}
-                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                    ‹ পূর্ববর্তী
-                </button>
-            `);
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                const isActive = (i === saasCurrentPage);
-                $btnContainer.append(`
-                    <button type="button" onclick="changeSaasPaymentPage(${i})"
-                        class="w-7 h-7 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center ${isActive ? 'bg-pink-600 text-white shadow-2xs' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'}">
-                        ${i.toLocaleString('bn-BD')}
-                    </button>
-                `);
-            }
-
-            // Next Button
-            const nextDisabled = saasCurrentPage === totalPages;
-            $btnContainer.append(`
-                <button type="button" onclick="changeSaasPaymentPage(${saasCurrentPage + 1})" ${nextDisabled ? 'disabled' : ''}
-                    class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
-                    পরবর্তী ›
-                </button>
-            `);
         }
 
         function changeSaasPaymentPage(page) {
             const totalPages = Math.ceil(saasPaymentsData.length / saasPerPage);
             if (page < 1 || page > totalPages) return;
             renderSaasPaymentsTable(page);
+            scrollToSectionTop('#saasPaymentHistorySection');
         }
 
         // =========================================================================
@@ -2076,11 +2200,19 @@
                     </div>
                 `;
                 $grid.append(emptyHtml);
+                $('#productsPagination').addClass('hidden');
                 lucide.createIcons();
                 return;
             }
 
-            filtered.forEach(p => {
+            const totalPages = Math.ceil(filtered.length / productsPerPage);
+            if (productsCurrentPage > totalPages) productsCurrentPage = totalPages || 1;
+            if (productsCurrentPage < 1) productsCurrentPage = 1;
+
+            const startIndex = (productsCurrentPage - 1) * productsPerPage;
+            const pageProducts = filtered.slice(startIndex, startIndex + productsPerPage);
+
+            pageProducts.forEach(p => {
                 const stockCount = parseInt(p.stock) || 0;
                 const mainPrice = parseFloat(p.main_price) || 0;
                 const retailerPrice = parseFloat(p.retailer_price) || 0;
@@ -2154,6 +2286,18 @@
                         </div>
                     </div>
                 `);
+            });
+
+            renderGenericPagination({
+                containerId: 'productsPagination',
+                summaryId: 'productsPaginationSummary',
+                buttonsId: 'productsPaginationButtons',
+                currentPage: productsCurrentPage,
+                totalItems: filtered.length,
+                perPage: productsPerPage,
+                itemLabel: 'প্রোডাক্ট',
+                onPageChangeFn: 'changeProductsPage',
+                activeColorClass: 'bg-brand-600 text-white'
             });
 
             lucide.createIcons();
@@ -2675,7 +2819,10 @@
         }
 
         // Search listeners
-        $('#prodSearchInput').on('input', () => renderProducts(productsData));
+        $('#prodSearchInput').on('input', () => {
+            productsCurrentPage = 1;
+            renderProducts(productsData);
+        });
         $('#stockOutSearchInput').on('input', () => renderStockOutProducts(productsData));
 
         // Quick Stock Adjuster (+1 or -1)
@@ -3559,11 +3706,6 @@
         ];
         let selectedVariants = [...savedSizeList];
         let selectedColors = [];
-
-        function toBnDigit(num) {
-            const bnDigits = {'0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯'};
-            return (num !== null && num !== undefined) ? num.toString().replace(/\d/g, d => bnDigits[d]) : '০';
-        }
 
         function autoSlugFromName(name) {
             if (!name) {
@@ -4730,6 +4872,7 @@
 
         function filterOrdersByStatus(status) {
             currentOrderStatusFilter = status;
+            ordersCurrentPage = 1;
 
             // Reset all filter buttons
             $('.order-filter-btn').removeClass('bg-slate-900 text-white shadow-xs')
@@ -4750,6 +4893,7 @@
         }
 
         function handleOrderSearch() {
+            ordersCurrentPage = 1;
             renderOrders(ordersData);
         }
 
@@ -4790,11 +4934,19 @@
                         <p class="text-xs text-slate-500 mt-1">বর্তমানে কোনো পেন্ডিং বা প্রসেসিং অর্ডার নেই।</p>
                     </div>
                 `);
+                $('#ordersPagination').addClass('hidden');
                 lucide.createIcons();
                 return;
             }
 
-            filtered.forEach(ord => {
+            const totalPages = Math.ceil(filtered.length / ordersPerPage);
+            if (ordersCurrentPage > totalPages) ordersCurrentPage = totalPages || 1;
+            if (ordersCurrentPage < 1) ordersCurrentPage = 1;
+
+            const startIndex = (ordersCurrentPage - 1) * ordersPerPage;
+            const pageOrders = filtered.slice(startIndex, startIndex + ordersPerPage);
+
+            pageOrders.forEach(ord => {
                 const statusBadge = getStatusBadgeHtml(ord.status);
                 const cleanPhone = (ord.customer_phone || '').replace(/[^0-9]/g, '');
                 const waPhone = cleanPhone.startsWith('88') ? cleanPhone : ('88' + cleanPhone);
@@ -4972,6 +5124,18 @@
                 container.append(cardHtml);
             });
 
+            renderGenericPagination({
+                containerId: 'ordersPagination',
+                summaryId: 'ordersPaginationSummary',
+                buttonsId: 'ordersPaginationButtons',
+                currentPage: ordersCurrentPage,
+                totalItems: filtered.length,
+                perPage: ordersPerPage,
+                itemLabel: 'অর্ডার',
+                onPageChangeFn: 'changeOrdersPage',
+                activeColorClass: 'bg-slate-900 text-white'
+            });
+
             lucide.createIcons();
         }
 
@@ -4979,6 +5143,7 @@
         // COMPLETED ORDERS & ACCOUNTS LOGIC
         // ==========================================
         function handleCompletedOrderSearch() {
+            completedOrdersCurrentPage = 1;
             renderCompletedOrders(ordersData);
         }
 
@@ -5028,11 +5193,19 @@
                         <p class="text-xs text-slate-500 mt-1">এখনো কোনো ডেলিভারি সম্পন্ন হয়নি অথবা সার্চের সাথে মেলেনি।</p>
                     </div>
                 `);
+                $('#completedOrdersPagination').addClass('hidden');
                 lucide.createIcons();
                 return;
             }
 
-            filtered.forEach(ord => {
+            const totalPages = Math.ceil(filtered.length / completedOrdersPerPage);
+            if (completedOrdersCurrentPage > totalPages) completedOrdersCurrentPage = totalPages || 1;
+            if (completedOrdersCurrentPage < 1) completedOrdersCurrentPage = 1;
+
+            const startIndex = (completedOrdersCurrentPage - 1) * completedOrdersPerPage;
+            const pageOrders = filtered.slice(startIndex, startIndex + completedOrdersPerPage);
+
+            pageOrders.forEach(ord => {
                 const statusBadge = getStatusBadgeHtml(ord.status);
                 const cleanPhone = (ord.customer_phone || '').replace(/[^0-9]/g, '');
                 const waPhone = cleanPhone.startsWith('88') ? cleanPhone : ('88' + cleanPhone);
@@ -5219,6 +5392,18 @@
                 container.append(cardHtml);
             });
 
+            renderGenericPagination({
+                containerId: 'completedOrdersPagination',
+                summaryId: 'completedOrdersPaginationSummary',
+                buttonsId: 'completedOrdersPaginationButtons',
+                currentPage: completedOrdersCurrentPage,
+                totalItems: filtered.length,
+                perPage: completedOrdersPerPage,
+                itemLabel: 'সম্পন্ন অর্ডার',
+                onPageChangeFn: 'changeCompletedOrdersPage',
+                activeColorClass: 'bg-emerald-600 text-white'
+            });
+
             lucide.createIcons();
         }
 
@@ -5226,6 +5411,7 @@
         // CANCELLED ORDERS (TRASH & UNDO) LOGIC
         // ==========================================
         function handleCancelledOrderSearch() {
+            cancelledOrdersCurrentPage = 1;
             renderCancelledOrders(ordersData);
         }
 
@@ -5257,11 +5443,19 @@
                         <p class="text-xs text-slate-500 mt-1">ট্র্যাশ সম্পূর্ণ পরিষ্কার! কোনো অর্ডার বাতিল করা হয়নি।</p>
                     </div>
                 `);
+                $('#cancelledOrdersPagination').addClass('hidden');
                 lucide.createIcons();
                 return;
             }
 
-            filtered.forEach(ord => {
+            const totalPages = Math.ceil(filtered.length / cancelledOrdersPerPage);
+            if (cancelledOrdersCurrentPage > totalPages) cancelledOrdersCurrentPage = totalPages || 1;
+            if (cancelledOrdersCurrentPage < 1) cancelledOrdersCurrentPage = 1;
+
+            const startIndex = (cancelledOrdersCurrentPage - 1) * cancelledOrdersPerPage;
+            const pageOrders = filtered.slice(startIndex, startIndex + cancelledOrdersPerPage);
+
+            pageOrders.forEach(ord => {
                 const statusBadge = getStatusBadgeHtml(ord.status);
 
                 // Calculate days remaining in 30-day trash
@@ -5411,6 +5605,18 @@
                 `;
 
                 container.append(cardHtml);
+            });
+
+            renderGenericPagination({
+                containerId: 'cancelledOrdersPagination',
+                summaryId: 'cancelledOrdersPaginationSummary',
+                buttonsId: 'cancelledOrdersPaginationButtons',
+                currentPage: cancelledOrdersCurrentPage,
+                totalItems: filtered.length,
+                perPage: cancelledOrdersPerPage,
+                itemLabel: 'বাতিল অর্ডার',
+                onPageChangeFn: 'changeCancelledOrdersPage',
+                activeColorClass: 'bg-rose-600 text-white'
             });
 
             lucide.createIcons();
@@ -5792,12 +5998,20 @@ ${itemsText}
                         </button>
                     </div>
                 `);
+                $('#discountsPagination').addClass('hidden');
                 if (window.lucide) lucide.createIcons();
                 return;
             }
 
+            const totalPages = Math.ceil(discounted.length / discountsPerPage);
+            if (discountsCurrentPage > totalPages) discountsCurrentPage = totalPages || 1;
+            if (discountsCurrentPage < 1) discountsCurrentPage = 1;
+
+            const startIndex = (discountsCurrentPage - 1) * discountsPerPage;
+            const pageDiscounts = discounted.slice(startIndex, startIndex + discountsPerPage);
+
             let cardsHtml = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
-            discounted.forEach(prod => {
+            pageDiscounts.forEach(prod => {
                 const img = (prod.images && prod.images[0]) ? prod.images[0] : null;
                 const regPrice = parseFloat(prod.retailer_price || 0);
                 const discPercent = parseInt(prod.discount_percent || 0);
@@ -5875,6 +6089,19 @@ ${itemsText}
             cardsHtml += '</div>';
 
             $container.html(cardsHtml);
+
+            renderGenericPagination({
+                containerId: 'discountsPagination',
+                summaryId: 'discountsPaginationSummary',
+                buttonsId: 'discountsPaginationButtons',
+                currentPage: discountsCurrentPage,
+                totalItems: discounted.length,
+                perPage: discountsPerPage,
+                itemLabel: 'ডিসকাউন্ট পণ্য',
+                onPageChangeFn: 'changeDiscountsPage',
+                activeColorClass: 'bg-orange-600 text-white'
+            });
+
             if (window.lucide) lucide.createIcons();
 
             if (!window.discountCountdownInterval) {

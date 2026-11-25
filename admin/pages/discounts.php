@@ -61,5 +61,11 @@
                             <!-- Populated dynamically via JS -->
                             <div class="py-12 text-center text-slate-400 text-xs">লোড হচ্ছে...</div>
                         </div>
+
+                        <!-- Discounts Pagination -->
+                        <div id="discountsPagination" class="hidden p-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div id="discountsPaginationSummary" class="text-xs font-medium text-slate-500 text-center sm:text-left"></div>
+                            <div id="discountsPaginationButtons" class="flex items-center gap-1.5 flex-wrap justify-center"></div>
+                        </div>
                     </div>
                 </section>

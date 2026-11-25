@@ -39,6 +39,12 @@
                             <!-- Populated dynamically via JS -->
                             <div class="col-span-full py-12 text-center text-slate-500" data-i18n="loading">লোড হচ্ছে...</div>
                         </div>
+
+                        <!-- Inventory / Products Pagination -->
+                        <div id="productsPagination" class="hidden p-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div id="productsPaginationSummary" class="text-xs font-medium text-slate-500 text-center sm:text-left"></div>
+                            <div id="productsPaginationButtons" class="flex items-center gap-1.5 flex-wrap justify-center"></div>
+                        </div>
                     </div>
 
                 </section>
