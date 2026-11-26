@@ -1301,6 +1301,10 @@
                     loadSaasSubscriptionAndPayments();
                 } else if (tab === 'stockManagement') {
                     renderStockManagementProducts(productsData);
+                } else if (tab === 'userInfo') {
+                    if (storeData) populateProfileForm(storeData);
+                } else if (tab === 'dashboard') {
+                    if (storeData) renderSocialOverview(storeData.social_links || {});
                 }
 
                 hideTopLoader();
@@ -1712,8 +1716,18 @@
             ];
 
             platforms.forEach(p => {
-                const val = socials[p.id];
-                const isLinked = val && val.trim() !== '';
+                const val = (socials && typeof socials[p.id] === 'string') ? socials[p.id].trim() : '';
+                const isLinked = val !== '';
+
+                let linkUrl = val;
+                if (isLinked) {
+                    if (p.id === 'whatsapp' && !val.startsWith('http://') && !val.startsWith('https://')) {
+                        const cleanPhone = val.replace(/[^0-9]/g, '');
+                        linkUrl = cleanPhone.startsWith('88') ? `https://wa.me/${cleanPhone}` : `https://wa.me/88${cleanPhone}`;
+                    } else if (!val.startsWith('http://') && !val.startsWith('https://')) {
+                        linkUrl = `https://${val}`;
+                    }
+                }
 
                 const badge = `
                     <div class="flex items-center justify-between p-3 rounded-xl border ${isLinked ? p.border + ' ' + p.bg : 'border-slate-200 bg-slate-50/50'}">
@@ -1722,11 +1736,11 @@
                             <div>
                                 <div class="text-xs font-bold ${isLinked ? 'text-slate-900' : 'text-slate-500'}">${p.label}</div>
                                 <div class="text-[10px] ${isLinked ? 'text-emerald-700 font-semibold' : 'text-slate-400'}">
-                                    ${isLinked ? i18n[currentLang].connected : i18n[currentLang].notConnected}
+                                    ${isLinked ? (i18n[currentLang] ? i18n[currentLang].connected : 'সংযুক্ত') : (i18n[currentLang] ? i18n[currentLang].notConnected : 'যুক্ত নেই')}
                                 </div>
                             </div>
                         </div>
-                        ${isLinked ? `<a href="${val}" target="_blank" class="text-slate-400 hover:text-slate-700 p-1"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>` : ''}
+                        ${isLinked ? `<a href="${escapeHtml(linkUrl)}" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-slate-700 p-1" title="লিংকটি খুলুন"><i data-lucide="external-link" class="w-3.5 h-3.5"></i></a>` : ''}
                     </div>
                 `;
                 container.append(badge);
