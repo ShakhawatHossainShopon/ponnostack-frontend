@@ -2542,7 +2542,7 @@
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center space-x-1.5 mb-0.5">
-                                        <span class="inline-flex items-center space-x-1 px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded text-[10px] font-semibold truncate max-w-[140px]">
+                                        <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-semibold truncate max-w-[140px]">
                                             <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
                                             <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
                                         </span>
@@ -3213,16 +3213,16 @@
                 const toggleBadgeTitle = `${toBnDigit(variantCount)}টি ${variantTypeLabel}`;
 
                 $grid.append(`
-                    <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-2xs hover:shadow-sm transition flex flex-col justify-between space-y-3 relative" id="smCard_${p.uuid}">
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-2xs hover:shadow-sm transition flex flex-col justify-between space-y-3 relative overflow-hidden" id="smCard_${p.uuid}">
                         <!-- Top Metadata Row -->
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-center space-x-3 min-w-0">
-                                <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
+                        <div class="flex items-start justify-between gap-2.5 sm:gap-3">
+                            <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0 flex-1">
+                                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0">
                                     ${imgHtml}
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-center space-x-1.5 mb-0.5">
-                                        <span class="inline-flex items-center space-x-1 px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded text-[10px] font-semibold truncate max-w-[140px]">
+                                        <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-semibold truncate max-w-[140px]">
                                             <i data-lucide="tag" class="w-2.5 h-2.5 text-slate-400"></i>
                                             <span>${escapeHtml(p.category_name || 'Unnamed')}</span>
                                         </span>
@@ -3230,7 +3230,7 @@
                                     <h4 class="text-xs sm:text-sm font-bold text-slate-900 truncate mb-1" title="${escapeHtml(p.name)}">
                                         ${escapeHtml(p.name)}
                                     </h4>
-                                    <div class="text-[11px] text-slate-500 font-medium">
+                                    <div class="text-[11px] text-slate-500 font-medium truncate">
                                         বিক্রয় মূল্য: <b class="text-slate-900">৳${retailerPrice.toFixed(2)}</b>
                                     </div>
                                 </div>

@@ -31,28 +31,28 @@
                                     class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-brand-600 text-white shadow-2xs border border-transparent cursor-pointer shrink-0">
                                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                                     <span>সকল পণ্য</span>
-                                    <span id="smFilterCountAll" class="px-1.5 py-0.2 rounded-full text-[10px] bg-white/25 text-white font-black">০</span>
+                                    <span id="smFilterCountAll" class="px-1.5 py-0.5 rounded-full text-[10px] bg-white/25 text-white font-black">০</span>
                                 </button>
 
                                 <button type="button" onclick="setStockManagementFilter('inStock')" id="smFilterBtn_inStock"
                                     class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer shrink-0">
                                     <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
                                     <span>স্টকে আছে (>০)</span>
-                                    <span id="smFilterCountInStock" class="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">০</span>
+                                    <span id="smFilterCountInStock" class="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">০</span>
                                 </button>
 
                                 <button type="button" onclick="setStockManagementFilter('outStock')" id="smFilterBtn_outStock"
                                     class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer shrink-0">
                                     <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
                                     <span>স্টক শেষ (০)</span>
-                                    <span id="smFilterCountOutStock" class="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-200">০</span>
+                                    <span id="smFilterCountOutStock" class="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-200">০</span>
                                 </button>
 
                                 <button type="button" onclick="setStockManagementFilter('hasVariants')" id="smFilterBtn_hasVariants"
                                     class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 cursor-pointer shrink-0">
                                     <i data-lucide="shirt" class="w-3.5 h-3.5 text-indigo-500"></i>
                                     <span>সাইজ/ভ্যারিয়েন্টযুক্ত</span>
-                                    <span id="smFilterCountHasVariants" class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">০</span>
+                                    <span id="smFilterCountHasVariants" class="px-1.5 py-0.5 rounded-full text-[10px] bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">০</span>
                                 </button>
                             </div>
 
