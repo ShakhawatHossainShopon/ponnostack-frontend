@@ -21,7 +21,7 @@ if (empty($hasCategories) && empty($_GET['q'])) {
 
 // Fetch active products
 $productsRes = ApiClient::get('products', ['status' => 'active']);
-$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']) && count($productsRes['data']) > 0) ? $productsRes['data'] : getSampleProducts();
+$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data'])) ? $productsRes['data'] : [];
 
 // Determine active category filter from GET ?cat=...
 $activeCatSlug = trim((string)($_GET['cat'] ?? ''));

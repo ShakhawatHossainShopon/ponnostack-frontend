@@ -20,11 +20,11 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/sample_data.php';
 require_once __DIR__ . '/views/template_cards.php';
 
-// Fetch active products from API; fallback to sample data if store owner hasn't uploaded products yet
+// Fetch active products from API
 $productsRes = ApiClient::get('products', ['status' => 'active']);
-$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']) && count($productsRes['data']) > 0)
+$allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']))
     ? $productsRes['data']
-    : getSampleProducts();
+    : [];
 
 // Filter flash deals products
 $discountedProducts = array_values(array_filter($allProducts, fn($p) => !empty($p['has_discount'])));

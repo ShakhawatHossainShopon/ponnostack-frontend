@@ -22,12 +22,11 @@ try {
     $cardType = trim((string)($_GET['card_type'] ?? 'universal'));
     $currency = $storeCurrency ?? 'BDT';
 
-    // Fetch active products from API or sample fallback
+    // Fetch active products from API
     $productsRes = ApiClient::get('products', ['status' => 'active']);
-    $isSample = empty($productsRes['success']) || !is_array($productsRes['data']) || count($productsRes['data']) === 0;
-    $allProducts = !$isSample
+    $allProducts = (!empty($productsRes['success']) && is_array($productsRes['data']))
         ? $productsRes['data']
-        : getSampleProducts();
+        : [];
 
     // 1. Filter by category if requested
     $filtered = $allProducts;

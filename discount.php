@@ -26,9 +26,7 @@ if (!empty($productsRes['success']) && is_array($productsRes['data'])) {
         }
     }
 }
-if (empty($discountedProducts)) {
-    $discountedProducts = array_values(array_filter(getSampleProducts(), fn($p) => !empty($p['has_discount'])));
-}
+
 
 // Dedicated Flash Sale & Discount SEO
 $seoTitle = 'বিশেষ ডিসকাউন্ট ও ফ্ল্যাশ সেল অফার | ' . $storeName;

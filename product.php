@@ -44,24 +44,11 @@ if (!$product && !empty($identifier)) {
     }
 }
 
-// Fallback: check sample products
-if (!$product && !empty($identifier)) {
-    foreach (getSampleProducts() as $sp) {
-        if ($sp['slug'] === $identifier || $sp['uuid'] === $identifier) {
-            $product = $sp;
-            break;
-        }
-    }
-}
-
 // If no identifier provided, load first active product from store
 if (!$product && empty($identifier)) {
     $allRes = ApiClient::get('products', ['status' => 'active', 'limit' => 1]);
     if (!empty($allRes['success']) && !empty($allRes['data'][0])) {
         $product = $allRes['data'][0];
-    } else {
-        $samples = getSampleProducts();
-        $product = $samples[0] ?? null;
     }
 }
 
@@ -70,15 +57,8 @@ $allProductsRes = ApiClient::get('products', ['status' => 'active', 'limit' => 6
 $relatedProducts = [];
 if (!empty($allProductsRes['success']) && is_array($allProductsRes['data'])) {
     foreach ($allProductsRes['data'] as $p) {
-        if ($product && $p['uuid'] === $product['uuid']) continue;
+        if ($product && ($p['uuid'] ?? '') === ($product['uuid'] ?? '')) continue;
         $relatedProducts[] = $p;
-        if (count($relatedProducts) >= 4) break;
-    }
-}
-if (empty($relatedProducts)) {
-    foreach (getSampleProducts() as $sp) {
-        if ($product && $sp['uuid'] === $product['uuid']) continue;
-        $relatedProducts[] = $sp;
         if (count($relatedProducts) >= 4) break;
     }
 }
