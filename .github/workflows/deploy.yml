@@ -17,7 +17,9 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: 🚀 Sync Files to Hosting via FTP
+      - name: 🚀 Sync Files to Hosting via FTPS
+        id: ftps_deploy
+        continue-on-error: true
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -27,4 +29,14 @@ jobs:
           protocol: ftps
           security: loose
           timeout: 180000
-          port: 21
+
+      - name: 🚀 Fallback Sync via FTP (if FTPS data socket drops)
+        if: steps.ftps_deploy.outcome == 'failure'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || './' }}
+          protocol: ftp
+          timeout: 180000
