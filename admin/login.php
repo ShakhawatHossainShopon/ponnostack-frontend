@@ -187,19 +187,6 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
                     <span id="btnLoginText" data-i18n="loginBtn">ড্যাশবোর্ডে প্রবেশ করুন</span>
                 </button>
             </form>
-
-            <!-- Quick Demo Credential Autofill Helper -->
-            <div class="mt-6 pt-5 border-t border-slate-100">
-                <button type="button" onclick="fillDemoCredentials()"
-                    class="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-2">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
-                    <span data-i18n="fillDemoBtn">ডেমো একাউন্ট স্বয়ংক্রিয় পূরণ করুন</span>
-                </button>
-                <p class="text-[11px] text-center text-slate-400 mt-2 font-mono">
-                    <?= htmlspecialchars($store['owner_email'] ?? 'hshopon14@gmail.com') ?> / ********
-                </p>
-            </div>
-
         </div>
     </main>
 
@@ -242,7 +229,6 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
                 passwordLabel: 'পাসওয়ার্ড (Password) *',
                 loginBtn: 'ড্যাশবোর্ডে প্রবেশ করুন',
                 loggingIn: 'যাচাই করা হচ্ছে...',
-                fillDemoBtn: 'ডেমো একাউন্ট স্বয়ংক্রিয় পূরণ করুন (store123)',
                 loginSuccessTitle: 'স্বাগতম!',
                 loginSuccessText: 'ড্যাশবোর্ডে প্রবেশ করা হচ্ছে...',
                 loginFailedTitle: 'লগইন ব্যর্থ হয়েছে',
@@ -257,7 +243,6 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
                 passwordLabel: 'Password *',
                 loginBtn: 'Sign In to Dashboard',
                 loggingIn: 'Verifying...',
-                fillDemoBtn: 'Auto-fill Demo Credentials (store123)',
                 loginSuccessTitle: 'Welcome Back!',
                 loginSuccessText: 'Redirecting to your dashboard...',
                 loginFailedTitle: 'Authentication Failed',
@@ -310,12 +295,6 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
         $('#password').on('input', function() {
             $(this).removeClass('border-red-500 ring-2 ring-red-100');
         });
-
-        function fillDemoCredentials() {
-            $('#email').val('<?= htmlspecialchars($store['owner_email'] ?? 'hshopon14@gmail.com') ?>');
-            $('#password').val('FDSHFDH');
-            $('#email, #password').removeClass('border-red-500 ring-2 ring-red-100');
-        }
 
         // Form Submit Handler
         $('#storeLoginForm').on('submit', async function(e) {
