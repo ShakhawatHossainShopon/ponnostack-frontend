@@ -18,13 +18,13 @@ if (file_exists(__DIR__ . '/.env.local')) {
 
 return [
     // Mother Platform API URL
-    'api_url'    => Env::get('API_URL', 'http://localhost/Ponnostack/backend/api'),
+    'api_url'    => Env::get('API_URL', 'https://ponnostack.shop/backend/api'),
 
     // Mother Platform Asset / Uploads Root URL (leave blank to auto-resolve from api_url)
     'asset_url'  => Env::get('ASSET_URL', ''),
 
     // Unique Store UUID assigned to this client tenant in Mother Control Panel
-    'store_uuid' => Env::get('STORE_UUID', 'e86c2f55-4eae-429c-8220-f55d817f742a'),
+    'store_uuid' => Env::get('STORE_UUID', '286208db-136a-4e6f-ac8d-eba06755ed7a'),
 
     // Base Platform Domain for Subdomain Multi-tenancy (e.g. ponnostack.shop)
     'base_domain' => Env::get('BASE_DOMAIN', 'ponnostack.shop'),
