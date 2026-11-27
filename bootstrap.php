@@ -26,7 +26,7 @@ if (!$store) {
         <div class="max-w-md w-full bg-white border border-red-200 rounded-2xl p-6 text-center shadow-lg">
             <h2 class="text-lg font-bold text-red-600 mb-2">স্টোর কনফিগারেশন ত্রুটি</h2>
             <p class="text-xs text-slate-600 mb-4">
-                প্রদত্ত Store UUID (<code><?= htmlspecialchars(ApiClient::getStoreUuid()) ?></code>) মাদার প্ল্যাটফর্মে খুঁজে পাওয়া যায়নি অথবা মাদার এপিআই অফলাইনে রয়েছে।
+                প্রদত্ত Store Identifier (<code><?= htmlspecialchars(ApiClient::getStoreIdentifier()) ?></code>) মাদার প্ল্যাটফর্মে খুঁজে পাওয়া যায়নি অথবা মাদার এপিআই অফলাইনে রয়েছে।
             </p>
             <div class="text-[11px] text-slate-400">
                 অনুগ্রহ করে <code>config.php</code> ফাইলের <code>store_uuid</code> ও <code>api_url</code> যাচাই করুন।

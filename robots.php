@@ -18,4 +18,5 @@ echo "Allow: /\n";
 echo "Disallow: /admin/\n";
 echo "Disallow: /checkout\n";
 echo "\n";
+echo "Sitemap: {$baseUrl}/sitemap.xml\n";
 echo "Sitemap: {$baseUrl}/sitemap.php\n";

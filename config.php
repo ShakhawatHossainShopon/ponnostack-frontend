@@ -26,6 +26,9 @@ return [
     // Unique Store UUID assigned to this client tenant in Mother Control Panel
     'store_uuid' => Env::get('STORE_UUID', 'e86c2f55-4eae-429c-8220-f55d817f742a'),
 
+    // Base Platform Domain for Subdomain Multi-tenancy (e.g. ponnostack.shop)
+    'base_domain' => Env::get('BASE_DOMAIN', 'ponnostack.shop'),
+
     // Customer Portal URL
     'portal_url' => Env::get('PORTAL_URL', 'http://localhost/Ponnostack/portal/login.php'),
 

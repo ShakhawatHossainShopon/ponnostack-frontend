@@ -61,7 +61,19 @@ $resolvedSeoRobots = !empty($seoRobots)
     : ($currentScript === 'checkout.php' ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
 
 // 6. Canonical URL
-$resolvedSeoCanonical = !empty($seoCanonical) ? $seoCanonical : $currentFullUrl;
+if (!empty($seoCanonical)) {
+    $resolvedSeoCanonical = $seoCanonical;
+} else {
+    // Build clean canonical URL without internal tracking/debug query params (e.g. ?store=)
+    $cleanPath = explode('?', $currentUri)[0];
+    $cleanQuery = [];
+    if (!empty($_GET['page'])) $cleanQuery['page'] = (int)$_GET['page'];
+    if (!empty($_GET['cat']))  $cleanQuery['cat'] = trim((string)$_GET['cat']);
+    if (!empty($_GET['slug'])) $cleanQuery['slug'] = trim((string)$_GET['slug']);
+    if (!empty($_GET['q']))    $cleanQuery['q'] = trim((string)$_GET['q']);
+    $queryString = !empty($cleanQuery) ? ('?' . http_build_query($cleanQuery)) : '';
+    $resolvedSeoCanonical = $currentProtocol . $currentHost . $cleanPath . $queryString;
+}
 
 // 7. OG Type
 $resolvedSeoType = !empty($seoType) ? $seoType : (isset($product) ? 'product' : 'website');
@@ -85,6 +97,8 @@ $resolvedSeoType = !empty($seoType) ? $seoType : (isset($product) ? 'product' : 
     <!-- AUTHOR & LOCALIZATION -->
     <meta name="author" content="<?= htmlspecialchars($storeName) ?>">
     <meta name="publisher" content="<?= htmlspecialchars($storeName) ?>">
+    <meta name="application-name" content="<?= htmlspecialchars($storeName) ?>">
+    <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars($storeName) ?>">
     <meta name="geo.region" content="BD">
     <meta name="language" content="Bengali, English">
     
@@ -116,6 +130,19 @@ $resolvedSeoType = !empty($seoType) ? $seoType : (isset($product) ? 'product' : 
     {
       "@context": "https://schema.org",
       "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "<?= htmlspecialchars($storeBaseUrl) ?>/#website",
+          "url": "<?= htmlspecialchars($storeBaseUrl) ?>/",
+          "name": "<?= addslashes($storeName) ?>",
+          "alternateName": "<?= addslashes($storeSlug) ?>",
+          "inLanguage": "bn-BD",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "<?= htmlspecialchars($storeBaseUrl) ?>/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
         {
           "@type": "OnlineStore",
           "@id": "<?= htmlspecialchars($storeBaseUrl) ?>/#store",
