@@ -1721,6 +1721,7 @@
                 { id: 'instagram', label: 'Instagram', icon: 'camera', color: 'text-pink-600', bg: 'bg-pink-50', border: 'border-pink-200' },
                 { id: 'whatsapp', label: 'WhatsApp', icon: 'message-circle', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
                 { id: 'youtube', label: 'YouTube', icon: 'video', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+                { id: 'tiktok', label: 'TikTok', icon: 'music-2', color: 'text-slate-900', bg: 'bg-slate-100', border: 'border-slate-300' },
             ];
 
             platforms.forEach(p => {
@@ -4790,6 +4791,7 @@
             $('#pInstagram').val(socials.instagram || '');
             $('#pWhatsapp').val(socials.whatsapp || '');
             $('#pYoutube').val(socials.youtube || '');
+            $('#pTiktok').val(socials.tiktok || '');
         }
 
         function updateUI(data) {
@@ -4825,7 +4827,8 @@
                 facebook: $('#pFacebook').val().trim(),
                 instagram: $('#pInstagram').val().trim(),
                 whatsapp: $('#pWhatsapp').val().trim(),
-                youtube: $('#pYoutube').val().trim()
+                youtube: $('#pYoutube').val().trim(),
+                tiktok: $('#pTiktok').val().trim()
             };
 
             const payload = {
