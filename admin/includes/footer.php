@@ -881,7 +881,7 @@
                 lblSizes: 'সাইজসমূহ (Sizes)',
                 lblColors: 'রঙসমূহ (Colors)',
                 lblDescription: 'পণ্যের বিবরণ (Description)',
-                lblProductImages: 'প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ৫টি ছবি)',
+                lblProductImages: 'প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ১০টি ছবি)',
                 lblAutoCompressBadge: '⚡ স্বয়ংক্রিয় ২০০KB অপটিমাইজেশন',
                 dropzonePrompt: 'ছবি আপলোড করতে ক্লিক করুন (বা ড্র্যাগ করুন)',
                 dropzoneHelp: 'PNG, JPG, WebP ইত্যাদি (যেকোনো সাইজের ছবি স্বয়ংক্রিয়ভাবে ২০০KB-তে কম্প্রেস হবে)',
@@ -992,7 +992,7 @@
                 lblSizes: 'Sizes',
                 lblColors: 'Colors',
                 lblDescription: 'Description',
-                lblProductImages: 'Product Images (Max 5 Images)',
+                lblProductImages: 'Product Images (Max 10 Images)',
                 lblAutoCompressBadge: '⚡ Auto ~200KB Optimization',
                 dropzonePrompt: 'Click or drag images to upload',
                 dropzoneHelp: 'PNG, JPG, WebP (Images of any size automatically compressed to ~200KB)',
@@ -1075,6 +1075,14 @@
         }
 
         function showToast(message, type = 'success') {
+            if (window.Toast && typeof window.Toast.show === 'function') {
+                if (typeof window.Toast[type] === 'function') {
+                    window.Toast[type](message);
+                } else {
+                    window.Toast.show(message, type);
+                }
+                return;
+            }
             const bgGradients = {
                 success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 info: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
@@ -4405,9 +4413,9 @@
                 Toast.warning('কমপক্ষে একটি ছবি আপলোড করতে হবে।');
                 return;
             }
-            if (totalImages > 5) {
+            if (totalImages > 10) {
                 goToStep(3);
-                Toast.warning('সর্বোচ্চ ৫টি ছবি রাখা যাবে। অতিরিক্ত ছবি মুছে ফেলুন।');
+                Toast.warning('সর্বোচ্চ ১০টি ছবি রাখা যাবে। অতিরিক্ত ছবি মুছে ফেলুন।');
                 return;
             }
 
@@ -4415,19 +4423,20 @@
             $('#btnSaveProductText').text('সংরক্ষণ হচ্ছে...');
 
             try {
-                // Convert new files to Base64 (WAF-proof)
+                // Convert & Compress new files to WebP Base64 (~150KB each) with real-time progress bar
                 let newImagesBase64 = [];
                 if (selectedNewFiles.length > 0) {
-                    const base64Promises = selectedNewFiles.map(file => {
-                        return new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result);
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                        });
-                    });
-                    newImagesBase64 = await Promise.all(base64Promises);
+                    updateUploadProgress(5, 'ছবিসমূহ অপটিমাইজ করা হচ্ছে...');
+                    for (let idx = 0; idx < selectedNewFiles.length; idx++) {
+                        const file = selectedNewFiles[idx];
+                        const progress = Math.round(10 + ((idx + 1) / selectedNewFiles.length) * 60);
+                        updateUploadProgress(progress, `ছবি অপটিমাইজ করা হচ্ছে (${toBnDigit(idx + 1)}/${toBnDigit(selectedNewFiles.length)})...`);
+                        const b64 = await compressImageClientSide(file);
+                        newImagesBase64.push(b64);
+                    }
                 }
+
+                updateUploadProgress(75, 'মাদার প্ল্যাটফর্মে সেভ হচ্ছে...');
 
                 // Format sizes & colors payload
                 const sizesPayload = selectedVariants;
@@ -4457,16 +4466,20 @@
                 }
 
                 if (res.success && res.data) {
+                    updateUploadProgress(100, 'প্রোডাক্ট সফলভাবে সংরক্ষণ করা হয়েছে!');
                     Toast.success('প্রোডাক্ট সফলভাবে সংরক্ষণ করা হয়েছে!');
+                    setTimeout(hideUploadProgress, 1200);
                     await loadProducts();
                     switchTab('products');
                 } else {
+                    hideUploadProgress();
                     if (res.data && res.data.limit_reached) {
                         showPackageLimitModal(res.message, res.data.current_count, res.data.product_limit);
                     }
                     Toast.error(res.message || 'প্রোডাক্ট সংরক্ষণ ব্যর্থ হয়েছে।');
                 }
             } catch (err) {
+                hideUploadProgress();
                 console.error('Error saving product:', err);
                 Toast.error(err.message || 'নেটওয়ার্ক ত্রুটি ঘটেছে।');
             } finally {
@@ -4500,28 +4513,97 @@
             }
         });
 
+        // Client-side Image Upload Progress Bar Controller
+        function updateUploadProgress(percent, text) {
+            $('#imageUploadProgressContainer').removeClass('hidden');
+            $('#imageUploadProgressBar').css('width', `${percent}%`);
+            $('#imageUploadProgressPercent').text(`${percent}%`);
+            if (text) $('#imageUploadProgressText').text(text);
+        }
+
+        function hideUploadProgress() {
+            $('#imageUploadProgressContainer').addClass('hidden');
+            $('#imageUploadProgressBar').css('width', '0%');
+            $('#imageUploadProgressPercent').text('0%');
+        }
+
+        // High-performance In-browser Canvas Compressor (~100-200KB WebP)
+        function compressImageClientSide(file, maxWidth = 1200, maxHeight = 1200, quality = 0.82) {
+            return new Promise((resolve, reject) => {
+                if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                    return;
+                }
+
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.onload = function() {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth || height > maxHeight) {
+                            if (width / maxWidth > height / maxHeight) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            } else {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, width);
+                        canvas.height = Math.max(1, height);
+                        const ctx = canvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        let base64 = canvas.toDataURL('image/webp', quality);
+                        if (!base64 || !base64.startsWith('data:image/webp')) {
+                            base64 = canvas.toDataURL('image/jpeg', quality);
+                        }
+                        resolve(base64);
+                    };
+                    img.onerror = function() {
+                        const fallbackReader = new FileReader();
+                        fallbackReader.onload = () => resolve(fallbackReader.result);
+                        fallbackReader.onerror = reject;
+                        fallbackReader.readAsDataURL(file);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         function processSelectedFiles(fileList) {
             if (!fileList || fileList.length === 0) return;
             const files = Array.from(fileList);
             const currentCount = existingImages.length + selectedNewFiles.length;
 
-            if (currentCount >= 5) {
-                Toast.warning('একটি প্রোডাক্টে সর্বোচ্চ ৫টি ছবি আপলোড করা যাবে। ছবির সীমা পূর্ণ হয়েছে।');
+            if (currentCount >= 10) {
+                Toast.warning('একটি প্রোডাক্টে সর্বোচ্চ ১০টি ছবি আপলোড করা যাবে। ছবির সীমা পূর্ণ হয়েছে।');
                 return;
             }
 
-            const allowed = 5 - currentCount;
+            const allowed = 10 - currentCount;
             const validFiles = files.filter(f => f.type && f.type.startsWith('image/'));
 
             if (validFiles.length > allowed) {
-                Toast.info(`সর্বোচ্চ ৫টি ছবির সীমা অনুযায়ী প্রথম ${toBnDigit(allowed)}টি ছবি গ্রহণ করা হয়েছে।`);
+                Toast.info(`সর্বোচ্চ ১০টি ছবির সীমা অনুযায়ী প্রথম ${toBnDigit(allowed)}টি ছবি গ্রহণ করা হয়েছে।`);
             }
 
             validFiles.slice(0, allowed).forEach(f => selectedNewFiles.push(f));
             renderImagePreviews();
         }
 
-        // Image Selection Handler (Client-side limit max 5)
+        // Image Selection Handler (Client-side limit max 10)
         function handleImageSelection(event) {
             if (event.target && event.target.files) {
                 processSelectedFiles(event.target.files);
@@ -4575,8 +4657,8 @@
 
             const totalCount = existingImages.length + selectedNewFiles.length;
 
-            // Strictly toggle dropzone vs 5-image limit badge
-            if (totalCount >= 5) {
+            // Strictly toggle dropzone vs 10-image limit badge
+            if (totalCount >= 10) {
                 $('#imageDropzone').addClass('hidden');
                 $('#imageLimitReachedBadge').removeClass('hidden');
             } else {

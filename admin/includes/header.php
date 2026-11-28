@@ -60,10 +60,22 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-    <!-- Universal Toast Engine (Zero Swal) -->
+    <!-- Universal Toast Engine (Zero Swal, Anti-spam Deduplication) -->
     <script>
         window.Toast = {
+            _lastMsg: '',
+            _lastTime: 0,
+            _activeToast: null,
             show: function(msg, type = 'info') {
+                if (!msg) return;
+                const now = Date.now();
+                // Anti-spam deduplication: Ignore identical messages fired within 2 seconds
+                if (this._lastMsg === msg && (now - this._lastTime) < 2000) {
+                    return;
+                }
+                this._lastMsg = msg;
+                this._lastTime = now;
+
                 const colors = {
                     success: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
                     error: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
@@ -71,7 +83,11 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
                     info: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)'
                 };
                 if (typeof Toastify === 'function') {
-                    Toastify({
+                    // Dismiss previous toast if still visible to prevent screen clutter
+                    if (this._activeToast && typeof this._activeToast.hideToast === 'function') {
+                        try { this._activeToast.hideToast(); } catch(e) {}
+                    }
+                    this._activeToast = Toastify({
                         text: msg,
                         duration: 3200,
                         gravity: 'top',
@@ -86,7 +102,8 @@ $logoPath = !empty($store['logo_url']) ? $store['logo_url'] : ApiClient::assetUr
                             padding: '12px 20px',
                             color: '#ffffff'
                         }
-                    }).showToast();
+                    });
+                    this._activeToast.showToast();
                 } else {
                     alert(msg);
                 }

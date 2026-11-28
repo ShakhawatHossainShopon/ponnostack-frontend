@@ -329,11 +329,11 @@
                     <p class="text-xs text-slate-500 mt-0.5">আকর্ষণীয় ছবি আপলোড করুন এবং তথ্য যাচাই করে প্রোডাক্টটি প্রকাশ করুন।</p>
                 </div>
 
-                <!-- Multi-Image Upload (Auto-compressed to ~200KB, Max 5 Images) -->
+                <!-- Multi-Image Upload (Auto-compressed to ~200KB, Max 10 Images) -->
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold text-slate-900 flex items-center space-x-1">
-                            <span>প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ৫টি ছবি)</span>
+                            <span>প্রোডাক্টের ছবিসমূহ (সর্বোচ্চ ১০টি ছবি)</span>
                             <span class="text-rose-500 font-black">*</span>
                         </label>
                         <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -341,10 +341,10 @@
                         </span>
                     </div>
 
-                    <!-- Limit Reached Notice (Hidden until 5 images) -->
+                    <!-- Limit Reached Notice (Hidden until 10 images) -->
                     <div id="imageLimitReachedBadge" class="hidden p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center text-xs font-bold text-emerald-800 flex items-center justify-center space-x-2">
                         <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
-                        <span>সর্বোচ্চ ৫টি ছবি যুক্ত করা হয়েছে (ছবির সীমা পূর্ণ)। কোনো ছবি পরিবর্তন করতে নিচের প্রিভিউ থেকে মুছুন।</span>
+                        <span>সর্বোচ্চ ১০টি ছবি যুক্ত করা হয়েছে (ছবির সীমা পূর্ণ)। কোনো ছবি পরিবর্তন করতে নিচের প্রিভিউ থেকে মুছুন।</span>
                     </div>
 
                     <!-- File input & Dropzone -->
@@ -370,8 +370,22 @@
                         <span>কমপক্ষে একটি প্রোডাক্টের ছবি আপলোড করা আবশ্যক। ছবি ছাড়া পণ্য সংরক্ষণ করা যাবে না।</span>
                     </div>
 
+                    <!-- Upload & Compression Progress Bar -->
+                    <div id="imageUploadProgressContainer" class="hidden mt-3 p-3.5 bg-brand-50/80 border border-brand-200 rounded-2xl space-y-2 shadow-2xs transition-all">
+                        <div class="flex items-center justify-between text-xs font-bold text-brand-900">
+                            <span class="flex items-center space-x-2" id="imageUploadProgressStatus">
+                                <i data-lucide="loader-2" class="w-4 h-4 text-brand-600 animate-spin"></i>
+                                <span id="imageUploadProgressText">ছবি অপটিমাইজ ও আপলোড হচ্ছে...</span>
+                            </span>
+                            <span id="imageUploadProgressPercent" class="font-mono text-brand-700 bg-white px-2 py-0.5 rounded-md border border-brand-200">0%</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-brand-100 rounded-full overflow-hidden p-0.5 border border-brand-200">
+                            <div id="imageUploadProgressBar" class="h-full bg-gradient-to-r from-brand-600 to-emerald-500 rounded-full transition-all duration-300 shadow-sm" style="width: 0%"></div>
+                        </div>
+                    </div>
+
                     <!-- Live Image Previews Container -->
-                    <div id="imagePreviewGrid" class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3">
+                    <div id="imagePreviewGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mt-3">
                         <!-- Populated dynamically via JS -->
                     </div>
                 </div>
